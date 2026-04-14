@@ -1092,18 +1092,36 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
   function extractDates(text) {
     const dates = [];
-    const re1 = /\b(\d{1,2})[./](\d{1,2})[./](\d{2,4})\b/g;
-    let m;
-    while ((m = re1.exec(text)) !== null) {
-      let d = m[1], mo = m[2], y = m[3];
+    var reDateTime = /(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})\s*(?:\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM)?)?/gi;
+    var m;
+    while ((m = reDateTime.exec(text)) !== null) {
+      var a = m[1], b = m[2], y = m[3];
       if (y.length === 2) y = '20' + y;
-      dates.push(y + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0'));
+      var nA = Number(a), nB = Number(b);
+      var day, mo;
+      if (nA > 12 && nB <= 12) {
+        day = nA; mo = nB;
+      } else if (nB > 12 && nA <= 12) {
+        mo = nA; day = nB;
+      } else {
+        day = nA; mo = nB;
+      }
+      if (day > 0 && day <= 31 && mo > 0 && mo <= 12) {
+        dates.push(y + '-' + String(mo).padStart(2, '0') + '-' + String(day).padStart(2, '0'));
+      }
     }
-    const reCard = /(?:תוקף|exp|EXP)[^\d]{0,8}(\d{1,2})\s*\/\s*(\d{2,4})/i;
-    const cm = text.match(reCard);
+    var reRel = /(\d+)\s*שנים/;
+    var rm = text.match(reRel);
+    if (rm) {
+      var future = new Date();
+      future.setFullYear(future.getFullYear() + Number(rm[1]));
+      dates.push(future.getFullYear() + '-' + String(future.getMonth() + 1).padStart(2, '0') + '-' + String(future.getDate()).padStart(2, '0'));
+    }
+    var reCard = /(?:תוקף|exp|EXP)[^\d]{0,8}(\d{1,2})\s*\/\s*(\d{2,4})/i;
+    var cm = text.match(reCard);
     if (cm) {
-      const mm = cm[1];
-      let yy = cm[2];
+      var mm = cm[1];
+      var yy = cm[2];
       if (yy.length === 2) yy = '20' + yy;
       dates.push('card:' + String(mm).padStart(2, '0') + '/' + yy.slice(-2));
     }
