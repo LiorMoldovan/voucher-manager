@@ -1,0 +1,2393 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#6C5CE7" />
+  <title>מנהל שוברים</title>
+  <link rel="manifest" href="manifest.json" />
+  <script src="firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <style>
+:root {
+  --primary: #6C5CE7;
+  --bg: #0F0F1A;
+  --surface: #1A1A2E;
+  --card: #222240;
+  --text: #FFFFFF;
+  --muted: #A0A0B8;
+  --border: rgba(255,255,255,0.08);
+  --food: #FF6B6B;
+  --shopping: #6C5CE7;
+  --entertainment: #00B894;
+  --travel: #FDCB6E;
+  --other: #A0A0B8;
+  --ex-green: #00B894;
+  --ex-yellow: #FDCB6E;
+  --ex-orange: #E17055;
+  --ex-red: #D63031;
+  --ex-blue: #74B9FF;
+  --ex-gray: #636E72;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --nav-h: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Hebrew", Arial, sans-serif;
+}
+html[data-theme="light"] {
+  --bg: #F4F5FB;
+  --surface: #FFFFFF;
+  --card: #FFFFFF;
+  --text: #1A1A2E;
+  --muted: #5F6275;
+  --border: rgba(0,0,0,0.08);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
+body { padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 12px); max-width: 480px; margin-inline: auto; }
+[hidden] { display: none !important; }
+a { color: var(--primary); }
+button, input, select, textarea { font: inherit; color: inherit; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 10px 16px; border-radius: var(--radius-sm);
+  border: none; cursor: pointer; font-weight: 600; transition: transform .12s, opacity .12s, background .2s;
+  background: var(--primary); color: #fff;
+}
+.btn:active { transform: scale(0.98); }
+.btn.secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.btn.danger { background: #D63031; }
+.btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn:disabled { opacity: 0.5; pointer-events: none; }
+.input {
+  width: 100%; min-height: 44px; padding: 10px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+}
+textarea.input { min-height: 120px; resize: vertical; }
+.topbar {
+  position: sticky; top: 0; z-index: 30; padding: 12px 14px 8px;
+  background: linear-gradient(180deg, var(--bg) 70%, transparent); backdrop-filter: blur(8px);
+}
+.screen { padding: 0 14px 16px; min-height: 60vh; }
+.screen-title { font-size: 1.35rem; font-weight: 800; margin: 8px 0 12px; letter-spacing: -0.02em; }
+.card {
+  background: var(--card); border-radius: var(--radius); padding: 14px; margin-bottom: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18); border: 1px solid var(--border); position: relative; overflow: hidden;
+}
+.card-strip { position: absolute; inset-inline-start: 0; top: 0; bottom: 0; width: 5px; }
+.badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+.badge.green { background: rgba(0,184,148,0.2); color: var(--ex-green); }
+.badge.yellow { background: rgba(253,203,110,0.25); color: #b8860b; }
+.badge.orange { background: rgba(225,112,85,0.25); color: var(--ex-orange); }
+.badge.red { background: rgba(214,48,49,0.25); color: var(--ex-red); }
+.badge.blue { background: rgba(116,185,255,0.22); color: var(--ex-blue); }
+.badge.gray { background: rgba(99,110,114,0.25); color: var(--ex-gray); }
+.badge.pending { border: 2px dashed var(--muted); background: transparent; color: var(--muted); }
+.badge.code-miss { background: rgba(225,112,85,0.3); color: var(--ex-orange); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.chip {
+  padding: 8px 12px; border-radius: 999px; font-size: 0.85rem; font-weight: 600;
+  background: var(--surface); border: 1px solid var(--border); cursor: pointer; min-height: 40px; display: inline-flex; align-items: center;
+}
+.chip.active { background: rgba(108,92,231,0.25); border-color: var(--primary); color: var(--text); }
+.bottom-nav {
+  position: fixed; inset-inline: 0; bottom: 0; z-index: 40;
+  height: calc(var(--nav-h) + var(--safe-bottom)); padding-bottom: var(--safe-bottom);
+  background: var(--surface); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: flex-start; padding-top: 6px;
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 0.65rem; color: var(--muted);
+  cursor: pointer; padding: 6px; min-height: 48px; border: none; background: transparent;
+}
+.nav-item.active { color: var(--primary); font-weight: 700; }
+.nav-icon { font-size: 1.35rem; line-height: 1; }
+.overlay {
+  position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.overlay.centered { align-items: center; padding: 16px; }
+.sheet {
+  width: 100%; max-width: 480px; max-height: 88vh; overflow: auto;
+  background: var(--surface); border-radius: 20px 20px 0 0; padding: 16px 16px calc(20px + var(--safe-bottom));
+  animation: slideUp .25s ease-out; border: 1px solid var(--border);
+}
+.modal {
+  width: 100%; max-width: 440px; max-height: 90vh; overflow: auto; background: var(--surface);
+  border-radius: var(--radius); padding: 18px; border: 1px solid var(--border);
+}
+@keyframes slideUp { from { transform: translateY(100%); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
+@keyframes pulseSoft { 0%,100% { box-shadow: 0 0 0 0 rgba(225,112,85,0.45); } 50% { box-shadow: 0 0 0 10px rgba(225,112,85,0); } }
+.urgent { animation: pulseSoft 2s ease-in-out infinite; border-color: var(--ex-orange) !important; }
+.toast-wrap { position: fixed; top: 12px; inset-inline: 12px; z-index: 100; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast {
+  pointer-events: auto; background: var(--card); border: 1px solid var(--border); padding: 12px 14px; border-radius: var(--radius-sm);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35); font-size: 0.9rem;
+}
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.row-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.mt8 { margin-top: 8px; } .mt12 { margin-top: 12px; } .mb8 { margin-bottom: 8px; }
+.small { font-size: 0.8rem; color: var(--muted); }
+.logo-wrap { text-align: center; padding: 32px 16px 16px; }
+.logo { font-size: 3.5rem; }
+.welcome-title { font-size: 1.6rem; font-weight: 900; margin: 8px 0 4px; }
+#recaptcha-container { margin-top: 12px; }
+.h-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x mandatory; }
+.h-scroll .card { min-width: 220px; flex: 0 0 auto; scroll-snap-align: start; margin-bottom: 0; }
+.list-compact { display: flex; flex-direction: column; gap: 8px; }
+.list-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px; border-radius: var(--radius-sm); background: var(--card); border: 1px solid var(--border); cursor: pointer; min-height: 48px;
+}
+.star-btn { position: absolute; top: 10px; inset-inline-end: 10px; z-index: 2; background: rgba(0,0,0,0.25); border: none; border-radius: 999px; width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; }
+.banner-alert {
+  padding: 12px; border-radius: var(--radius-sm); background: rgba(225,112,85,0.15); border: 1px solid var(--ex-orange); cursor: pointer; margin-bottom: 12px;
+}
+.empty { text-align: center; padding: 40px 16px; color: var(--muted); }
+.empty-arrow { font-size: 2rem; margin-top: 12px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-card { padding: 14px; border-radius: var(--radius-sm); background: var(--card); border: 1px solid var(--border); cursor: pointer; min-height: 72px; }
+.stat-card b { display: block; font-size: 1.4rem; }
+.balance-big { font-size: 2rem; font-weight: 900; letter-spacing: -0.03em; }
+hr.sep { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+label.lbl { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+.dl-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.link-pill { padding: 8px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--border); font-size: 0.85rem; cursor: pointer; text-decoration: none; color: var(--text); min-height: 40px; display: inline-flex; align-items: center; }
+#app-config-msg { padding: 14px; margin: 12px; border-radius: var(--radius-sm); background: rgba(253,203,110,0.2); border: 1px solid var(--ex-yellow); color: var(--text); }
+html[dir="ltr"] body { direction: ltr; text-align: start; }
+  </style>
+</head>
+<body>
+  <div id="app-config-msg" hidden></div>
+  <div id="toast-root" class="toast-wrap"></div>
+
+  <section id="screen-welcome" class="screen">
+    <div class="logo-wrap">
+      <div class="logo">🎫</div>
+      <h1 class="welcome-title" data-i18n="appName">מנהל שוברים</h1>
+      <p class="small" data-i18n="tagline">ניהול שוברים וכרטיסי מתנה לשוק הישראלי</p>
+    </div>
+    <div class="card">
+      <button type="button" class="btn" id="btn-google" style="width:100%;margin-bottom:10px" data-i18n="signGoogle">התחברות עם Google</button>
+      <button type="button" class="btn secondary" id="btn-phone-mode" style="width:100%" data-i18n="signPhone">התחברות עם טלפון (SMS)</button>
+    </div>
+    <div id="phone-auth-panel" class="card" hidden>
+      <label class="lbl" data-i18n="phoneLabel">מספר טלפון</label>
+      <input class="input" id="phone-input" type="tel" placeholder="05xxxxxxxx" />
+      <div id="recaptcha-container"></div>
+      <button type="button" class="btn mt12" id="btn-send-sms" data-i18n="sendSms">שלח קוד SMS</button>
+      <label class="lbl mt12" data-i18n="smsCode">קוד SMS</label>
+      <input class="input" id="sms-code" type="text" inputmode="numeric" />
+      <button type="button" class="btn mt12" id="btn-verify-sms" data-i18n="verifySms">אימות</button>
+    </div>
+  </section>
+
+  <section id="screen-rejected" class="screen" hidden>
+    <div class="card" style="text-align:center;padding:28px">
+      <div style="font-size:3rem">🚫</div>
+      <h2 class="screen-title" data-i18n="rejectedTitle">אין גישה</h2>
+      <p data-i18n="rejectedBody">בקש מהבעלים להוסיף את מספר הטלפון שלך לרשימת המאושרים.</p>
+      <button type="button" class="btn mt12" id="btn-create-wallet" data-i18n="createWallet">יצירת ארנק חדש שלי</button>
+      <button type="button" class="btn ghost mt8" id="btn-signout-rejected" data-i18n="signOut">התנתקות</button>
+    </div>
+  </section>
+
+  <section id="screen-phone-collect" class="screen" hidden>
+    <div class="card">
+      <h2 class="screen-title" data-i18n="phoneCollectTitle">מספר טלפון לשיתוף</h2>
+      <p class="small" data-i18n="phoneCollectHint">נדרש לזיהוי משפחתי ושיתוף שוברים</p>
+      <label class="lbl mt12" data-i18n="phoneLabel">מספר טלפון</label>
+      <input class="input" id="google-phone-input" type="tel" />
+      <button type="button" class="btn mt12" id="btn-save-google-phone" data-i18n="continue">המשך</button>
+    </div>
+  </section>
+
+  <section id="screen-passphrase" class="screen" hidden>
+    <div class="card">
+      <h2 class="screen-title" id="pass-title" data-i18n="passSetupTitle">הגדרת מפתח הצפנה</h2>
+      <p class="small" id="pass-desc" data-i18n="passSetupDesc">בחר משפט סיסמה חזק — הוא מצפין קודי שוברים. המפתח נשמר רק בזיכרון המכשיר.</p>
+      <label class="lbl mt12" data-i18n="passphrase">משפט סיסמה</label>
+      <input class="input" id="pass-1" type="password" autocomplete="new-password" />
+      <label class="lbl mt12" data-i18n="passphraseConfirm">אימות משפט סיסמה</label>
+      <input class="input" id="pass-2" type="password" autocomplete="new-password" />
+      <button type="button" class="btn mt12" id="btn-pass-submit" data-i18n="unlock">המשך</button>
+    </div>
+  </section>
+
+  <main id="main-app" hidden>
+    <div id="tab-dashboard" class="tab-page">
+      <div class="topbar">
+        <input class="input" id="dash-search" data-i18n-placeholder="searchPlaceholder" placeholder="חיפוש..." />
+      </div>
+      <div class="screen">
+        <div id="dash-balance-card" class="card">
+          <div class="small" data-i18n="totalBalance">סה״כ יתרה פעילה (ש״ח)</div>
+          <div class="balance-big" id="dash-total-balance">0</div>
+        </div>
+        <div id="dash-expiry-banner" class="banner-alert" hidden></div>
+        <div class="grid2" id="dash-stats"></div>
+        <h3 class="screen-title" style="font-size:1rem" data-i18n="favorites">מועדפים</h3>
+        <div class="h-scroll" id="dash-favorites"></div>
+        <h3 class="screen-title" style="font-size:1rem" data-i18n="activeOffers">הצעות פעילות</h3>
+        <div id="dash-offers"></div>
+        <div id="dash-empty" class="empty" hidden>
+          <p data-i18n="dashEmpty">הוסף את השובר הראשון שלך</p>
+          <div class="empty-arrow">⬇</div>
+          <p class="small" data-i18n="dashEmptyHint">לשונית הוספה</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-vouchers" class="tab-page" hidden>
+      <div class="topbar">
+        <input class="input" id="v-search" data-i18n-placeholder="searchPlaceholder" placeholder="חיפוש..." />
+      </div>
+      <div class="screen">
+        <div class="row-between mb8">
+          <div class="chips" id="view-toggle">
+            <button type="button" class="chip active" data-view="card" data-i18n="viewCard">כרטיסים</button>
+            <button type="button" class="chip" data-view="list" data-i18n="viewList">רשימה</button>
+          </div>
+        </div>
+        <div class="chips" id="filter-chips"></div>
+        <div class="row mt8">
+          <select class="input" id="filter-category" style="flex:1"></select>
+          <select class="input" id="filter-source" style="flex:1"></select>
+          <select class="input" id="sort-select" style="flex:1"></select>
+        </div>
+        <div id="voucher-list" class="mt12"></div>
+      </div>
+    </div>
+
+    <div id="tab-add" class="tab-page" hidden>
+      <div class="screen">
+        <div class="chips" id="add-mode-chips">
+          <button type="button" class="chip active" data-add="paste" data-i18n="addPaste">הדבקת טקסט</button>
+          <button type="button" class="chip" data-add="manual" data-i18n="addManual">הזנה ידנית</button>
+        </div>
+        <div id="add-paste-panel">
+          <label class="lbl" data-i18n="pasteLabel">הדבק כאן טקסט מהודעה / מייל</label>
+          <textarea class="input" id="paste-area"></textarea>
+          <button type="button" class="btn mt12" id="btn-parse" data-i18n="parse">ניתוח</button>
+        </div>
+        <div id="add-manual-panel" hidden></div>
+        <div id="add-review" hidden></div>
+      </div>
+    </div>
+
+    <div id="tab-archive" class="tab-page" hidden>
+      <div class="screen">
+        <h2 class="screen-title" data-i18n="archiveTitle">ארכיון</h2>
+        <div id="archive-list"></div>
+        <div id="archive-empty" class="empty" hidden data-i18n="archiveEmpty">אין פריטים בארכיון</div>
+      </div>
+    </div>
+
+    <div id="tab-settings" class="tab-page" hidden>
+      <div class="screen">
+        <h2 class="screen-title" data-i18n="settingsTitle">הגדרות</h2>
+        <div class="card" id="settings-user"></div>
+        <div class="card" id="settings-sharing"></div>
+        <div class="card" id="settings-display"></div>
+        <div class="card" id="settings-data"></div>
+        <div class="card" id="settings-calendar"></div>
+        <div class="card small" data-i18n="aboutVersion">גרסה 1.0.0</div>
+      </div>
+    </div>
+
+    <nav class="bottom-nav" id="bottom-nav">
+      <button type="button" class="nav-item active" data-tab="dashboard"><span class="nav-icon">🏠</span><span data-i18n="navDash">בית</span></button>
+      <button type="button" class="nav-item" data-tab="vouchers"><span class="nav-icon">🎫</span><span data-i18n="navVouchers">שוברים</span></button>
+      <button type="button" class="nav-item" data-tab="add"><span class="nav-icon">➕</span><span data-i18n="navAdd">הוספה</span></button>
+      <button type="button" class="nav-item" data-tab="archive"><span class="nav-icon">📦</span><span data-i18n="navArchive">ארכיון</span></button>
+      <button type="button" class="nav-item" data-tab="settings"><span class="nav-icon">⚙️</span><span data-i18n="navSettings">הגדרות</span></button>
+    </nav>
+  </main>
+
+  <div id="overlay-sheet" class="overlay" hidden>
+    <div class="sheet" id="sheet-content" role="dialog"></div>
+  </div>
+  <div id="overlay-modal" class="overlay centered" hidden>
+    <div class="modal" id="modal-content"></div>
+  </div>
+  <div id="overlay-backdrop-close" style="position:fixed;inset:0;z-index:49" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+
+  const APP_VERSION = '1.0.0';
+  const COL_ACC = 'vm_accounts';
+  const COL_VOU = 'vouchers';
+  const IDX_PHONE = 'vm_phone_index';
+
+  const CATEGORIES = [
+    { id: 'food', he: 'מזון', en: 'Food', color: 'food' },
+    { id: 'shopping', he: 'קניות', en: 'Shopping', color: 'shopping' },
+    { id: 'entertainment', he: 'בילויים', en: 'Entertainment', color: 'entertainment' },
+    { id: 'travel', he: 'נסיעות', en: 'Travel', color: 'travel' },
+    { id: 'other', he: 'אחר', en: 'Other', color: 'other' }
+  ];
+
+  const I18N = {
+    he: {
+      appName: 'מנהל שוברים',
+      tagline: 'ניהול שוברים וכרטיסי מתנה לשוק הישראלי',
+      signGoogle: 'התחברות עם Google',
+      signPhone: 'התחברות עם טלפון (SMS)',
+      phoneLabel: 'מספר טלפון',
+      sendSms: 'שלח קוד SMS',
+      smsCode: 'קוד SMS',
+      verifySms: 'אימות',
+      continue: 'המשך',
+      rejectedTitle: 'אין גישה',
+      rejectedBody: 'בקש מהבעלים להוסיף את מספר הטלפון שלך לרשימת המאושרים.',
+      createWallet: 'יצירת ארנק חדש שלי',
+      signOut: 'התנתקות',
+      phoneCollectTitle: 'מספר טלפון לשיתוף',
+      phoneCollectHint: 'נדרש לזיהוי משפחתי ושיתוף שוברים',
+      passSetupTitle: 'הגדרת מפתח הצפנה',
+      passSetupDesc: 'בחר משפט סיסמה חזק — הוא מצפין קודי שוברים. המפתח נשמר רק בזיכרון המכשיר.',
+      passEnterTitle: 'הזנת משפט סיסמה',
+      passEnterDesc: 'הזן את משפט הסיסמה כדי לפענח את הקודים.',
+      passphrase: 'משפט סיסמה',
+      passphraseConfirm: 'אימות משפט סיסמה',
+      unlock: 'המשך',
+      searchPlaceholder: 'חיפוש...',
+      totalBalance: 'סה״כ יתרה פעילה (ש״ח)',
+      favorites: 'מועדפים',
+      activeOffers: 'הצעות פעילות',
+      dashEmpty: 'הוסף את השובר הראשון שלך',
+      dashEmptyHint: 'עבור ללשונית הוספה למטה',
+      statActive: 'פעילים',
+      statExpiring: 'פגים בקרוב',
+      statPending: 'ממתינים',
+      expiringBanner: 'שוברים שפגים תוך 7 ימים — לחץ לצפייה',
+      viewCard: 'כרטיסים',
+      viewList: 'רשימה',
+      filterActive: 'פעיל',
+      filterExpiring: 'פג בקרוב',
+      filterPending: 'ממתין',
+      filterAll: 'הכל',
+      sortExpiry: 'תאריך תפוגה',
+      sortBalance: 'יתרה',
+      sortName: 'שם',
+      sortAdded: 'תאריך הוספה',
+      sortUsed: 'שימוש אחרון',
+      catAll: 'כל הקטגוריות',
+      srcAll: 'כל המקורות',
+      navDash: 'בית',
+      navVouchers: 'שוברים',
+      navAdd: 'הוספה',
+      navArchive: 'ארכיון',
+      navSettings: 'הגדרות',
+      addPaste: 'הדבקת טקסט',
+      addManual: 'הזנה ידנית',
+      pasteLabel: 'הדבק כאן טקסט מהודעה / מייל',
+      parse: 'ניתוח',
+      saveAll: 'שמור הכל',
+      save: 'שמור',
+      cancel: 'ביטול',
+      archiveTitle: 'ארכיון',
+      archiveEmpty: 'אין פריטים בארכיון',
+      restore: 'שחזור',
+      deleteForever: 'מחיקה לצמיתות',
+      settingsTitle: 'הגדרות',
+      aboutVersion: 'גרסה 1.0.0',
+      userSection: 'משתמש',
+      sharingSection: 'שיתוף משפחתי',
+      approvedPhones: 'מספרים מאושרים',
+      addPhone: 'הוסף מספר',
+      remove: 'הסר',
+      displaySection: 'תצוגה',
+      langHe: 'עברית',
+      langEn: 'English',
+      themeAuto: 'אוטומטי',
+      themeLight: 'בהיר',
+      themeDark: 'כהה',
+      defaultView: 'תצוגת ברירת מחדל',
+      dataSection: 'נתונים',
+      exportJson: 'ייצוא JSON',
+      importJson: 'ייבוא JSON',
+      importCsv: 'ייבוא CSV',
+      lastBackup: 'גיבוי אחרון',
+      calendarSection: 'יומן',
+      calRemind: 'ימי תזכורת לפני תפוגה',
+      changePass: 'שינוי משפט סיסמה',
+      copyCode: 'העתק קוד',
+      use: 'שימוש',
+      markUsed: 'סמן כמומש',
+      howToUse: 'איך משתמשים',
+      moreDetails: 'פרטים מלאים',
+      edit: 'עריכה',
+      archive: 'ארכיון',
+      delete: 'מחיקה',
+      duplicateWarn: 'קוד זה כבר קיים בארנק',
+      multiVoucherTitle: 'זוהו מספר שוברים',
+      multiVoucherBody: 'ניתן ליצור מספר רשומות.',
+      manyStoresHint: 'שובר זה תקף ברשת חנויות רחבה',
+      codeMissing: 'חסר קוד',
+      almostEmpty: 'כמעט ריק',
+      pending: 'ממתין',
+      active: 'פעיל',
+      archived: 'בארכיון',
+      typeValue: 'שווי כספי',
+      typeOffer: 'הטבה',
+      codeSimple: 'קוד פשוט',
+      codeCard: 'כרטיס אשראי',
+      name: 'שם',
+      storeTags: 'תגי חנויות (מופרד בפסיק)',
+      category: 'קטגוריה',
+      source: 'מקור',
+      sourceText: 'טקסט מקור',
+      originalAmount: 'סכום מקורי',
+      remainingBalance: 'יתרה נוכחית',
+      offerDesc: 'תיאור ההטבה',
+      expiryDate: 'תאריך תפוגה',
+      validFrom: 'תקף מ',
+      noExpiry: 'ללא תפוגה',
+      notes: 'הערות',
+      linkBalance: 'בדיקת יתרה',
+      linkStores: 'רשימת חנויות',
+      linkVoucher: 'צפייה בשובר',
+      linkPersonal: 'אזור אישי',
+      photo: 'תמונה',
+      takePhoto: 'צילום / העלאה',
+      addCalendar: 'הוסף ליומן Google',
+      usageHistory: 'היסטוריית שימושים',
+      amount: 'סכום',
+      note: 'הערה',
+      date: 'תאריך',
+      configNeeded: 'יש להגדיר Firebase בקובץ firebase-config.js (apiKey וכו׳).',
+      copied: 'הועתק',
+      copyFail: 'העתקה נכשלה',
+      errorGeneric: 'אירעה שגיאה',
+      signedInAs: 'מחובר כ',
+      phone: 'טלפון',
+      method: 'שיטת התחברות',
+      google: 'Google',
+      phoneAuth: 'טלפון',
+      noFirebase: 'Firebase לא מוגדר',
+      expiredToast: 'שוברים שפגו מאז הביקור האחרון',
+      close: 'סגור',
+      reviewTitle: 'סקירה לפני שמירה',
+      manualTitle: 'טופס הזנה ידנית',
+      addToCalendar: 'יומן',
+      sheetUse: 'שימוש / סימון',
+      storesNetwork: 'רשת חנויות',
+      yes: 'כן',
+      no: 'לא'
+    },
+    en: {
+      appName: 'Voucher Manager',
+      tagline: 'Gift cards & vouchers for Israel',
+      signGoogle: 'Sign in with Google',
+      signPhone: 'Sign in with Phone (SMS)',
+      phoneLabel: 'Phone number',
+      sendSms: 'Send SMS code',
+      smsCode: 'SMS code',
+      verifySms: 'Verify',
+      continue: 'Continue',
+      rejectedTitle: 'No access',
+      rejectedBody: 'Ask the owner to add your phone number to the approved list.',
+      createWallet: 'Create my new wallet',
+      signOut: 'Sign out',
+      phoneCollectTitle: 'Phone for sharing',
+      phoneCollectHint: 'Used for family identity and sharing.',
+      passSetupTitle: 'Set encryption passphrase',
+      passSetupDesc: 'Choose a strong passphrase — it encrypts voucher codes. The key stays in memory only.',
+      passEnterTitle: 'Enter passphrase',
+      passEnterDesc: 'Enter your passphrase to decrypt codes.',
+      passphrase: 'Passphrase',
+      passphraseConfirm: 'Confirm passphrase',
+      unlock: 'Continue',
+      searchPlaceholder: 'Search...',
+      totalBalance: 'Total active balance (NIS)',
+      favorites: 'Favorites',
+      activeOffers: 'Active offers',
+      dashEmpty: 'Add your first voucher',
+      dashEmptyHint: 'Go to the Add tab below',
+      statActive: 'Active',
+      statExpiring: 'Expiring soon',
+      statPending: 'Pending',
+      expiringBanner: 'Vouchers expiring within 7 days — tap to view',
+      viewCard: 'Cards',
+      viewList: 'List',
+      filterActive: 'Active',
+      filterExpiring: 'Expiring',
+      filterPending: 'Pending',
+      filterAll: 'All',
+      sortExpiry: 'Expiry date',
+      sortBalance: 'Balance',
+      sortName: 'Name',
+      sortAdded: 'Date added',
+      sortUsed: 'Recently used',
+      catAll: 'All categories',
+      srcAll: 'All sources',
+      navDash: 'Home',
+      navVouchers: 'Vouchers',
+      navAdd: 'Add',
+      navArchive: 'Archive',
+      navSettings: 'Settings',
+      addPaste: 'Paste text',
+      addManual: 'Manual entry',
+      pasteLabel: 'Paste message or email text',
+      parse: 'Parse',
+      saveAll: 'Save all',
+      save: 'Save',
+      cancel: 'Cancel',
+      archiveTitle: 'Archive',
+      archiveEmpty: 'No archived items',
+      restore: 'Restore',
+      deleteForever: 'Delete permanently',
+      settingsTitle: 'Settings',
+      aboutVersion: 'Version 1.0.0',
+      userSection: 'User',
+      sharingSection: 'Family sharing',
+      approvedPhones: 'Approved numbers',
+      addPhone: 'Add number',
+      remove: 'Remove',
+      displaySection: 'Display',
+      langHe: 'Hebrew',
+      langEn: 'English',
+      themeAuto: 'Auto',
+      themeLight: 'Light',
+      themeDark: 'Dark',
+      defaultView: 'Default view',
+      dataSection: 'Data',
+      exportJson: 'Export JSON',
+      importJson: 'Import JSON',
+      importCsv: 'Import CSV',
+      lastBackup: 'Last backup',
+      calendarSection: 'Calendar',
+      calRemind: 'Reminder days before expiry',
+      changePass: 'Change passphrase',
+      copyCode: 'Copy code',
+      use: 'Use',
+      markUsed: 'Mark used',
+      howToUse: 'How to use',
+      moreDetails: 'Full details',
+      edit: 'Edit',
+      archive: 'Archive',
+      delete: 'Delete',
+      duplicateWarn: 'This code already exists in your wallet',
+      multiVoucherTitle: 'Multiple vouchers detected',
+      multiVoucherBody: 'You can create multiple records.',
+      manyStoresHint: 'This voucher works at many stores',
+      codeMissing: 'Code missing',
+      almostEmpty: 'Almost empty',
+      pending: 'Pending',
+      active: 'Active',
+      archived: 'Archived',
+      typeValue: 'Monetary value',
+      typeOffer: 'Offer',
+      codeSimple: 'Simple code',
+      codeCard: 'Card',
+      name: 'Name',
+      storeTags: 'Store tags (comma-separated)',
+      category: 'Category',
+      source: 'Source',
+      sourceText: 'Source text',
+      originalAmount: 'Original amount',
+      remainingBalance: 'Remaining balance',
+      offerDesc: 'Offer description',
+      expiryDate: 'Expiry date',
+      validFrom: 'Valid from',
+      noExpiry: 'No expiry',
+      notes: 'Notes',
+      linkBalance: 'Check balance',
+      linkStores: 'Store list',
+      linkVoucher: 'View voucher',
+      linkPersonal: 'Personal area',
+      photo: 'Photo',
+      takePhoto: 'Camera / upload',
+      addCalendar: 'Add to Google Calendar',
+      usageHistory: 'Usage history',
+      amount: 'Amount',
+      note: 'Note',
+      date: 'Date',
+      configNeeded: 'Configure Firebase in firebase-config.js (apiKey, etc.).',
+      copied: 'Copied',
+      copyFail: 'Copy failed',
+      errorGeneric: 'Something went wrong',
+      signedInAs: 'Signed in as',
+      phone: 'Phone',
+      method: 'Sign-in method',
+      google: 'Google',
+      phoneAuth: 'Phone',
+      noFirebase: 'Firebase not configured',
+      expiredToast: 'Vouchers expired since last visit',
+      close: 'Close',
+      reviewTitle: 'Review before save',
+      manualTitle: 'Manual entry form',
+      addToCalendar: 'Calendar',
+      sheetUse: 'Use / mark',
+      storesNetwork: 'Store network',
+      yes: 'Yes',
+      no: 'No'
+    }
+  };
+
+  const state = {
+    lang: 'he',
+    themePref: 'dark',
+    effectiveTheme: 'dark',
+    defaultView: 'card',
+    firebaseOk: false,
+    authUser: null,
+    normalizedPhone: '',
+    activeAccountId: null,
+    isOwner: false,
+    cryptoSalt: null,
+    derivedKey: null,
+    passMode: 'setup',
+    vouchers: [],
+    settingsDoc: null,
+    unsubVouchers: null,
+    unsubSettings: null,
+    currentFilter: 'active',
+    voucherView: 'card',
+    lastVisit: 0,
+    showedExpiredToast: false,
+    pendingShareText: '',
+    recaptchaVerifier: null,
+    phoneForIndex: '',
+    learnTagsByNetwork: {}
+  };
+
+  function t(key) {
+    const pack = I18N[state.lang] || I18N.he;
+    return pack[key] || I18N.he[key] || key;
+  }
+
+  function applyDirLang() {
+    const rtl = state.lang === 'he';
+    document.documentElement.lang = state.lang;
+    document.documentElement.dir = rtl ? 'rtl' : 'ltr';
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      const k = el.getAttribute('data-i18n');
+      if (k) el.textContent = t(k);
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+      const k = el.getAttribute('data-i18n-placeholder');
+      if (k) el.setAttribute('placeholder', t(k));
+    });
+  }
+
+  function applyTheme() {
+    const pref = state.themePref || 'dark';
+    let eff = pref;
+    if (pref === 'auto') {
+      eff = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    state.effectiveTheme = eff;
+    document.documentElement.setAttribute('data-theme', eff === 'light' ? 'light' : 'dark');
+  }
+
+  function normalizeIsraeliPhone(raw) {
+    if (!raw) return '';
+    let s = String(raw).replace(/[\s\-()]/g, '');
+    if (s.startsWith('+')) s = s.slice(1);
+    if (s.startsWith('0')) s = '972' + s.slice(1);
+    if (!s.startsWith('972')) s = '972' + s;
+    return s.replace(/\D/g, '');
+  }
+
+  function money(n) {
+    if (n == null || n === '' || isNaN(Number(n))) return '—';
+    return Number(n).toLocaleString(state.lang === 'he' ? 'he-IL' : 'en-US', { maximumFractionDigits: 2 });
+  }
+
+  function toast(msg, ms) {
+    const root = document.getElementById('toast-root');
+    if (!root) return;
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = msg;
+    root.appendChild(el);
+    setTimeout(function () {
+      el.remove();
+    }, ms || 3500);
+  }
+
+  function copyText(text) {
+    if (!text) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        toast(t('copied'));
+      }).catch(fallback);
+    } else fallback();
+    function fallback() {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        toast(t('copied'));
+      } catch (e) {
+        toast(t('copyFail'));
+      }
+    }
+  }
+
+  window.VoucherApp = window.VoucherApp || {};
+  window.VoucherApp.state = state;
+  window.VoucherApp.t = t;
+  window.VoucherApp.I18N = I18N;
+  window.VoucherApp.CATEGORIES = CATEGORIES;
+  window.VoucherApp.APP_VERSION = APP_VERSION;
+  window.VoucherApp.COL_ACC = COL_ACC;
+  window.VoucherApp.COL_VOU = COL_VOU;
+  window.VoucherApp.IDX_PHONE = IDX_PHONE;
+  window.VoucherApp.applyDirLang = applyDirLang;
+  window.VoucherApp.applyTheme = applyTheme;
+  window.VoucherApp.normalizeIsraeliPhone = normalizeIsraeliPhone;
+  window.VoucherApp.money = money;
+  window.VoucherApp.toast = toast;
+  window.VoucherApp.copyText = copyText;
+})();
+(function () {
+  'use strict';
+  const Va = window.VoucherApp;
+  const state = Va.state;
+
+  let db = null;
+  let auth = null;
+
+  function isFirebaseConfigured() {
+    try {
+      const c = typeof FIREBASE_CONFIG !== 'undefined' ? FIREBASE_CONFIG : null;
+      return !!(c && c.apiKey && c.apiKey !== 'YOUR_API_KEY' && c.projectId && c.projectId !== 'YOUR_PROJECT_ID');
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function initFirebase() {
+    if (!isFirebaseConfigured()) {
+      state.firebaseOk = false;
+      return false;
+    }
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(FIREBASE_CONFIG);
+      }
+      auth = firebase.auth();
+      db = firebase.firestore();
+      db.enablePersistence({ synchronizeTabs: true }).catch(function () {});
+      state.firebaseOk = true;
+      return true;
+    } catch (e) {
+      console.error(e);
+      state.firebaseOk = false;
+      return false;
+    }
+  }
+
+  function getDb() { return db; }
+  function getAuth() { return auth; }
+
+  function randomSalt() {
+    const buf = new Uint8Array(16);
+    crypto.getRandomValues(buf);
+    return btoa(String.fromCharCode.apply(null, buf));
+  }
+
+  function saltToBuf(b64) {
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  async function deriveKeyFromPassphrase(passphrase, saltB64) {
+    const enc = new TextEncoder();
+    const salt = saltToBuf(saltB64);
+    const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
+
+  async function encryptString(key, plain) {
+    if (plain == null || plain === '') return null;
+    const enc = new TextEncoder();
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, enc.encode(String(plain)));
+    return {
+      iv: btoa(String.fromCharCode.apply(null, iv)),
+      ct: btoa(String.fromCharCode.apply(null, new Uint8Array(ct)))
+    };
+  }
+
+  async function decryptString(key, blob) {
+    if (!blob || !blob.ct || !blob.iv) return '';
+    try {
+      const iv = Uint8Array.from(atob(blob.iv), function (c) { return c.charCodeAt(0); });
+      const ct = Uint8Array.from(atob(blob.ct), function (c) { return c.charCodeAt(0); });
+      const dec = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, ct);
+      return new TextDecoder().decode(dec);
+    } catch (e) {
+      return '';
+    }
+  }
+
+  async function encryptVoucherFields(key, v) {
+    const out = Object.assign({}, v);
+    if (v.code && typeof v.code === 'string') {
+      out.code = await encryptString(key, v.code);
+    }
+    if (v.cardNumber && typeof v.cardNumber === 'string') {
+      out.cardNumber = await encryptString(key, v.cardNumber);
+    }
+    if (v.cardExpiry && typeof v.cardExpiry === 'string') {
+      out.cardExpiry = await encryptString(key, v.cardExpiry);
+    }
+    if (v.cardCvv && typeof v.cardCvv === 'string') {
+      out.cardCvv = await encryptString(key, v.cardCvv);
+    }
+    return out;
+  }
+
+  async function decryptVoucherFields(key, v) {
+    const out = Object.assign({}, v);
+    async function decField(f) {
+      const val = v[f];
+      if (val && typeof val === 'object' && val.ct) {
+        out[f] = await decryptString(key, val);
+      } else if (typeof val === 'string') {
+        out[f] = val;
+      } else {
+        out[f] = '';
+      }
+    }
+    await decField('code');
+    await decField('cardNumber');
+    await decField('cardExpiry');
+    await decField('cardCvv');
+    return out;
+  }
+
+  function accountRef(accountId) {
+    return db.collection(Va.COL_ACC).doc(accountId);
+  }
+
+  function vouchersCol(accountId) {
+    return accountRef(accountId).collection(Va.COL_VOU);
+  }
+
+  function phoneIndexRef(phone) {
+    return db.collection(Va.IDX_PHONE).doc(phone);
+  }
+
+  async function fetchPhoneIndex(phone) {
+    const snap = await phoneIndexRef(phone).get();
+    return snap.exists ? snap.data() : null;
+  }
+
+  async function ensureAccountForOwner(uid, phone, saltB64) {
+    const ref = accountRef(uid);
+    const snap = await ref.get();
+    const base = {
+      ownerUid: uid,
+      approvedPhones: firebase.firestore.FieldValue.arrayUnion(phone),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if (!snap.exists) {
+      await ref.set(Object.assign({}, base, {
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        settings: {
+          language: state.lang,
+          theme: state.themePref,
+          defaultView: state.defaultView,
+          lastBackup: null,
+          calendarReminders: [7, 3, 1],
+          cryptoSalt: saltB64 || randomSalt()
+        }
+      }), { merge: true });
+      await phoneIndexRef(phone).set({ accountId: uid }, { merge: true });
+    } else {
+      await ref.set(base, { merge: true });
+      await phoneIndexRef(phone).set({ accountId: uid }, { merge: true });
+    }
+  }
+
+  async function loadSettings(accountId) {
+    const snap = await accountRef(accountId).get();
+    if (!snap.exists) return null;
+    return snap.data();
+  }
+
+  async function saveSettingsPatch(accountId, patch) {
+    const ref = accountRef(accountId);
+    const snap = await ref.get();
+    const cur = snap.exists && snap.data().settings ? snap.data().settings : {};
+    const next = Object.assign({}, cur, patch);
+    await ref.set({
+      settings: next,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  }
+
+  async function addApprovedPhone(accountId, phone) {
+    const ref = accountRef(accountId);
+    await ref.update({
+      approvedPhones: firebase.firestore.FieldValue.arrayUnion(phone),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await phoneIndexRef(phone).set({ accountId: accountId }, { merge: true });
+  }
+
+  async function removeApprovedPhone(accountId, phone, ownerPhone) {
+    const ref = accountRef(accountId);
+    await ref.update({
+      approvedPhones: firebase.firestore.FieldValue.arrayRemove(phone),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    if (phone !== ownerPhone) {
+      await phoneIndexRef(phone).delete().catch(function () {});
+    }
+  }
+
+  Va.db = function () { return db; };
+  Va.auth = function () { return auth; };
+  Va.initFirebase = initFirebase;
+  Va.isFirebaseConfigured = isFirebaseConfigured;
+  Va.getDb = getDb;
+  Va.getAuth = getAuth;
+  Va.randomSalt = randomSalt;
+  Va.deriveKeyFromPassphrase = deriveKeyFromPassphrase;
+  Va.encryptString = encryptString;
+  Va.decryptString = decryptString;
+  Va.encryptVoucherFields = encryptVoucherFields;
+  Va.decryptVoucherFields = decryptVoucherFields;
+  Va.accountRef = accountRef;
+  Va.vouchersCol = vouchersCol;
+  Va.phoneIndexRef = phoneIndexRef;
+  Va.fetchPhoneIndex = fetchPhoneIndex;
+  Va.ensureAccountForOwner = ensureAccountForOwner;
+  Va.loadSettings = loadSettings;
+  Va.saveSettingsPatch = saveSettingsPatch;
+  Va.addApprovedPhone = addApprovedPhone;
+  Va.removeApprovedPhone = removeApprovedPhone;
+  Va.randomSalt = randomSalt;
+})();
+(function () {
+  'use strict';
+  const Va = window.VoucherApp;
+
+  const KNOWN_STORES = [
+    'FOX', 'CASTRO', 'GOLF', 'כיתן', 'NIKE', 'נייק', 'McDonald', "מקדונלד", "Papa John", "פאפא ג'ונס",
+    'Rebar', 'ריבר', 'Roladin', 'רולדין', 'Good Pharm', 'גוד פארם', 'Agadir', 'אגאדיר', 'Nofshonit', 'נופשונית'
+  ];
+
+  const KNOWN_SOURCES = [
+    { re: /HiTechZone|הייטקזון|הייטק\s*זון/i, id: 'hitechzone' },
+    { re: /\bHOT\b|הוט/i, id: 'hot' },
+    { re: /Isracard|ישראכרט/i, id: 'isracard' },
+    { re: /Pais\s*Plus|פיס\s*פלוס/i, id: 'pais' },
+    { re: /Amdocs|אמדוקס/i, id: 'amdocs' },
+    { re: /DreamsCard|דרים\s*קארד/i, id: 'dreamscard' },
+    { re: /GiftZone|גיפטזון/i, id: 'giftzone' },
+    { re: /\bSwish\b/i, id: 'swish' },
+    { re: /\bCSE\b/i, id: 'cse' }
+  ];
+
+  const DREAMS_STORES = ['FOX', 'FOX HOME', 'AMERICAN EAGLE', 'NIKE', 'FOOT LOCKER', 'LALINE', 'MANGO', 'AERIE', 'CONVERSE', 'SACKS', 'BILLABONG', "THE CHILDREN'S PLACE", 'QUICKSILVER', 'FLYING TIGER', 'SUNGLASS HUT', 'Shilav', 'JUMBO', 'ITAY BRANDS', 'MINENE', 'RUBY BAY'];
+  const GIFTZONE_STORES = ['CASTRO', 'GOLF', 'GOLF & CO', 'GOLF KIDS', 'INTIMA', 'POLGAT', 'Kitan', 'Renuar', 'H&O', 'Holmes Place', 'Go Active', 'Icon Fitness', 'Good Pharm', 'Home Center', 'Terminal X', 'Carrefour', "Tiv Ta'am", 'Victory'];
+
+  const OCCASIONS = [
+    { re: /חג\s*פסח|פסח/i, en: 'Passover', he: 'פסח' },
+    { re: /יום\s*הולדת/i, en: 'Birthday', he: 'יום הולדת' },
+    { re: /ראש\s*השנה/i, en: 'Rosh Hashanah', he: 'ראש השנה' },
+    { re: /חנוכה/i, en: 'Hanukkah', he: 'חנוכה' }
+  ];
+
+  function preProcess(text) {
+    let s = String(text || '').replace(/[\u200f\u200e]/g, '');
+    s = s.replace(/\[\d{1,2}:\d{2},\s*\d{1,2}\/\d{1,2}\/\d{2,4}\]\s*[^:]+:\s*/gm, '\n');
+    s = s.replace(/^(From|Sent|To|Subject|Date|נשלח|אל|מאת|נושא)\s*:\s*.+$/gim, '\n');
+    s = s.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    return s;
+  }
+
+  function extractUrls(s) {
+    const re = /https?:\/\/[^\s)\]>'"]+/gi;
+    const urls = [];
+    let m;
+    while ((m = re.exec(s)) !== null) {
+      urls.push(m[0].replace(/[.,;]+$/, ''));
+    }
+    return urls;
+  }
+
+  function categorizeUrl(u) {
+    const low = u.toLowerCase();
+    const links = { storesList: '', balanceCheck: '', voucherView: '', personalArea: '' };
+    if (low.includes('mltp.co.il')) links.balanceCheck = u;
+    else if (low.includes('htzone.co.il')) links.storesList = u;
+    else if (low.includes('slink.k4a.co.il') || low.includes('swish.co.il')) links.voucherView = u;
+    else if (low.includes('tbit.be')) links.personalArea = u;
+    else if (low.includes('dcgift.co.il')) links.voucherView = links.voucherView || u;
+    else if (low.match(/\.(il|com)\b/i)) links.voucherView = links.voucherView || u;
+    return links;
+  }
+
+  function mergeLinks(a, b) {
+    const o = Object.assign({}, a);
+    Object.keys(b || {}).forEach(function (k) {
+      if (b[k] && !o[k]) o[k] = b[k];
+    });
+    return o;
+  }
+
+  function detectSource(text) {
+    for (let i = 0; i < KNOWN_SOURCES.length; i++) {
+      if (KNOWN_SOURCES[i].re.test(text)) return KNOWN_SOURCES[i].id;
+    }
+    return '';
+  }
+
+  function detectStoresInText(text) {
+    const found = [];
+    const t = text;
+    KNOWN_STORES.forEach(function (name) {
+      if (name.length < 3) return;
+      try {
+        if (new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(t)) found.push(name);
+      } catch (e) {}
+    });
+    return found;
+  }
+
+  function networkStores(networkId) {
+    if (networkId === 'dreamscard') return DREAMS_STORES.slice();
+    if (networkId === 'giftzone') return GIFTZONE_STORES.slice();
+    return [];
+  }
+
+  function extractAmounts(text) {
+    const out = [];
+    const patterns = [
+      /(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)\s*(?:ש"ח|₪|שקל|NIS|nis)\b/g,
+      /(?:שווי|בשווי|סכום|יתרה|שובר)\s*(?:של\s*)?(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)/g
+    ];
+    patterns.forEach(function (re) {
+      let m;
+      const r = new RegExp(re.source, re.flags);
+      while ((m = r.exec(text)) !== null) {
+        const num = parseFloat(String(m[1] || m[0]).replace(/,/g, ''));
+        if (!isNaN(num) && num > 0) out.push(num);
+      }
+    });
+    return out;
+  }
+
+  function extractDates(text) {
+    const dates = [];
+    const re1 = /\b(\d{1,2})[./](\d{1,2})[./](\d{2,4})\b/g;
+    let m;
+    while ((m = re1.exec(text)) !== null) {
+      let d = m[1], mo = m[2], y = m[3];
+      if (y.length === 2) y = '20' + y;
+      dates.push(y + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0'));
+    }
+    const reCard = /(?:תוקף|exp|EXP)[^\d]{0,8}(\d{1,2})\s*\/\s*(\d{2,4})/i;
+    const cm = text.match(reCard);
+    if (cm) {
+      const mm = cm[1];
+      let yy = cm[2];
+      if (yy.length === 2) yy = '20' + yy;
+      dates.push('card:' + String(mm).padStart(2, '0') + '/' + yy.slice(-2));
+    }
+    return dates;
+  }
+
+  function extractCardBlocks(text) {
+    const blocks = [];
+    const re = /\b(\d{4})[-\s]?(\d{4})[-\s]?(\d{4})[-\s]?(\d{4})\b/g;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      const num = m[1] + m[2] + m[3] + m[4];
+      const slice = text.slice(Math.max(0, m.index - 120), Math.min(text.length, m.index + 120));
+      let exp = '';
+      let cvv = '';
+      const em = slice.match(/(?:תוקף|exp)[^\d]{0,10}(\d{1,2})\s*\/\s*(\d{2,4})/i);
+      if (em) exp = em[1].padStart(2, '0') + '/' + (em[2].length === 2 ? em[2] : em[2].slice(-2));
+      const cv = slice.match(/\b(\d{3})\b/);
+      if (cv) cvv = cv[1];
+      blocks.push({ cardNumber: num.replace(/(\d{4})(?=\d)/g, '$1-'), cardExpiry: exp, cardCvv: cvv, index: m.index });
+    }
+    return blocks;
+  }
+
+  function extractSimpleCodes(text) {
+    const codes = [];
+    const re = /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g;
+    const stripped = text.replace(re, function (x) {
+      return ' ';
+    });
+    const re2 = /\b(?:\d{8,}(?:[-\s]\d{2,})*)\b/g;
+    let m;
+    while ((m = re2.exec(stripped)) !== null) {
+      const c = m[0].replace(/\s+/g, '');
+      if (c.replace(/\D/g, '').length >= 8) codes.push({ code: c, index: m.index });
+    }
+    return codes;
+  }
+
+  function pickOccasion(text) {
+    for (let i = 0; i < OCCASIONS.length; i++) {
+      if (OCCASIONS[i].re.test(text)) return OCCASIONS[i];
+    }
+    return null;
+  }
+
+  function smartName(network, amount, sourceId, occ, lang) {
+    const parts = [];
+    if (network === 'giftzone') parts.push('GiftZone');
+    else if (network === 'dreamscard') parts.push('DreamsCard');
+    if (amount) parts.push(String(amount) + ' NIS');
+    if (sourceId === 'amdocs') parts.push('(Amdocs)');
+    else if (sourceId) parts.push('(' + sourceId + ')');
+    if (occ) parts.push(lang === 'he' ? occ.he : occ.en);
+    return parts.join(' ').trim() || (lang === 'he' ? 'שובר' : 'Voucher');
+  }
+
+  function parsePastedText(raw, lang, learnMap) {
+    const text = preProcess(raw);
+    const urls = extractUrls(text);
+    let links = { storesList: '', balanceCheck: '', voucherView: '', personalArea: '' };
+    urls.forEach(function (u) {
+      links = mergeLinks(links, categorizeUrl(u));
+    });
+    const sourceId = detectSource(text);
+    const storeTags = detectStoresInText(text);
+    const amounts = extractAmounts(text);
+    const dates = extractDates(text);
+    const occ = pickOccasion(text);
+    const cards = extractCardBlocks(text);
+    const simples = extractSimpleCodes(text);
+    const network = sourceId === 'dreamscard' ? 'dreamscard' : sourceId === 'giftzone' ? 'giftzone' : '';
+    let inherited = [];
+    if (network && learnMap && learnMap[network]) inherited = learnMap[network].slice();
+
+    const drafts = [];
+    const mainAmount = amounts.length ? amounts[0] : null;
+
+    function baseDraft() {
+      return {
+        type: 'value',
+        status: 'active',
+        name: '',
+        storeTags: Array.from(new Set(storeTags.concat(inherited))),
+        category: 'shopping',
+        source: sourceId,
+        sourceText: text.slice(0, 400),
+        codeType: 'simple',
+        code: '',
+        cardNumber: '',
+        cardExpiry: '',
+        cardCvv: '',
+        originalAmount: mainAmount || '',
+        remainingBalance: mainAmount || '',
+        offerDescription: '',
+        expiryDate: '',
+        validFromDate: '',
+        noExpiry: false,
+        links: Object.assign({}, links),
+        howToUse: '',
+        notes: '',
+        favorite: false,
+        photo: null,
+        usageHistory: [],
+        _manyStores: !!links.storesList
+      };
+    }
+
+    if (cards.length) {
+      cards.forEach(function (c, idx) {
+        const d = baseDraft();
+        d.codeType = 'card';
+        d.cardNumber = c.cardNumber;
+        d.cardExpiry = c.cardExpiry;
+        d.cardCvv = c.cardCvv;
+        d.name = smartName(network, mainAmount, sourceId, occ, lang) + (cards.length > 1 ? ' #' + (idx + 1) : '');
+        if (network) d.storeTags = Array.from(new Set(d.storeTags.concat(networkStores(network))));
+        const cd = dates.find(function (x) { return String(x).startsWith('card:'); });
+        if (cd) d.cardExpiry = cd.replace('card:', '');
+        drafts.push(d);
+      });
+    }
+
+    if (simples.length) {
+      const byVal = {};
+      simples.forEach(function (s) {
+        byVal[s.code] = (byVal[s.code] || 0) + 1;
+      });
+      const uniqueCodes = Object.keys(byVal);
+      if (uniqueCodes.length === 1 && byVal[uniqueCodes[0]] > 1 && mainAmount) {
+        const n = byVal[uniqueCodes[0]];
+        for (let i = 0; i < n; i++) {
+          const d = baseDraft();
+          d.code = uniqueCodes[0];
+          d.name = smartName(network, mainAmount, sourceId, occ, lang) + ' #' + (i + 1);
+          if (network) d.storeTags = Array.from(new Set(d.storeTags.concat(networkStores(network))));
+          const plainDates = dates.filter(function (x) { return !String(x).startsWith('card:'); });
+          if (plainDates[0]) d.expiryDate = plainDates[0];
+          drafts.push(d);
+        }
+      } else {
+        uniqueCodes.forEach(function (code, idx) {
+          const d = baseDraft();
+          d.code = code;
+          d.name = smartName(network, mainAmount, sourceId, occ, lang) + (uniqueCodes.length > 1 ? ' #' + (idx + 1) : '');
+          if (network) d.storeTags = Array.from(new Set(d.storeTags.concat(networkStores(network))));
+          const plainDates = dates.filter(function (x) { return !String(x).startsWith('card:'); });
+          if (plainDates[idx] || plainDates[0]) d.expiryDate = plainDates[idx] || plainDates[0];
+          drafts.push(d);
+        });
+      }
+    }
+
+    if (!drafts.length) {
+      const d = baseDraft();
+      d.status = 'pending';
+      d.name = smartName(network, mainAmount, sourceId, occ, lang);
+      if (mainAmount) {
+        d.originalAmount = mainAmount;
+        d.remainingBalance = mainAmount;
+      }
+      const plainDates = dates.filter(function (x) { return !String(x).startsWith('card:'); });
+      if (plainDates[0]) d.expiryDate = plainDates[0];
+      if (/מולטיפאס|שובר|הטבה|קופון/i.test(text) && !mainAmount) {
+        d.type = 'offer';
+        d.offerDescription = text.slice(0, 280);
+      }
+      if (network) d.storeTags = Array.from(new Set(d.storeTags.concat(networkStores(network))));
+      drafts.push(d);
+    } else {
+      drafts.forEach(function (d) {
+        const plainDates = dates.filter(function (x) { return !String(x).startsWith('card:'); });
+        if (!d.expiryDate && plainDates[0]) d.expiryDate = plainDates[0];
+      });
+    }
+
+    if (/אגאדיר/i.test(text) && amounts.length >= 2) {
+      const d2 = baseDraft();
+      d2.name = (lang === 'he' ? 'אגאדיר — הטבה נוספת' : 'Agadir — extra offer');
+      d2.type = 'offer';
+      d2.offerDescription = text.slice(0, 200);
+      d2.originalAmount = '';
+      d2.remainingBalance = '';
+      drafts.push(d2);
+    }
+
+    return { drafts: drafts, raw: text };
+  }
+
+  Va.parsePastedText = parsePastedText;
+  Va.KNOWN_STORES = KNOWN_STORES;
+  Va.KNOWN_SOURCES = KNOWN_SOURCES;
+})();
+(function () {
+  'use strict';
+  const Va = window.VoucherApp;
+  const state = Va.state;
+
+  let unsubV = null;
+  let unsubS = null;
+  const plainMap = {};
+
+  function $(id) { return document.getElementById(id); }
+
+  function showOnly(el) {
+    ['screen-welcome', 'screen-rejected', 'screen-phone-collect', 'screen-passphrase', 'main-app'].forEach(function (id) {
+      const n = $(id);
+      if (n) n.hidden = id !== el;
+    });
+  }
+
+  function showTab(name) {
+    document.querySelectorAll('.tab-page').forEach(function (n) { n.hidden = true; });
+    const page = $('tab-' + name);
+    if (page) page.hidden = false;
+    document.querySelectorAll('.nav-item').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-tab') === name);
+    });
+  }
+
+  function categoryMeta(id) {
+    const c = Va.CATEGORIES.find(function (x) { return x.id === id; });
+    return c || Va.CATEGORIES[4];
+  }
+
+  function parseYmd(s) {
+    if (!s) return null;
+    const p = String(s).split('-');
+    if (p.length < 3) return null;
+    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  }
+
+  function daysUntilExpiry(v) {
+    if (v.noExpiry) return Infinity;
+    const d = parseYmd(v.expiryDate);
+    if (!d) return Infinity;
+    return Math.ceil((d - new Date()) / 86400000);
+  }
+
+  function expiryBadge(v) {
+    const d = daysUntilExpiry(v);
+    if (v.noExpiry || !v.expiryDate) return { cls: 'gray', text: '—' };
+    if (d < 0) return { cls: 'red', text: String(d) };
+    if (d <= 7) return { cls: 'orange', text: String(d) };
+    if (d <= 30) return { cls: 'yellow', text: String(d) };
+    if (d <= 90) return { cls: 'green', text: String(d) };
+    return { cls: 'blue', text: String(d) };
+  }
+
+  function isCodeMissing(v) {
+    const p = plainMap[v.id] || {};
+    if (v.codeType === 'card') return !p.cardNumber;
+    return !p.code;
+  }
+
+  function filterVouchers(list) {
+    const q = ($('v-search') && $('v-search').value || $('dash-search') && $('dash-search').value || '').toLowerCase();
+    return list.filter(function (v) {
+      const p = plainMap[v.id] || {};
+      const hay = (v.name + ' ' + (v.storeTags || []).join(' ') + ' ' + (p.code || '') + ' ' + (v.source || '')).toLowerCase();
+      if (q && hay.indexOf(q) < 0) return false;
+      const d = daysUntilExpiry(v);
+      if (state.currentFilter === 'active') return v.status === 'active' && d >= 0;
+      if (state.currentFilter === 'expiring') return v.status === 'active' && d >= 0 && d <= 7;
+      if (state.currentFilter === 'pending') return v.status === 'pending';
+      return true;
+    });
+  }
+
+  function sortVouchers(list) {
+    const mode = $('sort-select') ? $('sort-select').value : 'expiry';
+    const arr = list.slice();
+    arr.sort(function (a, b) {
+      if (mode === 'balance') return Number(b.remainingBalance || 0) - Number(a.remainingBalance || 0);
+      if (mode === 'name') return (a.name || '').localeCompare(b.name || '', state.lang === 'he' ? 'he' : 'en');
+      if (mode === 'added') return String(b.createdAt || '') > String(a.createdAt || '') ? 1 : -1;
+      if (mode === 'used') {
+        const ah = (a.usageHistory && a.usageHistory.length) ? a.usageHistory[a.usageHistory.length - 1].date : '';
+        const bh = (b.usageHistory && b.usageHistory.length) ? b.usageHistory[b.usageHistory.length - 1].date : '';
+        return String(bh) > String(ah) ? 1 : -1;
+      }
+      return daysUntilExpiry(a) - daysUntilExpiry(b);
+    });
+    return arr;
+  }
+
+  function pinOrder(list) {
+    const urgent = [];
+    const fav = [];
+    const rest = [];
+    list.forEach(function (v) {
+      const u = v.status === 'active' && daysUntilExpiry(v) >= 0 && daysUntilExpiry(v) <= 7;
+      if (u) urgent.push(v);
+      else if (v.favorite) fav.push(v);
+      else rest.push(v);
+    });
+    return urgent.concat(fav, rest);
+  }
+
+  async function rebuildPlain() {
+    Object.keys(plainMap).forEach(function (k) { delete plainMap[k]; });
+    const key = state.derivedKey;
+    if (!key) return;
+    for (let i = 0; i < state.vouchers.length; i++) {
+      const v = state.vouchers[i];
+      plainMap[v.id] = await Va.decryptVoucherFields(key, v);
+    }
+  }
+
+  function codeExists(code, excludeId) {
+    if (!code) return false;
+    for (let i = 0; i < state.vouchers.length; i++) {
+      const v = state.vouchers[i];
+      if (excludeId && v.id === excludeId) continue;
+      const p = plainMap[v.id] || {};
+      if (p.code && p.code === code) return true;
+      const norm = String(code).replace(/\D/g, '');
+      if (norm.length >= 8 && p.cardNumber && String(p.cardNumber).replace(/\D/g, '') === norm) return true;
+    }
+    return false;
+  }
+
+  function renderDashStats() {
+    const box = $('dash-stats');
+    if (!box) return;
+    const active = state.vouchers.filter(function (v) { return v.status === 'active' && daysUntilExpiry(v) >= 0; });
+    const exp = active.filter(function (v) { return daysUntilExpiry(v) <= 7; });
+    const pend = state.vouchers.filter(function (v) { return v.status === 'pending'; });
+    box.innerHTML = '<div class="stat-card" data-jump="active"><b>' + active.length + '</b><span class="small">' + Va.t('statActive') + '</span></div>' +
+      '<div class="stat-card" data-jump="expiring"><b>' + exp.length + '</b><span class="small">' + Va.t('statExpiring') + '</span></div>' +
+      '<div class="stat-card" data-jump="pending"><b>' + pend.length + '</b><span class="small">' + Va.t('statPending') + '</span></div>';
+    box.querySelectorAll('.stat-card').forEach(function (c) {
+      c.onclick = function () {
+        const j = c.getAttribute('data-jump');
+        state.currentFilter = j === 'expiring' ? 'expiring' : j === 'pending' ? 'pending' : 'active';
+        showTab('vouchers');
+        renderVouchers();
+        updateFilterChips();
+      };
+    });
+  }
+
+  function renderDashboard() {
+    let sum = 0;
+    state.vouchers.forEach(function (v) {
+      if (v.type === 'value' && v.status === 'active' && daysUntilExpiry(v) >= 0) {
+        sum += Number(v.remainingBalance || 0) || 0;
+      }
+    });
+    const bal = $('dash-total-balance');
+    if (bal) bal.textContent = Va.money(sum);
+    renderDashStats();
+    const expiring = state.vouchers.filter(function (v) {
+      return v.status === 'active' && daysUntilExpiry(v) >= 0 && daysUntilExpiry(v) <= 7;
+    });
+    const ban = $('dash-expiry-banner');
+    if (ban) {
+      if (expiring.length) {
+        ban.hidden = false;
+        ban.textContent = Va.t('expiringBanner') + ' (' + expiring.length + ')';
+        ban.onclick = function () {
+          state.currentFilter = 'expiring';
+          showTab('vouchers');
+          renderVouchers();
+          updateFilterChips();
+        };
+      } else ban.hidden = true;
+    }
+    const favs = $('dash-favorites');
+    if (favs) {
+      favs.innerHTML = '';
+      state.vouchers.filter(function (v) { return v.favorite && v.status === 'active'; }).slice(0, 12).forEach(function (v) {
+        const cm = categoryMeta(v.category);
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = '<div class="card-strip" style="background:var(--' + cm.color + ')"></div><b>' + escapeHtml(v.name) + '</b><div class="small">' + Va.money(v.remainingBalance) + '</div>';
+        card.onclick = function () { openSheet(v); };
+        favs.appendChild(card);
+      });
+    }
+    const off = $('dash-offers');
+    if (off) {
+      off.innerHTML = '';
+      state.vouchers.filter(function (v) { return v.type === 'offer' && v.status === 'active'; }).slice(0, 8).forEach(function (v) {
+        const row = document.createElement('div');
+        row.className = 'list-row';
+        row.innerHTML = '<div><b>' + escapeHtml(v.name) + '</b><div class="small">' + escapeHtml((v.offerDescription || '').slice(0, 80)) + '</div></div>';
+        row.onclick = function () { openSheet(v); };
+        off.appendChild(row);
+      });
+    }
+    const empty = $('dash-empty');
+    if (empty) empty.hidden = state.vouchers.length > 0;
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
+
+  function updateFilterChips() {
+    const box = $('filter-chips');
+    if (!box) return;
+    const opts = [
+      { id: 'active', key: 'filterActive' },
+      { id: 'expiring', key: 'filterExpiring' },
+      { id: 'pending', key: 'filterPending' },
+      { id: 'all', key: 'filterAll' }
+    ];
+    box.innerHTML = '';
+    opts.forEach(function (o) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip' + (state.currentFilter === o.id ? ' active' : '');
+      b.textContent = Va.t(o.key);
+      b.onclick = function () {
+        state.currentFilter = o.id;
+        updateFilterChips();
+        renderVouchers();
+      };
+      box.appendChild(b);
+    });
+  }
+
+  function fillSelects() {
+    const fc = $('filter-category');
+    if (fc) {
+      fc.innerHTML = '<option value="">' + Va.t('catAll') + '</option>' +
+        Va.CATEGORIES.map(function (c) {
+          return '<option value="' + c.id + '">' + (state.lang === 'he' ? c.he : c.en) + '</option>';
+        }).join('');
+    }
+    const fs = $('filter-source');
+    if (fs) {
+      const srcs = Array.from(new Set(state.vouchers.map(function (v) { return v.source; }).filter(Boolean)));
+      fs.innerHTML = '<option value="">' + Va.t('srcAll') + '</option>' +
+        srcs.map(function (s) { return '<option value="' + escapeHtml(s) + '">' + escapeHtml(s) + '</option>'; }).join('');
+    }
+    const so = $('sort-select');
+    if (so && !so._filled) {
+      so.innerHTML =
+        '<option value="expiry">' + Va.t('sortExpiry') + '</option>' +
+        '<option value="balance">' + Va.t('sortBalance') + '</option>' +
+        '<option value="name">' + Va.t('sortName') + '</option>' +
+        '<option value="added">' + Va.t('sortAdded') + '</option>' +
+        '<option value="used">' + Va.t('sortUsed') + '</option>';
+      so._filled = true;
+      so.onchange = function () { renderVouchers(); };
+    }
+  }
+
+  function renderVouchers() {
+    updateFilterChips();
+    fillSelects();
+    const listEl = $('voucher-list');
+    if (!listEl) return;
+    let list = state.vouchers.filter(function (v) { return v.status !== 'archived'; });
+    list = filterVouchers(list);
+    const cat = $('filter-category') && $('filter-category').value;
+    const src = $('filter-source') && $('filter-source').value;
+    if (cat) list = list.filter(function (v) { return v.category === cat; });
+    if (src) list = list.filter(function (v) { return v.source === src; });
+    list = pinOrder(sortVouchers(list));
+    const view = state.voucherView || 'card';
+    listEl.innerHTML = '';
+    if (!list.length) {
+      listEl.innerHTML = '<div class="empty">' + Va.t('dashEmpty') + '</div>';
+      return;
+    }
+    list.forEach(function (v) {
+      const cm = categoryMeta(v.category);
+      const eb = expiryBadge(v);
+      const urgent = v.status === 'active' && daysUntilExpiry(v) >= 0 && daysUntilExpiry(v) <= 7;
+      const miss = isCodeMissing(v);
+      const low = v.type === 'value' && v.originalAmount && Number(v.remainingBalance) < Number(v.originalAmount) * 0.15;
+      if (view === 'list') {
+        const row = document.createElement('div');
+        row.className = 'list-row' + (urgent ? ' urgent' : '');
+        row.innerHTML = '<div><b>' + escapeHtml(v.name) + '</b><div class="small">' + (v.type === 'value' ? Va.money(v.remainingBalance) : escapeHtml((v.offerDescription || '').slice(0, 60))) + '</div></div>' +
+          '<span class="badge ' + eb.cls + '">' + eb.text + '</span>';
+        row.onclick = function () { openSheet(v); };
+        listEl.appendChild(row);
+        return;
+      }
+      const card = document.createElement('div');
+      card.className = 'card' + (urgent ? ' urgent' : '');
+      card.innerHTML =
+        '<div class="card-strip" style="background:var(--' + cm.color + ')"></div>' +
+        '<button type="button" class="star-btn" data-id="' + v.id + '">' + (v.favorite ? '★' : '☆') + '</button>' +
+        '<div class="row-between"><div><div class="small">' + escapeHtml((v.storeTags || []).join(', ')) + '</div><b>' + escapeHtml(v.name) + '</b></div></div>' +
+        '<div class="balance-big mt8">' + (v.type === 'value' ? Va.money(v.remainingBalance) : escapeHtml((v.offerDescription || '').slice(0, 120))) + '</div>' +
+        '<div class="row mt8">' +
+        '<span class="badge ' + eb.cls + '">' + eb.text + '</span>' +
+        (v.status === 'pending' ? '<span class="badge pending">' + Va.t('pending') + '</span>' : '') +
+        (miss ? '<span class="badge code-miss">' + Va.t('codeMissing') + '</span>' : '') +
+        (low ? '<span class="badge orange">' + Va.t('almostEmpty') + '</span>' : '') +
+        '</div>' +
+        '<div class="row mt8">' +
+        '<button type="button" class="btn secondary" data-copy="' + v.id + '">' + Va.t('copyCode') + '</button>' +
+        '<button type="button" class="btn" data-use="' + v.id + '">' + Va.t('use') + '</button>' +
+        '</div>';
+      card.querySelector('[data-copy]').onclick = function (e) {
+        e.stopPropagation();
+        const p = plainMap[v.id] || {};
+        copyText(p.code || p.cardNumber || '');
+      };
+      card.querySelector('[data-use]').onclick = function (e) {
+        e.stopPropagation();
+        markQuickUse(v);
+      };
+      card.querySelector('.star-btn').onclick = function (e) {
+        e.stopPropagation();
+        toggleFav(v);
+      };
+      card.onclick = function () { openSheet(v); };
+      listEl.appendChild(card);
+    });
+  }
+
+  async function toggleFav(v) {
+    await Va.vouchersCol(state.activeAccountId).doc(v.id).update({ favorite: !v.favorite, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+  }
+
+  async function markQuickUse(v) {
+    const amt = prompt(Va.t('amount'), v.type === 'value' ? String(v.remainingBalance || '') : '0');
+    if (amt == null) return;
+    const note = prompt(Va.t('note'), '') || '';
+    const hist = (v.usageHistory || []).concat([{ date: new Date().toISOString().slice(0, 10), amount: Number(amt) || 0, note: note }]);
+    let rem = v.remainingBalance;
+    if (v.type === 'value') rem = Math.max(0, Number(v.remainingBalance) - Number(amt));
+    const status = v.type === 'value' && rem <= 0 ? 'archived' : v.status;
+    await Va.vouchersCol(state.activeAccountId).doc(v.id).update({
+      usageHistory: hist,
+      remainingBalance: rem,
+      status: status,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  function openSheet(v) {
+    const p = plainMap[v.id] || {};
+    const sh = $('overlay-sheet');
+    const sc = $('sheet-content');
+    if (!sh || !sc) return;
+    const links = v.links || {};
+    const linkRow = [];
+    if (links.balanceCheck) linkRow.push('<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(links.balanceCheck) + '">' + Va.t('linkBalance') + '</a>');
+    if (links.storesList) linkRow.push('<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(links.storesList) + '">' + Va.t('linkStores') + '</a>');
+    if (links.voucherView) linkRow.push('<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(links.voucherView) + '">' + Va.t('linkVoucher') + '</a>');
+    if (links.personalArea) linkRow.push('<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(links.personalArea) + '">' + Va.t('linkPersonal') + '</a>');
+    let codeBlock = '';
+    if (v.codeType === 'card') {
+      codeBlock = '<div class="mt12"><div class="small">PAN</div><div class="balance-big" style="font-size:1.1rem;word-break:break-all">' + escapeHtml(p.cardNumber || '') +
+        '</div><div class="row mt8"><div><div class="small">EXP</div><button type="button" class="btn secondary" id="cp-exp">' + escapeHtml(p.cardExpiry || '') + '</button></div>' +
+        '<div><div class="small">CVV</div><button type="button" class="btn secondary" id="cp-cvv">' + escapeHtml(p.cardCvv || '') + '</button></div></div></div>';
+    } else {
+      codeBlock = '<div class="mt12"><div class="small">' + Va.t('copyCode') + '</div><div class="balance-big" style="font-size:1.4rem;word-break:break-all">' + escapeHtml(p.code || '') + '</div>' +
+        '<button type="button" class="btn mt8" id="cp-code">' + Va.t('copyCode') + '</button></div>';
+    }
+    sc.innerHTML = '<div class="row-between"><b>' + escapeHtml(v.name) + '</b><button type="button" class="btn ghost" id="sheet-close">' + Va.t('close') + '</button></div>' +
+      codeBlock +
+      '<p class="mt12 small">' + escapeHtml(v.howToUse || '') + '</p>' +
+      '<div class="dl-links mt12">' + linkRow.join('') + '</div>' +
+      '<div class="row mt12"><button type="button" class="btn" id="sheet-use">' + Va.t('sheetUse') + '</button>' +
+      '<button type="button" class="btn secondary" id="sheet-cal">' + Va.t('addToCalendar') + '</button>' +
+      '<button type="button" class="btn secondary" id="sheet-more">' + Va.t('moreDetails') + '</button></div>';
+    sh.hidden = false;
+    $('sheet-close').onclick = closeSheet;
+    const cpc = $('cp-code');
+    if (cpc) cpc.onclick = function () { Va.copyText(p.code || ''); };
+    const cpe = $('cp-exp');
+    if (cpe) cpe.onclick = function () { Va.copyText(p.cardExpiry || ''); };
+    const cpv = $('cp-cvv');
+    if (cpv) cpv.onclick = function () { Va.copyText(p.cardCvv || ''); };
+    $('sheet-use').onclick = function () { markQuickUse(v); closeSheet(); };
+    $('sheet-more').onclick = function () { closeSheet(); openDetailModal(v); };
+    $('sheet-cal').onclick = function () {
+      const title = encodeURIComponent(v.name);
+      const det = encodeURIComponent((p.code || p.cardNumber || '') + ' ' + (v.notes || ''));
+      const d = (v.expiryDate || '').replace(/-/g, '');
+      const dates = d ? (d + '/' + d) : '';
+      window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + title + '&details=' + det + (dates ? '&dates=' + dates + '/' + dates : ''), '_blank');
+    };
+    sh.onclick = function (e) { if (e.target === sh) closeSheet(); };
+  }
+
+  function closeSheet() {
+    const sh = $('overlay-sheet');
+    if (sh) sh.hidden = true;
+  }
+
+  function openDetailModal(v) {
+    const om = $('overlay-modal');
+    const mc = $('modal-content');
+    if (!om || !mc) return;
+    const p = plainMap[v.id] || {};
+    mc.innerHTML = '<div class="row-between"><b>' + escapeHtml(v.name) + '</b><button type="button" class="btn ghost" id="mod-close">' + Va.t('close') + '</button></div>' +
+      '<pre class="small" style="white-space:pre-wrap;max-height:40vh;overflow:auto">' + escapeHtml(JSON.stringify(Object.assign({}, v, { code: p.code, cardNumber: p.cardNumber, cardExpiry: p.cardExpiry, cardCvv: p.cardCvv }), null, 2)) + '</pre>' +
+      '<div class="row mt12"><button type="button" class="btn secondary" id="mod-edit">' + Va.t('edit') + '</button>' +
+      '<button type="button" class="btn secondary" id="mod-arch">' + Va.t('archive') + '</button>' +
+      '<button type="button" class="btn danger" id="mod-del">' + Va.t('delete') + '</button></div>';
+    om.hidden = false;
+    $('mod-close').onclick = closeModal;
+    $('mod-arch').onclick = async function () {
+      await Va.vouchersCol(state.activeAccountId).doc(v.id).update({ status: 'archived', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      closeModal();
+    };
+    $('mod-del').onclick = async function () {
+      if (!confirm('OK?')) return;
+      await Va.vouchersCol(state.activeAccountId).doc(v.id).delete();
+      closeModal();
+    };
+    $('mod-edit').onclick = function () {
+      closeModal();
+      openEditForm(v);
+    };
+    om.onclick = function (e) { if (e.target === om) closeModal(); };
+  }
+
+  function closeModal() {
+    const om = $('overlay-modal');
+    if (om) om.hidden = true;
+  }
+
+  function openEditForm(v) {
+    showTab('add');
+    buildManualPanel();
+    const p = plainMap[v.id] || {};
+    $('add-manual-panel').hidden = false;
+    $('add-paste-panel').hidden = true;
+    $('add-review').hidden = true;
+    $('add-manual-panel').innerHTML = manualFormHtml(v, p);
+    wireManualForm(v.id);
+  }
+
+  function manualFormHtml(v, p) {
+    v = v || {};
+    p = p || {};
+    return '<h3 class="screen-title" style="font-size:1.1rem">' + Va.t('manualTitle') + '</h3>' +
+      field('name', Va.t('name'), 'text', v.name || '') +
+      '<div class="row"><select class="input" id="mf-type"><option value="value"' + (v.type === 'value' ? ' selected' : '') + '>' + Va.t('typeValue') + '</option><option value="offer"' + (v.type === 'offer' ? ' selected' : '') + '>' + Va.t('typeOffer') + '</option></select>' +
+      '<select class="input" id="mf-codeType"><option value="simple"' + ((v.codeType || 'simple') === 'simple' ? ' selected' : '') + '>' + Va.t('codeSimple') + '</option><option value="card"' + (v.codeType === 'card' ? ' selected' : '') + '>' + Va.t('codeCard') + '</option></select></div>' +
+      field('code', 'Code', 'text', p.code || '') +
+      field('cardNumber', 'PAN', 'text', p.cardNumber || '') +
+      field('cardExpiry', 'EXP', 'text', p.cardExpiry || '') +
+      field('cardCvv', 'CVV', 'text', p.cardCvv || '') +
+      field('storeTags', Va.t('storeTags'), 'text', (v.storeTags || []).join(', ')) +
+      '<label class="lbl">' + Va.t('category') + '</label><select class="input" id="mf-cat">' +
+      Va.CATEGORIES.map(function (c) {
+        return '<option value="' + c.id + '"' + (v.category === c.id ? ' selected' : '') + '>' + (state.lang === 'he' ? c.he : c.en) + '</option>';
+      }).join('') + '</select>' +
+      field('source', Va.t('source'), 'text', v.source || '') +
+      field('sourceText', Va.t('sourceText'), 'textarea', v.sourceText || '') +
+      field('originalAmount', Va.t('originalAmount'), 'number', v.originalAmount) +
+      field('remainingBalance', Va.t('remainingBalance'), 'number', v.remainingBalance) +
+      field('offerDescription', Va.t('offerDesc'), 'textarea', v.offerDescription || '') +
+      field('expiryDate', Va.t('expiryDate'), 'date', v.expiryDate || '') +
+      field('validFromDate', Va.t('validFrom'), 'date', v.validFromDate || '') +
+      '<label class="lbl"><input type="checkbox" id="mf-noexp" ' + (v.noExpiry ? 'checked' : '') + '/> ' + Va.t('noExpiry') + '</label>' +
+      field('links-balance', Va.t('linkBalance'), 'text', (v.links && v.links.balanceCheck) || '') +
+      field('links-stores', Va.t('linkStores'), 'text', (v.links && v.links.storesList) || '') +
+      field('links-view', Va.t('linkVoucher'), 'text', (v.links && v.links.voucherView) || '') +
+      field('links-personal', Va.t('linkPersonal'), 'text', (v.links && v.links.personalArea) || '') +
+      field('howToUse', Va.t('howToUse'), 'textarea', v.howToUse || '') +
+      field('notes', Va.t('notes'), 'textarea', v.notes || '') +
+      '<label class="lbl">' + Va.t('photo') + '</label><input type="file" accept="image/*" capture="environment" id="mf-photo" />' +
+      '<button type="button" class="btn mt12" id="mf-save">' + Va.t('save') + '</button>';
+    function field(id, label, type, val) {
+      if (type === 'textarea') {
+        return '<label class="lbl">' + label + '</label><textarea class="input" id="mf-' + id + '">' + escapeHtml(val || '') + '</textarea>';
+      }
+      return '<label class="lbl">' + label + '</label><input class="input" id="mf-' + id + '" type="' + type + '" value="' + escapeHtml(val != null ? String(val) : '') + '" />';
+    }
+  }
+
+  function buildManualPanel() {
+    const p = $('add-manual-panel');
+    if (p && !p._built) {
+      p._built = true;
+    }
+  }
+
+  function wireManualForm(existingId) {
+    $('mf-save').onclick = async function () {
+      const v = readManualForm();
+      const enc = await Va.encryptVoucherFields(state.derivedKey, {
+        code: v.code,
+        cardNumber: v.cardNumber,
+        cardExpiry: v.cardExpiry,
+        cardCvv: v.cardCvv
+      });
+      delete v.code;
+      delete v.cardNumber;
+      delete v.cardExpiry;
+      delete v.cardCvv;
+      Object.assign(v, enc);
+      const col = Va.vouchersCol(state.activeAccountId);
+      if (existingId) {
+        await col.doc(existingId).set(Object.assign(v, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() }), { merge: true });
+      } else {
+        await col.add(Object.assign(v, {
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: state.authUser && state.authUser.uid
+        }));
+      }
+      Va.toast(Va.t('save'));
+      showTab('vouchers');
+    };
+    const ph = $('mf-photo');
+    if (ph) {
+      ph.onchange = async function () {
+        const f = ph.files && ph.files[0];
+        if (!f) return;
+        const b64 = await fileToB64(f);
+        window._mfPhotoB64 = b64;
+        Va.toast('Image ready');
+      };
+    }
+  }
+
+  function readManualForm() {
+    const tags = ($('mf-storeTags') && $('mf-storeTags').value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    return {
+      type: $('mf-type').value,
+      status: 'active',
+      name: $('mf-name').value,
+      storeTags: tags,
+      category: $('mf-cat').value,
+      source: $('mf-source').value,
+      sourceText: $('mf-sourceText').value,
+      codeType: $('mf-codeType').value,
+      code: $('mf-code').value,
+      cardNumber: $('mf-cardNumber').value,
+      cardExpiry: $('mf-cardExpiry').value,
+      cardCvv: $('mf-cardCvv').value,
+      originalAmount: Number($('mf-originalAmount').value) || '',
+      remainingBalance: Number($('mf-remainingBalance').value) || '',
+      offerDescription: $('mf-offerDescription').value,
+      expiryDate: $('mf-expiryDate').value,
+      validFromDate: $('mf-validFromDate').value,
+      noExpiry: $('mf-noexp').checked,
+      links: {
+        balanceCheck: $('mf-links-balance').value,
+        storesList: $('mf-links-stores').value,
+        voucherView: $('mf-links-view').value,
+        personalArea: $('mf-links-personal').value
+      },
+      howToUse: $('mf-howToUse').value,
+      notes: $('mf-notes').value,
+      favorite: false,
+      photo: window._mfPhotoB64 || null,
+      usageHistory: []
+    };
+  }
+
+  function fileToB64(file) {
+    return new Promise(function (res, rej) {
+      const r = new FileReader();
+      r.onload = function () { res(r.result); };
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+  }
+
+  function renderArchive() {
+    const list = $('archive-list');
+    const empty = $('archive-empty');
+    if (!list) return;
+    const arr = state.vouchers.filter(function (v) { return v.status === 'archived'; });
+    list.innerHTML = '';
+    empty.hidden = arr.length > 0;
+    arr.forEach(function (v) {
+      const row = document.createElement('div');
+      row.className = 'card';
+      row.innerHTML = '<b>' + escapeHtml(v.name) + '</b><div class="row mt12">' +
+        '<button type="button" class="btn secondary" data-rest="' + v.id + '">' + Va.t('restore') + '</button>' +
+        '<button type="button" class="btn danger" data-del="' + v.id + '">' + Va.t('deleteForever') + '</button></div>';
+      row.querySelector('[data-rest]').onclick = async function () {
+        await Va.vouchersCol(state.activeAccountId).doc(v.id).update({ status: 'active', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      };
+      row.querySelector('[data-del]').onclick = async function () {
+        if (!confirm('OK?')) return;
+        await Va.vouchersCol(state.activeAccountId).doc(v.id).delete();
+      };
+      list.appendChild(row);
+    });
+  }
+
+  function renderSettings() {
+    const u = state.authUser;
+    const su = $('settings-user');
+    if (su) {
+      su.innerHTML = '<h3>' + Va.t('userSection') + '</h3><div class="small">' + Va.t('signedInAs') + ': ' + escapeHtml(u && u.displayName || '') + '</div>' +
+        '<div class="small">' + Va.t('phone') + ': ' + escapeHtml(state.normalizedPhone) + '</div>' +
+        '<div class="small">' + Va.t('method') + ': ' + (u && u.phoneNumber ? Va.t('phoneAuth') : Va.t('google')) + '</div>' +
+        '<button type="button" class="btn danger mt12" id="btn-so">' + Va.t('signOut') + '</button>';
+      $('btn-so').onclick = function () { Va.auth().signOut(); location.reload(); };
+    }
+    const sh = $('settings-sharing');
+    if (sh && state.isOwner) {
+      const phones = (state.settingsDoc && state.settingsDoc.approvedPhones) ? state.settingsDoc.approvedPhones.slice() : [];
+      sh.innerHTML = '<h3>' + Va.t('sharingSection') + '</h3><div id="ap-list" class="mt8"></div>' +
+        '<div class="row mt8"><input class="input" id="ap-new" placeholder="+972..." /><button type="button" class="btn" id="ap-add">' + Va.t('addPhone') + '</button></div>';
+      const lst = $('ap-list');
+      phones.forEach(function (p) {
+        const row = document.createElement('div');
+        row.className = 'row-between mt8';
+        row.innerHTML = '<span>' + escapeHtml(p) + '</span><button type="button" class="btn secondary" data-rm="' + escapeHtml(p) + '">' + Va.t('remove') + '</button>';
+        row.querySelector('button').onclick = async function () {
+          await Va.removeApprovedPhone(state.activeAccountId, p, state.normalizedPhone || '');
+        };
+        lst.appendChild(row);
+      });
+      $('ap-add').onclick = async function () {
+        const np = Va.normalizeIsraeliPhone($('ap-new').value);
+        if (np.length < 10) return;
+        await Va.addApprovedPhone(state.activeAccountId, np);
+        $('ap-new').value = '';
+      };
+    } else if (sh) {
+      sh.innerHTML = '<h3>' + Va.t('sharingSection') + '</h3><p class="small">' + Va.t('rejectedBody') + '</p>';
+    }
+    const disp = $('settings-display');
+    if (disp) {
+      disp.innerHTML = '<h3>' + Va.t('displaySection') + '</h3>' +
+        '<div class="row"><button type="button" class="btn secondary" id="lg-he">' + Va.t('langHe') + '</button><button type="button" class="btn secondary" id="lg-en">' + Va.t('langEn') + '</button></div>' +
+        '<div class="row mt8"><button type="button" class="btn secondary" id="th-a">' + Va.t('themeAuto') + '</button><button type="button" class="btn secondary" id="th-l">' + Va.t('themeLight') + '</button><button type="button" class="btn secondary" id="th-d">' + Va.t('themeDark') + '</button></div>' +
+        '<div class="row mt8"><button type="button" class="btn secondary" id="dv-c">' + Va.t('viewCard') + '</button><button type="button" class="btn secondary" id="dv-l">' + Va.t('viewList') + '</button></div>' +
+        '<button type="button" class="btn mt12" id="btn-chg-pass">' + Va.t('changePass') + '</button>';
+      $('lg-he').onclick = function () { persistLang('he'); };
+      $('lg-en').onclick = function () { persistLang('en'); };
+      $('th-a').onclick = function () { persistTheme('auto'); };
+      $('th-l').onclick = function () { persistTheme('light'); };
+      $('th-d').onclick = function () { persistTheme('dark'); };
+      $('dv-c').onclick = function () { persistView('card'); };
+      $('dv-l').onclick = function () { persistView('list'); };
+      $('btn-chg-pass').onclick = async function () {
+        const oldp = prompt('Old passphrase');
+        const newp = prompt('New passphrase');
+        if (!oldp || !newp) return;
+        const snap = await Va.accountRef(state.activeAccountId).get();
+        const salt = snap.data().settings.cryptoSalt;
+        const oldKey = await Va.deriveKeyFromPassphrase(oldp, salt);
+        const newSalt = Va.randomSalt();
+        const newKey = await Va.deriveKeyFromPassphrase(newp, newSalt);
+        for (let i = 0; i < state.vouchers.length; i++) {
+          const v = state.vouchers[i];
+          const plain = await Va.decryptVoucherFields(oldKey, v);
+          const enc = await Va.encryptVoucherFields(newKey, plain);
+          await Va.vouchersCol(state.activeAccountId).doc(v.id).set(enc, { merge: true });
+        }
+        await Va.saveSettingsPatch(state.activeAccountId, { cryptoSalt: newSalt });
+        state.derivedKey = newKey;
+        Va.toast(Va.t('save'));
+      };
+    }
+    const data = $('settings-data');
+    if (data) {
+      data.innerHTML = '<h3>' + Va.t('dataSection') + '</h3>' +
+        '<div class="row"><button type="button" class="btn secondary" id="ex-json">' + Va.t('exportJson') + '</button>' +
+        '<button type="button" class="btn secondary" id="im-json">' + Va.t('importJson') + '</button>' +
+        '<button type="button" class="btn secondary" id="im-csv">' + Va.t('importCsv') + '</button></div>' +
+        '<div class="small mt8" id="lb-bak">' + Va.t('lastBackup') + ': —</div>' +
+        '<input type="file" id="im-file" hidden accept=".json,.csv" />';
+      const lb = (state.settingsDoc && state.settingsDoc.settings && state.settingsDoc.settings.lastBackup) || '';
+      $('lb-bak').textContent = Va.t('lastBackup') + ': ' + (lb || '—');
+      $('ex-json').onclick = async function () {
+        const exportData = [];
+        for (let i = 0; i < state.vouchers.length; i++) {
+          const v = state.vouchers[i];
+          const p = await Va.decryptVoucherFields(state.derivedKey, v);
+          exportData.push(Object.assign({}, v, p));
+        }
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'vouchers.json';
+        a.click();
+        await Va.saveSettingsPatch(state.activeAccountId, { lastBackup: new Date().toISOString() });
+      };
+      $('im-json').onclick = function () { $('im-file').click(); };
+      $('im-csv').onclick = function () { $('im-file').click(); };
+      $('im-file').onchange = async function () {
+        const f = $('im-file').files[0];
+        if (!f) return;
+        const txt = await f.text();
+        if (f.name.endsWith('.json')) {
+          const arr = JSON.parse(txt);
+          for (let i = 0; i < arr.length; i++) {
+            const row = arr[i];
+            const enc = await Va.encryptVoucherFields(state.derivedKey, row);
+            delete row.code;
+            delete row.cardNumber;
+            delete row.cardExpiry;
+            delete row.cardCvv;
+            Object.assign(row, enc);
+            await Va.vouchersCol(state.activeAccountId).add(Object.assign(row, {
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+              createdBy: state.authUser.uid
+            }));
+          }
+        } else {
+          const lines = txt.split(/\r?\n/);
+          const headers = lines[0].split(',');
+          for (let r = 1; r < lines.length; r++) {
+            const cols = lines[r].split(',');
+            if (!cols[0]) continue;
+            const obj = { type: 'value', status: 'active', name: cols[0] || 'CSV', storeTags: [], category: 'other', source: 'csv', links: {}, usageHistory: [] };
+            const enc = await Va.encryptVoucherFields(state.derivedKey, { code: cols[1] || '' });
+            Object.assign(obj, enc);
+            await Va.vouchersCol(state.activeAccountId).add(Object.assign(obj, {
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+              createdBy: state.authUser.uid
+            }));
+          }
+        }
+        Va.toast(Va.t('save'));
+      };
+    }
+    const cal = $('settings-calendar');
+    if (cal) {
+      cal.innerHTML = '<h3>' + Va.t('calendarSection') + '</h3><p class="small">' + Va.t('calRemind') + '</p>' +
+        '<input class="input" id="cal-days" value="7,3,1" />' +
+        '<button type="button" class="btn mt8" id="cal-save">' + Va.t('save') + '</button>';
+      const cur = (state.settingsDoc && state.settingsDoc.settings && state.settingsDoc.settings.calendarReminders) || [7, 3, 1];
+      $('cal-days').value = cur.join(',');
+      $('cal-save').onclick = async function () {
+        const arr = $('cal-days').value.split(',').map(function (x) { return parseInt(x.trim(), 10); }).filter(function (n) { return !isNaN(n); });
+        await Va.saveSettingsPatch(state.activeAccountId, { calendarReminders: arr });
+        Va.toast(Va.t('save'));
+      };
+    }
+  }
+
+  async function persistLang(l) {
+    state.lang = l;
+    Va.applyDirLang();
+    await Va.saveSettingsPatch(state.activeAccountId, { language: l });
+  }
+  async function persistTheme(th) {
+    state.themePref = th;
+    Va.applyTheme();
+    await Va.saveSettingsPatch(state.activeAccountId, { theme: th });
+  }
+  async function persistView(v) {
+    state.defaultView = v;
+    state.voucherView = v;
+    await Va.saveSettingsPatch(state.activeAccountId, { defaultView: v });
+  }
+
+  async function renderAll() {
+    await rebuildPlain();
+    learnFromData();
+    renderDashboard();
+    renderVouchers();
+    renderArchive();
+    renderSettings();
+    expiredSinceVisitToast();
+  }
+
+  function learnFromData() {
+    state.learnTagsByNetwork = {};
+    state.vouchers.forEach(function (v) {
+      const net = v.source;
+      if (net === 'dreamscard' || net === 'giftzone') {
+        if (!state.learnTagsByNetwork[net]) state.learnTagsByNetwork[net] = [];
+        (v.storeTags || []).forEach(function (t) {
+          if (state.learnTagsByNetwork[net].indexOf(t) < 0) state.learnTagsByNetwork[net].push(t);
+        });
+      }
+    });
+  }
+
+  function expiredSinceVisitToast() {
+    if (state.showedExpiredToast) return;
+    const last = Number(localStorage.getItem('vm_last_visit') || 0);
+    const now = Date.now();
+    const hit = state.vouchers.some(function (v) {
+      const d = parseYmd(v.expiryDate);
+      return d && v.status === 'active' && d < new Date() && d.getTime() > last;
+    });
+    if (hit) Va.toast(Va.t('expiredToast'));
+    state.showedExpiredToast = true;
+    localStorage.setItem('vm_last_visit', String(now));
+  }
+
+  function attachListeners() {
+    document.getElementById('btn-google').onclick = function () {
+      const prov = new firebase.auth.GoogleAuthProvider();
+      Va.auth().signInWithPopup(prov).catch(function (e) { Va.toast(e.message); });
+    };
+    document.getElementById('btn-phone-mode').onclick = function () {
+      $('phone-auth-panel').hidden = false;
+      setupRecaptcha();
+    };
+    document.getElementById('btn-send-sms').onclick = async function () {
+      const phone = Va.normalizeIsraeliPhone($('phone-input').value);
+      if (phone.length < 11) return Va.toast(Va.t('errorGeneric'));
+      const appVerifier = state.recaptchaVerifier;
+      try {
+        window._confirmation = await Va.auth().signInWithPhoneNumber('+' + phone, appVerifier);
+        Va.toast(Va.t('smsCode'));
+      } catch (e) {
+        Va.toast(e.message);
+      }
+    };
+    document.getElementById('btn-verify-sms').onclick = async function () {
+      const code = $('sms-code').value.trim();
+      try {
+        await window._confirmation.confirm(code);
+      } catch (e) {
+        Va.toast(e.message);
+      }
+    };
+    document.getElementById('btn-save-google-phone').onclick = async function () {
+      const p = Va.normalizeIsraeliPhone($('google-phone-input').value);
+      if (p.length < 11) return Va.toast(Va.t('errorGeneric'));
+      state.normalizedPhone = p;
+      await afterPhoneResolved();
+    };
+    document.getElementById('btn-pass-submit').onclick = async function () {
+      const p1 = $('pass-1').value;
+      const p2 = $('pass-2').value;
+      if (state.passMode === 'setup' && p1 !== p2) return Va.toast(Va.t('errorGeneric'));
+      const snap = await Va.accountRef(state.activeAccountId).get();
+      let salt = snap.exists && snap.data().settings && snap.data().settings.cryptoSalt;
+      if (state.passMode === 'setup' && !salt) {
+        salt = Va.randomSalt();
+        await Va.ensureAccountForOwner(state.activeAccountId, state.normalizedPhone, salt);
+      } else if (!salt && snap.exists) {
+        const d = snap.data();
+        salt = d.settings && d.settings.cryptoSalt;
+      }
+      if (!salt) return Va.toast(Va.t('errorGeneric'));
+      try {
+        state.derivedKey = await Va.deriveKeyFromPassphrase(p1, salt);
+      } catch (e) {
+        return Va.toast(Va.t('errorGeneric'));
+      }
+      showOnly('main-app');
+      startDataListeners();
+    };
+    document.getElementById('bottom-nav').onclick = function (e) {
+      const btn = e.target.closest('.nav-item');
+      if (!btn) return;
+      const tab = btn.getAttribute('data-tab');
+      showTab(tab);
+      if (tab === 'vouchers') renderVouchers();
+      if (tab === 'dashboard') renderDashboard();
+      if (tab === 'archive') renderArchive();
+      if (tab === 'settings') renderSettings();
+      if (tab === 'add') setupAddTab();
+    };
+    document.getElementById('view-toggle').onclick = function (e) {
+      const b = e.target.closest('.chip');
+      if (!b) return;
+      state.voucherView = b.getAttribute('data-view');
+      document.querySelectorAll('#view-toggle .chip').forEach(function (c) { c.classList.remove('active'); });
+      b.classList.add('active');
+      renderVouchers();
+    };
+    document.getElementById('btn-parse').onclick = function () {
+      const txt = $('paste-area').value;
+      const res = Va.parsePastedText(txt, state.lang, state.learnTagsByNetwork);
+      showReview(res.drafts, res.raw);
+    };
+    document.getElementById('add-mode-chips').onclick = function (e) {
+      const b = e.target.closest('.chip');
+      if (!b) return;
+      const mode = b.getAttribute('data-add');
+      document.querySelectorAll('#add-mode-chips .chip').forEach(function (c) { c.classList.remove('active'); });
+      b.classList.add('active');
+      $('add-paste-panel').hidden = mode !== 'paste';
+      $('add-manual-panel').hidden = mode !== 'manual';
+      $('add-review').hidden = true;
+      if (mode === 'manual') {
+        $('add-manual-panel').hidden = false;
+        $('add-manual-panel').innerHTML = manualFormHtml(null, {});
+        wireManualForm(null);
+      }
+    };
+    document.getElementById('btn-create-wallet').onclick = async function () {
+      state.activeAccountId = state.authUser.uid;
+      state.isOwner = true;
+      showOnly('screen-passphrase');
+      state.passMode = 'setup';
+      $('pass-2').hidden = false;
+      const lp = $('pass-2').previousElementSibling;
+      if (lp) lp.hidden = false;
+      $('pass-title').textContent = Va.t('passSetupTitle');
+      $('pass-desc').textContent = Va.t('passSetupDesc');
+    };
+    document.getElementById('btn-signout-rejected').onclick = function () { Va.auth().signOut(); };
+    $('dash-search') && ($('dash-search').oninput = function () { renderDashboard(); });
+    $('v-search') && ($('v-search').oninput = function () { renderVouchers(); });
+    const fc = $('filter-category');
+    if (fc) fc.onchange = function () { renderVouchers(); };
+    const fs2 = $('filter-source');
+    if (fs2) fs2.onchange = function () { renderVouchers(); };
+  }
+
+  function setupRecaptcha() {
+    if (state.recaptchaVerifier) return;
+    state.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { size: 'normal' });
+    state.recaptchaVerifier.render();
+  }
+
+  function setupAddTab() {
+    if (state.pendingShareText) {
+      $('paste-area').value = state.pendingShareText;
+      state.pendingShareText = '';
+    }
+  }
+
+  function showReview(drafts, raw) {
+    const box = $('add-review');
+    box.hidden = false;
+    $('add-paste-panel').hidden = true;
+    let html = '<h3>' + Va.t('reviewTitle') + '</h3>';
+    if (drafts.length > 1) html += '<p class="small">' + Va.t('multiVoucherBody') + '</p>';
+    drafts.forEach(function (d, idx) {
+      if (d._manyStores) html += '<div class="banner-alert">' + Va.t('manyStoresHint') + '</div>';
+      const dup = (d.code && codeExists(d.code)) || (d.cardNumber && codeExists(d.cardNumber));
+      if (dup) html += '<div class="banner-alert">' + Va.t('duplicateWarn') + '</div>';
+      html += '<div class="card" data-idx="' + idx + '"><b>' + escapeHtml(d.name) + '</b>' +
+        '<label class="lbl mt8">' + Va.t('name') + '</label><input class="input rv-name" value="' + escapeHtml(d.name) + '" />' +
+        '<label class="lbl">' + Va.t('storeTags') + '</label><input class="input rv-tags" value="' + escapeHtml((d.storeTags || []).join(', ')) + '" />';
+      if (d.codeType === 'card') {
+        html += '<label class="lbl">PAN</label><input class="input rv-pan" value="' + escapeHtml(d.cardNumber || '') + '" />' +
+          '<label class="lbl">EXP</label><input class="input rv-cexp" value="' + escapeHtml(d.cardExpiry || '') + '" />' +
+          '<label class="lbl">CVV</label><input class="input rv-cvv" value="' + escapeHtml(d.cardCvv || '') + '" />';
+      } else {
+        html += '<label class="lbl">Code</label><input class="input rv-code" value="' + escapeHtml(d.code || '') + '" />';
+      }
+      html += '<label class="lbl">' + Va.t('remainingBalance') + '</label><input class="input rv-bal" type="number" value="' + escapeHtml(d.remainingBalance) + '" />' +
+        '<label class="lbl">' + Va.t('expiryDate') + '</label><input class="input rv-exp" type="date" value="' + escapeHtml(d.expiryDate || '') + '" />' +
+        '</div>';
+    });
+    html += '<button type="button" class="btn mt12" id="rv-save">' + Va.t('saveAll') + '</button><button type="button" class="btn secondary mt8" id="rv-back">' + Va.t('cancel') + '</button>';
+    box.innerHTML = html;
+    $('rv-back').onclick = function () {
+      box.hidden = true;
+      $('add-paste-panel').hidden = false;
+    };
+    $('rv-save').onclick = async function () {
+      const cards = box.querySelectorAll('.card');
+      for (let i = 0; i < cards.length; i++) {
+        const c = cards[i];
+        const idx = parseInt(c.getAttribute('data-idx'), 10);
+        const d = Object.assign({}, drafts[idx]);
+        d.name = c.querySelector('.rv-name').value;
+        d.storeTags = c.querySelector('.rv-tags').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+        const rvCode = c.querySelector('.rv-code');
+        const rvPan = c.querySelector('.rv-pan');
+        if (rvCode) d.code = rvCode.value;
+        if (rvPan) {
+          d.codeType = 'card';
+          d.cardNumber = rvPan.value;
+          d.cardExpiry = c.querySelector('.rv-cexp').value;
+          d.cardCvv = c.querySelector('.rv-cvv').value;
+        }
+        d.remainingBalance = Number(c.querySelector('.rv-bal').value) || d.remainingBalance;
+        d.expiryDate = c.querySelector('.rv-exp').value;
+        const dupChk = (d.code && codeExists(d.code)) || (d.cardNumber && codeExists(d.cardNumber));
+        if (dupChk) {
+          if (!confirm(Va.t('duplicateWarn') + ' — continue?')) continue;
+        }
+        const enc = await Va.encryptVoucherFields(state.derivedKey, d);
+        ['code', 'cardNumber', 'cardExpiry', 'cardCvv'].forEach(function (k) { delete d[k]; });
+        Object.assign(d, enc);
+        await Va.vouchersCol(state.activeAccountId).add(Object.assign(d, {
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: state.authUser.uid,
+          sourceText: raw.slice(0, 400)
+        }));
+      }
+      box.hidden = true;
+      $('add-paste-panel').hidden = false;
+      Va.toast(Va.t('save'));
+      showTab('vouchers');
+    };
+  }
+
+  function startDataListeners() {
+    if (unsubV) unsubV();
+    if (unsubS) unsubS();
+    unsubV = Va.vouchersCol(state.activeAccountId).onSnapshot(async function (snap) {
+      state.vouchers = [];
+      snap.forEach(function (doc) {
+        state.vouchers.push(Object.assign({ id: doc.id }, doc.data()));
+      });
+      await renderAll();
+    });
+    unsubS = Va.accountRef(state.activeAccountId).onSnapshot(async function (doc) {
+      state.settingsDoc = doc.exists ? doc.data() : null;
+      if (state.settingsDoc && state.settingsDoc.settings) {
+        const s = state.settingsDoc.settings;
+        if (s.language) state.lang = s.language;
+        if (s.theme) state.themePref = s.theme;
+        if (s.defaultView) state.defaultView = state.voucherView = s.defaultView;
+        Va.applyDirLang();
+        Va.applyTheme();
+      }
+      renderSettings();
+    });
+  }
+
+  async function afterPhoneResolved() {
+    const phone = state.normalizedPhone;
+    const uid = state.authUser.uid;
+    const idx = await Va.fetchPhoneIndex(phone);
+    if (idx && idx.accountId) {
+      state.activeAccountId = idx.accountId;
+      state.isOwner = idx.accountId === uid;
+      showPassphraseEnter();
+      return;
+    }
+    const accSnap = await Va.accountRef(uid).get();
+    if (accSnap.exists) {
+      state.activeAccountId = uid;
+      state.isOwner = true;
+      showPassphraseEnter();
+      return;
+    }
+    showOnly('screen-rejected');
+  }
+
+  function showPassphraseEnter() {
+    showOnly('screen-passphrase');
+    state.passMode = 'enter';
+    $('pass-2').hidden = true;
+    const lp = $('pass-2').previousElementSibling;
+    if (lp) lp.hidden = true;
+    $('pass-title').textContent = Va.t('passEnterTitle');
+    $('pass-desc').textContent = Va.t('passEnterDesc');
+  }
+
+  async function onAuth(user) {
+    state.authUser = user;
+    if (!user) {
+      showOnly('screen-welcome');
+      return;
+    }
+    if (user.phoneNumber) {
+      state.normalizedPhone = Va.normalizeIsraeliPhone(user.phoneNumber);
+      await afterPhoneResolved();
+      return;
+    }
+    showOnly('screen-phone-collect');
+    $('google-phone-input').value = '';
+  }
+
+  Va.attachApp = function () {
+    Va.applyTheme();
+    Va.applyDirLang();
+    if (!Va.initFirebase()) {
+      const m = $('app-config-msg');
+      if (m) {
+        m.hidden = false;
+        m.textContent = Va.t('configNeeded');
+      }
+      return;
+    }
+    attachListeners();
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    }
+    const params = new URLSearchParams(location.search);
+    if (params.get('share-target') != null) {
+      const tit = params.get('shared_title') || params.get('title') || '';
+      const st = params.get('shared_text') || params.get('text') || '';
+      state.pendingShareText = (tit ? tit + '\n\n' : '') + st;
+    }
+    Va.auth().onAuthStateChanged(onAuth);
+  };
+
+  window.addEventListener('DOMContentLoaded', Va.attachApp);
+})();
+
+</script>
+</body>
+</html>
