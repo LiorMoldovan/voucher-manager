@@ -167,6 +167,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       <div class="logo">🎫</div>
       <h1 class="welcome-title" data-i18n="appName">מנהל שוברים</h1>
       <p class="small" data-i18n="tagline">ניהול שוברים וכרטיסי מתנה לשוק הישראלי</p>
+      <p class="small" style="margin-top:8px;opacity:0.5" id="welcome-ver"></p>
     </div>
     <div class="card">
       <button type="button" class="btn" id="btn-google" style="width:100%;margin-bottom:10px" data-i18n="signGoogle">התחברות עם Google</button>
@@ -317,7 +318,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '1.0.0';
+  const APP_VERSION = '1.0.1';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -394,7 +395,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'שחזור',
       deleteForever: 'מחיקה לצמיתות',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 1.0.0',
+      aboutVersion: 'גרסה 1.0.1',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -542,7 +543,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'Restore',
       deleteForever: 'Delete permanently',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 1.0.0',
+      aboutVersion: 'Version 1.0.1',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -2382,6 +2383,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   Va.attachApp = function () {
     Va.applyTheme();
     Va.applyDirLang();
+    var wv = $('welcome-ver');
+    if (wv) wv.textContent = 'v' + Va.APP_VERSION;
     if (!Va.initFirebase()) {
       const m = $('app-config-msg');
       if (m) {
