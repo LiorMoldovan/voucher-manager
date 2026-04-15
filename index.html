@@ -64,7 +64,7 @@ html[data-theme="light"] {
   --shadow-lg: 0 16px 48px rgba(0,0,0,0.1);
 }
 *, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
+html, body { margin: 0; padding: 0; height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 body { padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 28px); max-width: 480px; margin-inline: auto; }
 body::before {
   content: ''; position: fixed; top: -40%; left: -20%; width: 70%; height: 70%;
@@ -123,7 +123,7 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
   background: linear-gradient(180deg, var(--bg) 60%, transparent);
   backdrop-filter: blur(16px);
 }
-.screen { padding: 0 16px 20px; min-height: 60vh; }
+.screen { padding: 0 16px 20px; }
 .screen-title {
   font-size: 1.25rem; font-weight: 800; margin: 12px 0 14px;
   letter-spacing: -0.03em; line-height: 1.2;
@@ -338,11 +338,16 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   .balance-big { font-size: 1.6rem; }
   .grid2 { grid-template-columns: 1fr; }
   .stat-card b { font-size: 1.2rem; }
-  .card { padding: 14px; }
-  .screen { padding: 0 12px 16px; }
-  .btn { padding: 9px 12px; font-size: 0.85rem; }
+  .card { padding: 12px; }
+  .screen { padding: 0 10px 16px; }
+  .topbar { padding: 12px 10px 8px; }
+  .btn { padding: 9px 10px; font-size: 0.82rem; }
   .logo-wrap { padding: 32px 16px 20px; }
   .welcome-title { font-size: 1.5rem; }
+  .sheet { padding: 8px 14px calc(20px + var(--safe-bottom)); }
+  .modal { padding: 16px; }
+  .nav-icon { font-size: 1.15rem; }
+  .nav-item { font-size: 0.58rem; padding: 4px 2px; }
 }
 
 .btn.whatsapp {
@@ -465,10 +470,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       <div class="screen">
         <div class="chips" id="filter-chips"></div>
         <div id="v-filter-panel" hidden style="margin-bottom:10px">
-          <div class="row" style="gap:6px">
-            <select class="input" id="filter-category" style="flex:1;min-width:0"></select>
-            <select class="input" id="filter-source" style="flex:1;min-width:0"></select>
-            <select class="input" id="sort-select" style="flex:1;min-width:0"></select>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <select class="input" id="filter-category" style="flex:1 1 30%;min-width:90px"></select>
+            <select class="input" id="filter-source" style="flex:1 1 30%;min-width:90px"></select>
+            <select class="input" id="sort-select" style="flex:1 1 30%;min-width:90px"></select>
           </div>
           <div class="chips mt8" id="view-toggle">
             <button type="button" class="chip active" data-view="card" data-i18n="viewCard">כרטיסים</button>
@@ -536,7 +541,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.0.2';
+  const APP_VERSION = '2.0.3';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -613,7 +618,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'שחזור',
       deleteForever: 'מחיקה לצמיתות',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.0.2',
+      aboutVersion: 'גרסה 2.0.3',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -786,7 +791,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'Restore',
       deleteForever: 'Delete permanently',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.0.2',
+      aboutVersion: 'Version 2.0.3',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -1972,16 +1977,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           '<button type="button" class="star-btn" data-id="' + v.id + '" style="position:static;width:44px;height:44px;font-size:1rem;flex-shrink:0">' + (v.favorite ? '★' : '☆') + '</button>' +
         '</div>' +
         valueHtml +
-        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px">' +
-          '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px">' +
             '<span class="badge ' + eb.cls + '">' + eb.text + '</span>' +
             (miss ? '<span class="badge code-miss">' + Va.t('codeMissing') + '</span>' : '') +
             (low ? '<span class="badge orange">' + Va.t('almostEmpty') + '</span>' : '') +
-          '</div>' +
-          '<div style="display:flex;gap:6px;flex-shrink:0">' +
-            '<button type="button" class="btn ghost" data-copy="' + v.id + '" style="min-height:44px;padding:8px 14px;font-size:0.8rem;border-radius:999px">' + Va.t('copyCode') + '</button>' +
-            '<button type="button" class="btn" data-use="' + v.id + '" style="min-height:44px;padding:8px 16px;font-size:0.8rem;border-radius:999px">' + Va.t('use') + '</button>' +
-          '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:6px;margin-top:8px">' +
+            '<button type="button" class="btn ghost" data-copy="' + v.id + '" style="flex:1;min-height:44px;padding:8px 10px;font-size:0.8rem;border-radius:999px">' + Va.t('copyCode') + '</button>' +
+            '<button type="button" class="btn" data-use="' + v.id + '" style="flex:1;min-height:44px;padding:8px 10px;font-size:0.8rem;border-radius:999px">' + Va.t('use') + '</button>' +
         '</div>';
       card.querySelector('[data-copy]').onclick = function (e) {
         e.stopPropagation();
@@ -2058,9 +2061,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       codeBlock +
       '<p class="mt12 small">' + escapeHtml(v.howToUse || '') + '</p>' +
       '<div class="dl-links mt12">' + linkRow.join('') + '</div>' +
-      '<div class="row mt12" style="gap:6px"><button type="button" class="btn" id="sheet-use" style="flex:1;min-width:0">' + Va.t('sheetUse') + '</button>' +
-      '<button type="button" class="btn secondary" id="sheet-cal" style="flex:1;min-width:0">' + Va.t('addToCalendar') + '</button>' +
-      '<button type="button" class="btn secondary" id="sheet-more" style="flex:1;min-width:0">' + Va.t('moreDetails') + '</button></div>';
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px"><button type="button" class="btn" id="sheet-use" style="flex:1 1 100%;min-width:0">' + Va.t('sheetUse') + '</button>' +
+      '<button type="button" class="btn secondary" id="sheet-cal" style="flex:1 1 45%;min-width:0">' + Va.t('addToCalendar') + '</button>' +
+      '<button type="button" class="btn secondary" id="sheet-more" style="flex:1 1 45%;min-width:0">' + Va.t('moreDetails') + '</button></div>';
     sh.hidden = false;
     history.pushState({ overlay: 'sheet' }, '', '');
     $('sheet-close').onclick = closeSheet;
@@ -2124,9 +2127,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       (detLinks.personalArea ? '<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(detLinks.personalArea) + '">' + Va.t('linkPersonal') + '</a>' : '') +
       '</div>' +
       (detHistory ? '<div class="mt12"><div class="small"><b>' + Va.t('usageHistory') + '</b></div>' + detHistory + '</div>' : '') +
-      '<div class="row mt12" style="gap:6px"><button type="button" class="btn secondary" id="mod-edit" style="flex:1;min-width:0">' + Va.t('edit') + '</button>' +
-      '<button type="button" class="btn secondary" id="mod-arch" style="flex:1;min-width:0">' + Va.t('archive') + '</button>' +
-      '<button type="button" class="btn danger" id="mod-del" style="flex:1;min-width:0">' + Va.t('delete') + '</button></div>';
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px"><button type="button" class="btn secondary" id="mod-edit" style="flex:1 1 auto;min-width:0">' + Va.t('edit') + '</button>' +
+      '<button type="button" class="btn secondary" id="mod-arch" style="flex:1 1 auto;min-width:0">' + Va.t('archive') + '</button>' +
+      '<button type="button" class="btn danger" id="mod-del" style="flex:1 1 auto;min-width:0">' + Va.t('delete') + '</button></div>';
     om.hidden = false;
     history.pushState({ overlay: 'modal' }, '', '');
     $('mod-close').onclick = closeModal;
@@ -2179,8 +2182,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     p = p || {};
     return '<h3 class="screen-title" style="font-size:1.1rem">' + Va.t('manualTitle') + '</h3>' +
       field('name', Va.t('name'), 'text', v.name || '') +
-      '<div class="row"><select class="input" id="mf-type"><option value="value"' + (v.type === 'value' ? ' selected' : '') + '>' + Va.t('typeValue') + '</option><option value="offer"' + (v.type === 'offer' ? ' selected' : '') + '>' + Va.t('typeOffer') + '</option></select>' +
-      '<select class="input" id="mf-codeType"><option value="simple"' + ((v.codeType || 'simple') === 'simple' ? ' selected' : '') + '>' + Va.t('codeSimple') + '</option><option value="card"' + (v.codeType === 'card' ? ' selected' : '') + '>' + Va.t('codeCard') + '</option></select></div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px"><select class="input" id="mf-type" style="flex:1 1 45%;min-width:0"><option value="value"' + (v.type === 'value' ? ' selected' : '') + '>' + Va.t('typeValue') + '</option><option value="offer"' + (v.type === 'offer' ? ' selected' : '') + '>' + Va.t('typeOffer') + '</option></select>' +
+      '<select class="input" id="mf-codeType" style="flex:1 1 45%;min-width:0"><option value="simple"' + ((v.codeType || 'simple') === 'simple' ? ' selected' : '') + '>' + Va.t('codeSimple') + '</option><option value="card"' + (v.codeType === 'card' ? ' selected' : '') + '>' + Va.t('codeCard') + '</option></select></div>' +
       field('code', Va.t('copyCode'), 'text', p.code || '') +
       field('cardNumber', 'PAN', 'text', p.cardNumber || '') +
       field('cardExpiry', Va.t('expiryDate'), 'text', p.cardExpiry || '') +
@@ -2330,9 +2333,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     arr.forEach(function (v) {
       const row = document.createElement('div');
       row.className = 'card';
-      row.innerHTML = '<b>' + escapeHtml(v.name) + '</b><div class="row mt12">' +
-        '<button type="button" class="btn secondary" data-rest="' + v.id + '">' + Va.t('restore') + '</button>' +
-        '<button type="button" class="btn danger" data-del="' + v.id + '">' + Va.t('deleteForever') + '</button></div>';
+      row.innerHTML = '<b>' + escapeHtml(v.name) + '</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">' +
+        '<button type="button" class="btn secondary" data-rest="' + v.id + '" style="flex:1 1 auto;min-width:0">' + Va.t('restore') + '</button>' +
+        '<button type="button" class="btn danger" data-del="' + v.id + '" style="flex:1 1 auto;min-width:0">' + Va.t('deleteForever') + '</button></div>';
       row.querySelector('[data-rest]').onclick = async function () {
         await Va.vouchersCol(state.activeAccountId).doc(v.id).update({ status: 'active', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
       };
@@ -2360,7 +2363,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       const phones = (state.settingsDoc && state.settingsDoc.approvedPhones) ? state.settingsDoc.approvedPhones.slice() : [];
       var memberCount = phones.length > 1 ? ' (' + (phones.length - 1) + ' ' + Va.t('members') + ')' : '';
       sh.innerHTML = '<h3>' + Va.t('sharingSection') + memberCount + '</h3><div id="ap-list" class="mt8"></div>' +
-        '<div class="row mt8"><input class="input" id="ap-new" placeholder="+972..." /><button type="button" class="btn" id="ap-add">' + Va.t('addPhone') + '</button></div>';
+        '<div style="display:flex;gap:6px;margin-top:8px"><input class="input" id="ap-new" placeholder="+972..." style="flex:1;min-width:0" /><button type="button" class="btn" id="ap-add" style="flex-shrink:0">' + Va.t('addPhone') + '</button></div>';
       const lst = $('ap-list');
       var nameMap = (state.settingsDoc && state.settingsDoc.memberNames) || {};
       phones.forEach(function (p) {
@@ -2443,11 +2446,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       }
       disp.innerHTML = '<h3>' + Va.t('displaySection') + '</h3>' +
         '<label class="lbl">' + Va.t('langHe').split(' ')[0] + '</label>' +
-        '<div class="row" style="gap:6px">' + settingBtn('lg-he', Va.t('langHe'), state.lang === 'he') + settingBtn('lg-en', Va.t('langEn'), state.lang === 'en') + '</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px">' + settingBtn('lg-he', Va.t('langHe'), state.lang === 'he') + settingBtn('lg-en', Va.t('langEn'), state.lang === 'en') + '</div>' +
         '<label class="lbl mt8">' + Va.t('themeAuto') + '</label>' +
-        '<div class="row mt8" style="gap:6px">' + settingBtn('th-a', Va.t('themeAuto'), state.themePref === 'auto') + settingBtn('th-l', Va.t('themeLight'), state.themePref === 'light') + settingBtn('th-d', Va.t('themeDark'), state.themePref === 'dark') + '</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">' + settingBtn('th-a', Va.t('themeAuto'), state.themePref === 'auto') + settingBtn('th-l', Va.t('themeLight'), state.themePref === 'light') + settingBtn('th-d', Va.t('themeDark'), state.themePref === 'dark') + '</div>' +
         '<label class="lbl mt8">' + Va.t('viewCard') + '</label>' +
-        '<div class="row mt8" style="gap:6px">' + settingBtn('dv-c', Va.t('viewCard'), state.voucherView === 'card') + settingBtn('dv-l', Va.t('viewList'), state.voucherView === 'list') + '</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">' + settingBtn('dv-c', Va.t('viewCard'), state.voucherView === 'card') + settingBtn('dv-l', Va.t('viewList'), state.voucherView === 'list') + '</div>' +
         '<button type="button" class="btn ghost mt12" id="btn-chg-pass" style="width:100%">' + Va.t('changePass') + '</button>';
       $('lg-he').onclick = function () { persistLang('he'); };
       $('lg-en').onclick = function () { persistLang('en'); };
@@ -2488,9 +2491,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     const data = $('settings-data');
     if (data) {
       data.innerHTML = '<h3>' + Va.t('dataSection') + '</h3>' +
-        '<div class="row"><button type="button" class="btn secondary" id="ex-json">' + Va.t('exportJson') + '</button>' +
-        '<button type="button" class="btn secondary" id="im-json">' + Va.t('importJson') + '</button>' +
-        '<button type="button" class="btn secondary" id="im-csv">' + Va.t('importCsv') + '</button></div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px"><button type="button" class="btn secondary" id="ex-json" style="flex:1 1 auto;min-width:0">' + Va.t('exportJson') + '</button>' +
+        '<button type="button" class="btn secondary" id="im-json" style="flex:1 1 auto;min-width:0">' + Va.t('importJson') + '</button>' +
+        '<button type="button" class="btn secondary" id="im-csv" style="flex:1 1 auto;min-width:0">' + Va.t('importCsv') + '</button></div>' +
         '<div class="small mt8" id="lb-bak">' + Va.t('lastBackup') + ': —</div>' +
         '<input type="file" id="im-file" hidden accept=".json,.csv" />';
       const lb = (state.settingsDoc && state.settingsDoc.settings && state.settingsDoc.settings.lastBackup) || '';
