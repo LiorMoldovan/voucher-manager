@@ -541,7 +541,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.0.6';
+  const APP_VERSION = '2.0.7';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -618,7 +618,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'שחזור',
       deleteForever: 'מחיקה לצמיתות',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.0.6',
+      aboutVersion: 'גרסה 2.0.7',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -724,6 +724,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       inviteCopyLink: 'העתק קישור הזמנה',
       inviteGenerating: 'יוצר קישור...',
       inviteMsg: 'הצטרף/י לניהול השוברים שלי: {link}',
+      smsRegionBlocked: 'שליחת SMS אינה זמינה לאזור זה. פנה למפתח האפליקציה.',
       inviteExpired: 'קישור ההזמנה פג תוקף או לא תקין',
       inviteUsed: 'קישור ההזמנה כבר נוצל',
       joinWelcome: 'ברוכים הבאים! קיבלת גישה לשוברים',
@@ -793,7 +794,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'Restore',
       deleteForever: 'Delete permanently',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.0.6',
+      aboutVersion: 'Version 2.0.7',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -899,6 +900,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       inviteCopyLink: 'Copy invite link',
       inviteGenerating: 'Generating link...',
       inviteMsg: 'Join my voucher manager: {link}',
+      smsRegionBlocked: 'SMS is not available for this region. Contact the app developer.',
       inviteExpired: 'Invite link expired or invalid',
       inviteUsed: 'Invite link already used',
       joinWelcome: 'Welcome! You now have access to shared vouchers',
@@ -2703,7 +2705,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         window._confirmation = await Va.auth().signInWithPhoneNumber('+' + phone, appVerifier);
         Va.toast(Va.t('smsCode'));
       } catch (e) {
-        Va.toast(e.message);
+        if (e.code === 'auth/operation-not-allowed') {
+          Va.toast(Va.t('smsRegionBlocked'));
+        } else {
+          Va.toast(e.message);
+        }
       }
     };
     document.getElementById('btn-verify-sms').onclick = async function () {
