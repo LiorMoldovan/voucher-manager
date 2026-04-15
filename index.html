@@ -318,7 +318,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '1.0.3';
+  const APP_VERSION = '1.1.0';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -395,7 +395,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'שחזור',
       deleteForever: 'מחיקה לצמיתות',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 1.0.3',
+      aboutVersion: 'גרסה 1.1.0',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -464,6 +464,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       copied: 'הועתק',
       copyFail: 'העתקה נכשלה',
       errorGeneric: 'אירעה שגיאה',
+      wrongPass: 'משפט סיסמה שגוי',
       signedInAs: 'מחובר כ',
       phone: 'טלפון',
       method: 'שיטת התחברות',
@@ -472,6 +473,17 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       noFirebase: 'Firebase לא מוגדר',
       expiredToast: 'שוברים שפגו מאז הביקור האחרון',
       close: 'סגור',
+      movedToArchive: 'הועבר לארכיון',
+      confirmDelete: 'למחוק לצמיתות?',
+      deleted: 'נמחק',
+      confirmMarkUsed: 'סמן כמומש?',
+      amountTooHigh: 'סכום גבוה מהיתרה',
+      fullyUsedArchived: 'מומש במלואו — הועבר לארכיון',
+      days: 'ימים',
+      noResults: 'לא נמצאו תוצאות',
+      imageReady: 'תמונה מוכנה',
+      expired: 'פג תוקף',
+      expiresToday: 'פג היום!',
       reviewTitle: 'סקירה לפני שמירה',
       manualTitle: 'טופס הזנה ידנית',
       addToCalendar: 'יומן',
@@ -612,6 +624,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       copied: 'Copied',
       copyFail: 'Copy failed',
       errorGeneric: 'Something went wrong',
+      wrongPass: 'Wrong passphrase',
       signedInAs: 'Signed in as',
       phone: 'Phone',
       method: 'Sign-in method',
@@ -620,6 +633,17 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       noFirebase: 'Firebase not configured',
       expiredToast: 'Vouchers expired since last visit',
       close: 'Close',
+      movedToArchive: 'Moved to archive',
+      confirmDelete: 'Delete permanently?',
+      deleted: 'Deleted',
+      confirmMarkUsed: 'Mark as used?',
+      amountTooHigh: 'Amount exceeds balance',
+      fullyUsedArchived: 'Fully used — moved to archive',
+      days: 'days',
+      noResults: 'No results found',
+      imageReady: 'Image ready',
+      expired: 'Expired',
+      expiresToday: 'Expires today!',
       reviewTitle: 'Review before save',
       manualTitle: 'Manual entry form',
       addToCalendar: 'Calendar',
@@ -697,7 +721,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
   function money(n) {
     if (n == null || n === '' || isNaN(Number(n))) return '—';
-    return Number(n).toLocaleString(state.lang === 'he' ? 'he-IL' : 'en-US', { maximumFractionDigits: 2 });
+    return Number(n).toLocaleString(state.lang === 'he' ? 'he-IL' : 'en-US', { maximumFractionDigits: 2 }) + ' ₪';
   }
 
   function toast(msg, ms) {
@@ -1363,13 +1387,15 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
 
   function expiryBadge(v) {
-    const d = daysUntilExpiry(v);
-    if (v.noExpiry || !v.expiryDate) return { cls: 'gray', text: '—' };
-    if (d < 0) return { cls: 'red', text: String(d) };
-    if (d <= 7) return { cls: 'orange', text: String(d) };
-    if (d <= 30) return { cls: 'yellow', text: String(d) };
-    if (d <= 90) return { cls: 'green', text: String(d) };
-    return { cls: 'blue', text: String(d) };
+    var d = daysUntilExpiry(v);
+    var dl = ' ' + Va.t('days');
+    if (v.noExpiry || !v.expiryDate) return { cls: 'blue', text: Va.t('noExpiry') };
+    if (d < 0) return { cls: 'red', text: Va.t('expired') + ' (' + Math.abs(d) + dl + ')' };
+    if (d === 0) return { cls: 'red', text: Va.t('expiresToday') };
+    if (d <= 7) return { cls: 'orange', text: d + dl };
+    if (d <= 30) return { cls: 'yellow', text: d + dl };
+    if (d <= 90) return { cls: 'green', text: d + dl };
+    return { cls: 'green', text: d + dl };
   }
 
   function isCodeMissing(v) {
@@ -1379,7 +1405,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
 
   function filterVouchers(list) {
-    const q = ($('v-search') && $('v-search').value || $('dash-search') && $('dash-search').value || '').toLowerCase();
+    var activeTab = document.querySelector('.tab-page:not([hidden])');
+    var activeTabId = activeTab ? activeTab.id : '';
+    var q = '';
+    if (activeTabId === 'tab-vouchers' && $('v-search')) q = $('v-search').value;
+    else if (activeTabId === 'tab-dashboard' && $('dash-search')) q = $('dash-search').value;
+    q = q.toLowerCase();
     return list.filter(function (v) {
       const p = plainMap[v.id] || {};
       const hay = (v.name + ' ' + (v.storeTags || []).join(' ') + ' ' + (p.code || '') + ' ' + (v.source || '')).toLowerCase();
@@ -1562,15 +1593,16 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       fs.innerHTML = '<option value="">' + Va.t('srcAll') + '</option>' +
         srcs.map(function (s) { return '<option value="' + escapeHtml(s) + '">' + escapeHtml(s) + '</option>'; }).join('');
     }
-    const so = $('sort-select');
-    if (so && !so._filled) {
+    var so = $('sort-select');
+    if (so) {
+      var prev = so.value || 'expiry';
       so.innerHTML =
         '<option value="expiry">' + Va.t('sortExpiry') + '</option>' +
         '<option value="balance">' + Va.t('sortBalance') + '</option>' +
         '<option value="name">' + Va.t('sortName') + '</option>' +
         '<option value="added">' + Va.t('sortAdded') + '</option>' +
         '<option value="used">' + Va.t('sortUsed') + '</option>';
-      so._filled = true;
+      so.value = prev;
       so.onchange = function () { renderVouchers(); };
     }
   }
@@ -1590,7 +1622,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     const view = state.voucherView || 'card';
     listEl.innerHTML = '';
     if (!list.length) {
-      listEl.innerHTML = '<div class="empty">' + Va.t('dashEmpty') + '</div>';
+      var hasAny = state.vouchers.some(function (v) { return v.status !== 'archived'; });
+      listEl.innerHTML = '<div class="empty">' + (hasAny ? Va.t('noResults') : Va.t('dashEmpty')) + '</div>';
       return;
     }
     list.forEach(function (v) {
@@ -1628,7 +1661,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       card.querySelector('[data-copy]').onclick = function (e) {
         e.stopPropagation();
         const p = plainMap[v.id] || {};
-        copyText(p.code || p.cardNumber || '');
+        Va.copyText(p.code || p.cardNumber || '');
       };
       card.querySelector('[data-use]').onclick = function (e) {
         e.stopPropagation();
@@ -1648,19 +1681,32 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
 
   async function markQuickUse(v) {
-    const amt = prompt(Va.t('amount'), v.type === 'value' ? String(v.remainingBalance || '') : '0');
+    if (v.type === 'offer') {
+      if (!confirm(Va.t('confirmMarkUsed'))) return;
+      await Va.vouchersCol(state.activeAccountId).doc(v.id).update({
+        status: 'archived',
+        usageHistory: (v.usageHistory || []).concat([{ date: new Date().toISOString().slice(0, 10), amount: 0, note: '' }]),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      Va.toast(Va.t('movedToArchive'));
+      return;
+    }
+    var amt = prompt(Va.t('amount'), String(v.remainingBalance || ''));
     if (amt == null) return;
-    const note = prompt(Va.t('note'), '') || '';
-    const hist = (v.usageHistory || []).concat([{ date: new Date().toISOString().slice(0, 10), amount: Number(amt) || 0, note: note }]);
-    let rem = v.remainingBalance;
-    if (v.type === 'value') rem = Math.max(0, Number(v.remainingBalance) - Number(amt));
-    const status = v.type === 'value' && rem <= 0 ? 'archived' : v.status;
+    var numAmt = Number(amt) || 0;
+    if (numAmt <= 0) return Va.toast(Va.t('errorGeneric'));
+    if (numAmt > Number(v.remainingBalance)) return Va.toast(Va.t('amountTooHigh'));
+    var note = prompt(Va.t('note'), '') || '';
+    var hist = (v.usageHistory || []).concat([{ date: new Date().toISOString().slice(0, 10), amount: numAmt, note: note }]);
+    var rem = Math.max(0, Number(v.remainingBalance) - numAmt);
+    var status = rem <= 0 ? 'archived' : v.status;
     await Va.vouchersCol(state.activeAccountId).doc(v.id).update({
       usageHistory: hist,
       remainingBalance: rem,
       status: status,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    if (rem <= 0) Va.toast(Va.t('fullyUsedArchived'));
   }
 
   function openSheet(v) {
@@ -1703,9 +1749,15 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     $('sheet-cal').onclick = function () {
       const title = encodeURIComponent(v.name);
       const det = encodeURIComponent((p.code || p.cardNumber || '') + ' ' + (v.notes || ''));
-      const d = (v.expiryDate || '').replace(/-/g, '');
-      const dates = d ? (d + '/' + d) : '';
-      window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + title + '&details=' + det + (dates ? '&dates=' + dates + '/' + dates : ''), '_blank');
+      var d = (v.expiryDate || '').replace(/-/g, '');
+      var nextDay = '';
+      if (d) {
+        var dd = new Date(Number(d.slice(0,4)), Number(d.slice(4,6))-1, Number(d.slice(6,8)));
+        dd.setDate(dd.getDate() + 1);
+        nextDay = String(dd.getFullYear()) + String(dd.getMonth()+1).padStart(2,'0') + String(dd.getDate()).padStart(2,'0');
+      }
+      var calDates = d ? (d + '/' + nextDay) : '';
+      window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + title + '&details=' + det + (calDates ? '&dates=' + calDates : ''), '_blank');
     };
     sh.onclick = function (e) { if (e.target === sh) closeSheet(); };
   }
@@ -1720,8 +1772,26 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     const mc = $('modal-content');
     if (!om || !mc) return;
     const p = plainMap[v.id] || {};
+    var detLinks = v.links || {};
+    var detHistory = (v.usageHistory || []).map(function (h) {
+      return '<div class="small">' + escapeHtml(h.date || '') + ' — ' + Va.money(h.amount) + ' ₪' + (h.note ? ' (' + escapeHtml(h.note) + ')' : '') + '</div>';
+    }).join('');
     mc.innerHTML = '<div class="row-between"><b>' + escapeHtml(v.name) + '</b><button type="button" class="btn ghost" id="mod-close">' + Va.t('close') + '</button></div>' +
-      '<pre class="small" style="white-space:pre-wrap;max-height:40vh;overflow:auto">' + escapeHtml(JSON.stringify(Object.assign({}, v, { code: p.code, cardNumber: p.cardNumber, cardExpiry: p.cardExpiry, cardCvv: p.cardCvv }), null, 2)) + '</pre>' +
+      '<div class="mt8"><span class="badge ' + expiryBadge(v).cls + '">' + expiryBadge(v).text + '</span> ' +
+      (v.status === 'pending' ? '<span class="badge pending">' + Va.t('pending') + '</span>' : '') + '</div>' +
+      (v.type === 'value' ? '<div class="mt8"><div class="small">' + Va.t('remainingBalance') + '</div><div class="balance-big">' + Va.money(v.remainingBalance) + ' ₪</div></div>' : '') +
+      (v.type === 'offer' && v.offerDescription ? '<div class="mt8"><div class="small">' + Va.t('offerDesc') + '</div><div>' + escapeHtml(v.offerDescription) + '</div></div>' : '') +
+      '<div class="mt8"><div class="small">' + Va.t('storeTags') + '</div><div>' + escapeHtml((v.storeTags || []).join(', ') || '—') + '</div></div>' +
+      '<div class="mt8"><div class="small">' + Va.t('category') + '</div><div>' + escapeHtml(categoryMeta(v.category)[state.lang] || v.category) + '</div></div>' +
+      (v.howToUse ? '<div class="mt8"><div class="small">' + Va.t('howToUse') + '</div><div>' + escapeHtml(v.howToUse) + '</div></div>' : '') +
+      (v.notes ? '<div class="mt8"><div class="small">' + Va.t('notes') + '</div><div>' + escapeHtml(v.notes) + '</div></div>' : '') +
+      '<div class="dl-links mt8">' +
+      (detLinks.balanceCheck ? '<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(detLinks.balanceCheck) + '">' + Va.t('linkBalance') + '</a>' : '') +
+      (detLinks.storesList ? '<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(detLinks.storesList) + '">' + Va.t('linkStores') + '</a>' : '') +
+      (detLinks.voucherView ? '<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(detLinks.voucherView) + '">' + Va.t('linkVoucher') + '</a>' : '') +
+      (detLinks.personalArea ? '<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(detLinks.personalArea) + '">' + Va.t('linkPersonal') + '</a>' : '') +
+      '</div>' +
+      (detHistory ? '<div class="mt12"><div class="small"><b>' + Va.t('usageHistory') + '</b></div>' + detHistory + '</div>' : '') +
       '<div class="row mt12"><button type="button" class="btn secondary" id="mod-edit">' + Va.t('edit') + '</button>' +
       '<button type="button" class="btn secondary" id="mod-arch">' + Va.t('archive') + '</button>' +
       '<button type="button" class="btn danger" id="mod-del">' + Va.t('delete') + '</button></div>';
@@ -1730,11 +1800,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     $('mod-arch').onclick = async function () {
       await Va.vouchersCol(state.activeAccountId).doc(v.id).update({ status: 'archived', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
       closeModal();
+      Va.toast(Va.t('movedToArchive'));
     };
     $('mod-del').onclick = async function () {
-      if (!confirm('OK?')) return;
+      if (!confirm(Va.t('confirmDelete'))) return;
       await Va.vouchersCol(state.activeAccountId).doc(v.id).delete();
       closeModal();
+      Va.toast(Va.t('deleted'));
     };
     $('mod-edit').onclick = function () {
       closeModal();
@@ -1748,7 +1820,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (om) om.hidden = true;
   }
 
+  var _editingVoucher = null;
+
   function openEditForm(v) {
+    _editingVoucher = v;
     showTab('add');
     buildManualPanel();
     const p = plainMap[v.id] || {};
@@ -1766,9 +1841,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       field('name', Va.t('name'), 'text', v.name || '') +
       '<div class="row"><select class="input" id="mf-type"><option value="value"' + (v.type === 'value' ? ' selected' : '') + '>' + Va.t('typeValue') + '</option><option value="offer"' + (v.type === 'offer' ? ' selected' : '') + '>' + Va.t('typeOffer') + '</option></select>' +
       '<select class="input" id="mf-codeType"><option value="simple"' + ((v.codeType || 'simple') === 'simple' ? ' selected' : '') + '>' + Va.t('codeSimple') + '</option><option value="card"' + (v.codeType === 'card' ? ' selected' : '') + '>' + Va.t('codeCard') + '</option></select></div>' +
-      field('code', 'Code', 'text', p.code || '') +
+      field('code', Va.t('copyCode'), 'text', p.code || '') +
       field('cardNumber', 'PAN', 'text', p.cardNumber || '') +
-      field('cardExpiry', 'EXP', 'text', p.cardExpiry || '') +
+      field('cardExpiry', Va.t('expiryDate'), 'text', p.cardExpiry || '') +
       field('cardCvv', 'CVV', 'text', p.cardCvv || '') +
       field('storeTags', Va.t('storeTags'), 'text', (v.storeTags || []).join(', ')) +
       '<label class="lbl">' + Va.t('category') + '</label><select class="input" id="mf-cat">' +
@@ -1840,16 +1915,17 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         if (!f) return;
         const b64 = await fileToB64(f);
         window._mfPhotoB64 = b64;
-        Va.toast('Image ready');
+        Va.toast(Va.t('imageReady'));
       };
     }
   }
 
   function readManualForm() {
-    const tags = ($('mf-storeTags') && $('mf-storeTags').value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    var existing = _editingVoucher || {};
+    var tags = ($('mf-storeTags') && $('mf-storeTags').value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
     return {
       type: $('mf-type').value,
-      status: 'active',
+      status: existing.status || 'active',
       name: $('mf-name').value,
       storeTags: tags,
       category: $('mf-cat').value,
@@ -1874,9 +1950,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       },
       howToUse: $('mf-howToUse').value,
       notes: $('mf-notes').value,
-      favorite: false,
-      photo: window._mfPhotoB64 || null,
-      usageHistory: []
+      favorite: existing.favorite || false,
+      photo: window._mfPhotoB64 || existing.photo || null,
+      usageHistory: existing.usageHistory || []
     };
   }
 
@@ -2151,29 +2227,48 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       const p = Va.normalizeIsraeliPhone($('google-phone-input').value);
       if (p.length < 11) return Va.toast(Va.t('errorGeneric'));
       state.normalizedPhone = p;
-      await afterPhoneResolved();
+      try {
+        await afterPhoneResolved();
+      } catch (e) {
+        console.error('afterPhoneResolved failed:', e);
+        Va.toast(e.message || Va.t('errorGeneric'));
+        showOnly('screen-welcome');
+      }
     };
     document.getElementById('btn-pass-submit').onclick = async function () {
       const p1 = $('pass-1').value;
       const p2 = $('pass-2').value;
       if (state.passMode === 'setup' && p1 !== p2) return Va.toast(Va.t('errorGeneric'));
-      const snap = await Va.accountRef(state.activeAccountId).get();
-      let salt = snap.exists && snap.data().settings && snap.data().settings.cryptoSalt;
-      if (state.passMode === 'setup' && !salt) {
-        salt = Va.randomSalt();
-        await Va.ensureAccountForOwner(state.activeAccountId, state.normalizedPhone, salt);
-      } else if (!salt && snap.exists) {
-        const d = snap.data();
-        salt = d.settings && d.settings.cryptoSalt;
-      }
-      if (!salt) return Va.toast(Va.t('errorGeneric'));
       try {
-        state.derivedKey = await Va.deriveKeyFromPassphrase(p1, salt);
+        const snap = await Va.accountRef(state.activeAccountId).get();
+        let salt = snap.exists && snap.data().settings && snap.data().settings.cryptoSalt;
+        if (state.passMode === 'setup' && !salt) {
+          salt = Va.randomSalt();
+          await Va.ensureAccountForOwner(state.activeAccountId, state.normalizedPhone, salt);
+        } else if (!salt && snap.exists) {
+          const d = snap.data();
+          salt = d.settings && d.settings.cryptoSalt;
+        }
+        if (!salt) return Va.toast(Va.t('errorGeneric'));
+        var testKey = await Va.deriveKeyFromPassphrase(p1, salt);
+        if (state.passMode === 'enter') {
+          var testSnap = await Va.vouchersCol(state.activeAccountId).limit(1).get();
+          if (!testSnap.empty) {
+            var testDoc = testSnap.docs[0].data();
+            var testField = testDoc.code || testDoc.cardNumber;
+            if (testField && typeof testField === 'object' && testField.ct) {
+              var testResult = await Va.decryptString(testKey, testField);
+              if (!testResult) return Va.toast(Va.t('wrongPass'));
+            }
+          }
+        }
+        state.derivedKey = testKey;
+        showOnly('main-app');
+        startDataListeners();
       } catch (e) {
-        return Va.toast(Va.t('errorGeneric'));
+        console.error('Passphrase submit failed:', e);
+        Va.toast(e.message || Va.t('errorGeneric'));
       }
-      showOnly('main-app');
-      startDataListeners();
     };
     document.getElementById('bottom-nav').onclick = function (e) {
       const btn = e.target.closest('.nav-item');
@@ -2209,6 +2304,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       $('add-manual-panel').hidden = mode !== 'manual';
       $('add-review').hidden = true;
       if (mode === 'manual') {
+        _editingVoucher = null;
         $('add-manual-panel').hidden = false;
         $('add-manual-panel').innerHTML = manualFormHtml(null, {});
         wireManualForm(null);
@@ -2379,7 +2475,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     }
     if (user.phoneNumber) {
       state.normalizedPhone = Va.normalizeIsraeliPhone(user.phoneNumber);
-      await afterPhoneResolved();
+      try {
+        await afterPhoneResolved();
+      } catch (e) {
+        console.error('afterPhoneResolved failed:', e);
+        Va.toast(e.message || Va.t('errorGeneric'));
+        showOnly('screen-welcome');
+      }
       return;
     }
     showOnly('screen-phone-collect');
@@ -2411,10 +2513,22 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       state.pendingShareText = (tit ? tit + '\n\n' : '') + st;
     }
     Va.auth().getRedirectResult().catch(function (e) {
-      if (e.code && e.code !== 'auth/no-auth-event') Va.toast(e.message);
+      if (e.code && e.code !== 'auth/no-auth-event') {
+        Va.toast(e.message);
+        showOnly('screen-welcome');
+      }
     });
     Va.auth().onAuthStateChanged(onAuth);
   };
+
+  window.addEventListener('unhandledrejection', function (ev) {
+    console.error('Unhandled rejection:', ev.reason);
+    var visible = ['screen-welcome', 'screen-rejected', 'screen-phone-collect', 'screen-passphrase', 'main-app'].some(function (id) {
+      var el = document.getElementById(id);
+      return el && !el.hidden;
+    });
+    if (!visible) showOnly('screen-welcome');
+  });
 
   window.addEventListener('DOMContentLoaded', Va.attachApp);
 })();
