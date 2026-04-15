@@ -1,4 +1,4 @@
-const CACHE_NAME = 'voucher-manager-v2.0.0';
+const CACHE_NAME = 'voucher-manager-v2.0.1';
 const ASSETS = [
   '/voucher-manager/',
   '/voucher-manager/index.html',
@@ -7,8 +7,9 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
-  self.skipWaiting();
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', e => {

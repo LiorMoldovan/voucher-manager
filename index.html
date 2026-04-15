@@ -536,7 +536,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.0.0';
+  const APP_VERSION = '2.0.1';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -613,7 +613,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'שחזור',
       deleteForever: 'מחיקה לצמיתות',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.0.0',
+      aboutVersion: 'גרסה 2.0.1',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -786,7 +786,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'Restore',
       deleteForever: 'Delete permanently',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.0.0',
+      aboutVersion: 'Version 2.0.1',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -3126,7 +3126,24 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     }
     attachListeners();
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(function () {});
+      var refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (refreshing) return;
+        refreshing = true;
+        location.reload();
+      });
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        reg.addEventListener('updatefound', function () {
+          var nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', function () {
+            if (nw.state === 'activated' && navigator.serviceWorker.controller) {
+              Va.toast('🔄 ' + Va.t('appName') + ' updated!');
+            }
+          });
+        });
+        setInterval(function () { reg.update(); }, 60 * 60 * 1000);
+      }).catch(function () {});
     }
     const params = new URLSearchParams(location.search);
     if (params.get('share-target') != null) {
