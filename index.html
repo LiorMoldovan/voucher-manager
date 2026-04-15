@@ -541,7 +541,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.0.4';
+  const APP_VERSION = '2.0.5';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -618,7 +618,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'שחזור',
       deleteForever: 'מחיקה לצמיתות',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.0.4',
+      aboutVersion: 'גרסה 2.0.5',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -791,7 +791,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'Restore',
       deleteForever: 'Delete permanently',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.0.4',
+      aboutVersion: 'Version 2.0.5',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -2362,8 +2362,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (sh && state.isOwner) {
       const phones = (state.settingsDoc && state.settingsDoc.approvedPhones) ? state.settingsDoc.approvedPhones.slice() : [];
       var memberCount = phones.length > 1 ? ' (' + (phones.length - 1) + ' ' + Va.t('members') + ')' : '';
-      sh.innerHTML = '<h3>' + Va.t('sharingSection') + memberCount + '</h3><div id="ap-list" class="mt8"></div>' +
-        '<div style="display:flex;gap:6px;margin-top:8px"><input class="input" id="ap-new" placeholder="+972..." style="flex:1;min-width:0" /><button type="button" class="btn" id="ap-add" style="flex-shrink:0">' + Va.t('addPhone') + '</button></div>';
+      sh.innerHTML = '<h3>' + Va.t('sharingSection') + memberCount + '</h3><div id="ap-list" class="mt8"></div>';
       const lst = $('ap-list');
       var nameMap = (state.settingsDoc && state.settingsDoc.memberNames) || {};
       phones.forEach(function (p) {
@@ -2384,12 +2383,6 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         };
         lst.appendChild(row);
       });
-      $('ap-add').onclick = async function () {
-        const np = Va.normalizeIsraeliPhone($('ap-new').value);
-        if (np.length < 10) return;
-        await Va.addApprovedPhone(state.activeAccountId, np);
-        $('ap-new').value = '';
-      };
       var invWrap = document.createElement('div');
       invWrap.className = 'invite-wrap mt12';
       var invBtn = document.createElement('button');
