@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#08080F" />
+  <meta name="theme-color" content="#131320" />
   <title>מנהל שוברים</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -18,14 +18,14 @@
   --primary: #7C6BF0;
   --primary-glow: rgba(124,107,240,0.35);
   --accent: #00D2A0;
-  --bg: #08080F;
-  --surface: rgba(255,255,255,0.04);
-  --surface-solid: #111118;
-  --card: rgba(255,255,255,0.06);
-  --card-hover: rgba(255,255,255,0.09);
-  --text: #F0F0F5;
-  --muted: #8888A4;
-  --border: rgba(255,255,255,0.07);
+  --bg: #131320;
+  --surface: rgba(255,255,255,0.05);
+  --surface-solid: #1A1A2A;
+  --card: rgba(255,255,255,0.07);
+  --card-hover: rgba(255,255,255,0.11);
+  --text: #EDEDF4;
+  --muted: #9898B0;
+  --border: rgba(255,255,255,0.09);
   --border-focus: rgba(124,107,240,0.5);
   --food: #FF6B7A;
   --shopping: #7C6BF0;
@@ -379,7 +379,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       <div class="logo">🎫</div>
       <h1 class="welcome-title" data-i18n="appName">מנהל שוברים</h1>
       <p class="small" style="margin-top:4px" data-i18n="tagline">ניהול שוברים וכרטיסי מתנה לשוק הישראלי</p>
-      <p class="small" style="margin-top:10px;opacity:0.5;font-size:0.7rem" id="welcome-ver"></p>
+      <p class="small" style="margin-top:10px;opacity:0.7;font-size:0.7rem" id="welcome-ver"></p>
     </div>
     <div class="card" style="padding:20px">
       <button type="button" class="btn" id="btn-google" style="width:100%;margin-bottom:12px" data-i18n="signGoogle">התחברות עם Google</button>
@@ -541,7 +541,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.0.3';
+  const APP_VERSION = '2.0.4';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -618,7 +618,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'שחזור',
       deleteForever: 'מחיקה לצמיתות',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.0.3',
+      aboutVersion: 'גרסה 2.0.4',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -791,7 +791,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'Restore',
       deleteForever: 'Delete permanently',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.0.3',
+      aboutVersion: 'Version 2.0.4',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -960,7 +960,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var isLight = eff === 'light';
     document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
     var mc = document.querySelector('meta[name="theme-color"]');
-    if (mc) mc.setAttribute('content', isLight ? '#F5F5FA' : '#08080F');
+    if (mc) mc.setAttribute('content', isLight ? '#F5F5FA' : '#131320');
   }
 
   function normalizeIsraeliPhone(raw) {
