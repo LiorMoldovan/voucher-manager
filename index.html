@@ -65,7 +65,7 @@ html[data-theme="light"] {
 }
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
-body { padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px); max-width: 480px; margin-inline: auto; }
+body { padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 28px); max-width: 480px; margin-inline: auto; }
 body::before {
   content: ''; position: fixed; top: -40%; left: -20%; width: 70%; height: 70%;
   background: radial-gradient(ellipse, var(--primary-glow) 0%, transparent 70%);
@@ -536,7 +536,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.0.1';
+  const APP_VERSION = '2.0.2';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -613,7 +613,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'שחזור',
       deleteForever: 'מחיקה לצמיתות',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.0.1',
+      aboutVersion: 'גרסה 2.0.2',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -786,7 +786,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       restore: 'Restore',
       deleteForever: 'Delete permanently',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.0.1',
+      aboutVersion: 'Version 2.0.2',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -1637,13 +1637,20 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     });
   }
 
-  function showTab(name) {
+  var _navFromPop = false;
+  var _currentTab = 'dashboard';
+
+  function showTab(name, skipHistory) {
     document.querySelectorAll('.tab-page').forEach(function (n) { n.hidden = true; });
     var page = $('tab-' + name);
     if (page) page.hidden = false;
     document.querySelectorAll('.nav-item').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-tab') === name);
     });
+    _currentTab = name;
+    if (!skipHistory && !_navFromPop) {
+      history.pushState({ tab: name }, '', '');
+    }
     if (name === 'vouchers') renderVouchers();
     if (name === 'dashboard') renderDashboard();
     if (name === 'archive') renderArchive();
@@ -2055,6 +2062,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       '<button type="button" class="btn secondary" id="sheet-cal" style="flex:1;min-width:0">' + Va.t('addToCalendar') + '</button>' +
       '<button type="button" class="btn secondary" id="sheet-more" style="flex:1;min-width:0">' + Va.t('moreDetails') + '</button></div>';
     sh.hidden = false;
+    history.pushState({ overlay: 'sheet' }, '', '');
     $('sheet-close').onclick = closeSheet;
     const cpc = $('cp-code');
     if (cpc) cpc.onclick = function () { Va.copyText(p.code || ''); };
@@ -2063,7 +2071,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     const cpv = $('cp-cvv');
     if (cpv) cpv.onclick = function () { Va.copyText(p.cardCvv || ''); };
     $('sheet-use').onclick = async function () { await markQuickUse(v); closeSheet(); };
-    $('sheet-more').onclick = function () { closeSheet(); openDetailModal(v); };
+    $('sheet-more').onclick = function () {
+      var sh2 = $('overlay-sheet');
+      if (sh2) sh2.hidden = true;
+      openDetailModal(v);
+    };
     $('sheet-cal').onclick = function () {
       const title = encodeURIComponent(v.name);
       const det = encodeURIComponent((p.code || p.cardNumber || '') + ' ' + (v.notes || ''));
@@ -2080,9 +2092,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     sh.onclick = function (e) { if (e.target === sh) closeSheet(); };
   }
 
-  function closeSheet() {
-    const sh = $('overlay-sheet');
-    if (sh) sh.hidden = true;
+  function closeSheet(fromPop) {
+    var sh = $('overlay-sheet');
+    if (sh && !sh.hidden) {
+      sh.hidden = true;
+      if (!fromPop) history.back();
+    }
   }
 
   function openDetailModal(v) {
@@ -2113,6 +2128,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       '<button type="button" class="btn secondary" id="mod-arch" style="flex:1;min-width:0">' + Va.t('archive') + '</button>' +
       '<button type="button" class="btn danger" id="mod-del" style="flex:1;min-width:0">' + Va.t('delete') + '</button></div>';
     om.hidden = false;
+    history.pushState({ overlay: 'modal' }, '', '');
     $('mod-close').onclick = closeModal;
     $('mod-arch').onclick = async function () {
       await Va.vouchersCol(state.activeAccountId).doc(v.id).update({ status: 'archived', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
@@ -2128,15 +2144,19 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       Va.toast(Va.t('deleted'));
     };
     $('mod-edit').onclick = function () {
-      closeModal();
+      var om2 = $('overlay-modal');
+      if (om2) om2.hidden = true;
       openEditForm(v);
     };
     om.onclick = function (e) { if (e.target === om) closeModal(); };
   }
 
-  function closeModal() {
-    const om = $('overlay-modal');
-    if (om) om.hidden = true;
+  function closeModal(fromPop) {
+    var om = $('overlay-modal');
+    if (om && !om.hidden) {
+      om.hidden = true;
+      if (!fromPop) history.back();
+    }
   }
 
   var _editingVoucher = null;
@@ -2612,6 +2632,23 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       var om = $('overlay-modal');
       if (om && !om.hidden) { closeModal(); return; }
       if (sh && !sh.hidden) { closeSheet(); return; }
+    }
+  });
+
+  window.addEventListener('popstate', function (e) {
+    var om = $('overlay-modal');
+    var sh = $('overlay-sheet');
+    if (om && !om.hidden) { closeModal(true); return; }
+    if (sh && !sh.hidden) { closeSheet(true); return; }
+    var st = e.state;
+    if (st && st.tab) {
+      _navFromPop = true;
+      showTab(st.tab);
+      _navFromPop = false;
+    } else if (_currentTab !== 'dashboard') {
+      _navFromPop = true;
+      showTab('dashboard');
+      _navFromPop = false;
     }
   });
 
@@ -3125,6 +3162,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       return;
     }
     attachListeners();
+    history.replaceState({ tab: 'dashboard' }, '', '');
     if ('serviceWorker' in navigator) {
       var refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', function () {
