@@ -43,6 +43,12 @@ service cloud.firestore {
         allow read, write: if request.auth != null;
       }
     }
+    match /vm_invites/{token} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                    && request.resource.data.createdBy == request.auth.uid;
+      allow update: if request.auth != null;
+    }
   }
 }
 ```
