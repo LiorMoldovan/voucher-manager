@@ -135,6 +135,8 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
   position: relative; overflow: hidden; backdrop-filter: var(--glass);
   transition: transform .2s cubic-bezier(.4,0,.2,1), box-shadow .2s;
 }
+#tab-settings .card { padding: 12px 16px; margin-bottom: 10px; }
+#tab-settings .card h3 { font-size: 0.85rem; margin: 0 0 8px; }
 .card:active { transform: scale(0.985); }
 .card-strip {
   position: absolute; inset-inline-start: 0; top: 0; bottom: 0; width: 4px;
@@ -250,16 +252,16 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
 
 .h-scroll-wrap { position: relative; }
 .h-scroll-wrap::after {
-  content: ''; position: absolute; top: 0; bottom: 0; inset-inline-end: 0; width: 28px;
+  content: ''; position: absolute; top: 0; bottom: 0; inset-inline-end: 0; width: 24px;
   background: linear-gradient(to left, var(--bg), transparent);
   pointer-events: none; z-index: 1;
 }
 .h-scroll {
-  display: flex; gap: 10px; overflow-x: auto; padding: 0 2px 8px;
-  scroll-snap-type: x mandatory; scrollbar-width: none;
+  display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px;
+  scrollbar-width: none;
 }
 .h-scroll::-webkit-scrollbar { display: none; }
-.h-scroll .card { width: 150px; flex: 0 0 auto; scroll-snap-align: start; margin-bottom: 0; padding: 10px 12px; }
+.h-scroll .card { width: calc((100% - 16px) / 3); min-width: 120px; max-width: 170px; flex: 0 0 auto; margin-bottom: 0; padding: 10px; }
 
 .list-compact { display: flex; flex-direction: column; gap: 10px; }
 .list-row {
@@ -280,9 +282,9 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
 .star-btn:hover { background: rgba(255,200,90,0.2); transform: scale(1.1); }
 
 .fav-remove {
-  position: absolute; top: 4px; inset-inline-end: 4px; z-index: 2;
+  position: absolute; top: 0; inset-inline-end: 0; z-index: 2;
   background: none; border: none; border-radius: 999px;
-  width: 24px; height: 24px; font-size: 0.75rem; cursor: pointer;
+  width: 36px; height: 36px; font-size: 0.78rem; cursor: pointer;
   color: #f5c542; opacity: 0.7; transition: all .2s;
   display: flex; align-items: center; justify-content: center; padding: 0;
 }
@@ -368,9 +370,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
 .invite-wrap .btn { font-size: 0.85rem; padding: 10px 16px; min-height: 42px; }
 
-.member-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-.member-info { flex: 1; min-width: 0; overflow: hidden; }
-.member-name { font-weight: 500; display: flex; align-items: center; gap: 6px; overflow: hidden; white-space: nowrap; }
+.member-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.member-info { flex: 1; min-width: 0; }
+.member-name { font-weight: 500; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .member-phone { font-size: 0.78rem; color: var(--muted); direction: ltr; unicode-bidi: isolate; flex-shrink: 0; }
 .member-tag { font-size: 0.72rem; color: var(--primary); opacity: 0.8; margin-inline-start: 4px; }
 .member-row .btn { font-size: 0.82rem; padding: 9px 14px; min-height: 40px; white-space: nowrap; }
@@ -448,10 +450,28 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     </div>
   </section>
 
+  <section id="screen-wallet-picker" class="screen" hidden>
+    <div class="card" style="padding:22px">
+      <h2 class="screen-title" data-i18n="walletPickerTitle">בחירת ארנק</h2>
+      <p class="small" data-i18n="walletPickerHint">יש לך גישה ליותר מארנק אחד. בחר לאיזה להיכנס.</p>
+      <div id="wallet-picker-list" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <div id="overlay-wallet-switch" class="overlay" hidden>
+    <div class="sheet" id="wallet-switch-content" role="dialog" aria-modal="true">
+      <h3 style="margin:0 0 10px;font-size:1rem" data-i18n="walletSwitchTitle">החלפת ארנק</h3>
+      <div id="wallet-switch-list"></div>
+    </div>
+  </div>
+
   <main id="main-app" hidden>
     <div id="tab-dashboard" class="tab-page">
       <div class="topbar">
-        <input class="input" id="dash-search" data-i18n-placeholder="searchPlaceholder" placeholder="חיפוש..." style="border-radius:999px;padding-inline:18px" />
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="input" id="dash-search" data-i18n-placeholder="searchPlaceholder" placeholder="חיפוש..." style="border-radius:999px;padding-inline:18px;flex:1" />
+          <button type="button" class="btn ghost" id="wallet-switch-btn" hidden aria-label="Switch wallet" style="min-height:46px;min-width:46px;padding:0;border-radius:999px;flex-shrink:0;font-size:1.1rem">👛</button>
+        </div>
       </div>
       <div class="screen">
         <div id="dash-balance-card" class="card" style="padding:22px">
@@ -462,8 +482,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         <div class="grid2" id="dash-stats"></div>
         <h3 class="screen-title" style="font-size:0.95rem;margin-top:18px;opacity:0.8" data-i18n="favorites">מועדפים</h3>
         <div class="h-scroll-wrap"><div class="h-scroll" id="dash-favorites"></div></div>
-        <h3 class="screen-title" style="font-size:0.95rem;margin-top:18px;opacity:0.8" data-i18n="activeOffers">הצעות פעילות</h3>
-        <div id="dash-offers"></div>
+        <h3 class="screen-title" id="dash-vouchers-title" style="font-size:0.95rem;margin-top:18px;opacity:0.8" data-i18n="myVouchers" hidden>שוברי כסף</h3>
+        <div id="dash-vouchers" class="list-compact"></div>
+        <h3 class="screen-title" id="dash-offers-title" style="font-size:0.95rem;margin-top:18px;opacity:0.8" data-i18n="couponsAndDeals" hidden>קופונים והטבות</h3>
+        <div id="dash-offers" class="list-compact"></div>
         <div id="dash-empty" class="empty" hidden>
           <p data-i18n="dashEmpty">הוסף את השובר הראשון שלך</p>
           <div class="empty-arrow">⬇</div>
@@ -554,7 +576,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.2.2';
+  const APP_VERSION = '2.5.0';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -591,6 +613,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       totalBalance: 'סה״כ יתרה פעילה (ש״ח)',
       favorites: 'מועדפים',
       activeOffers: 'הצעות פעילות',
+      myVouchers: 'שוברי כסף',
+      couponsAndDeals: 'קופונים והטבות',
+      showAll: 'הצג הכל',
       dashEmpty: 'הוסף את השובר הראשון שלך',
       dashEmptyHint: 'עבור ללשונית הוספה למטה',
       statActive: 'פעילים',
@@ -626,16 +651,19 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       archiveEmpty: 'אין פריטים בארכיון',
       restore: 'שחזור',
       deleteForever: 'מחיקה לצמיתות',
+      lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.2.2',
+      aboutVersion: 'גרסה 2.5.0',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
       addPhone: 'הוסף מספר',
       remove: 'הסר',
       displaySection: 'תצוגה',
+      langLabel: 'שפה',
       langHe: 'עברית',
       langEn: 'English',
+      themeLabel: 'ערכת נושא',
       themeAuto: 'אוטומטי',
       themeLight: 'בהיר',
       themeDark: 'כהה',
@@ -643,6 +671,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       dataSection: 'גיבוי ושחזור',
       exportJson: 'שמור עותק למכשיר',
       importJson: 'שחזר מקובץ',
+      importConfirm: 'שוברים',
       lastBackup: 'עותק אחרון נשמר',
       calendarSection: 'יומן',
       calRemind: 'ימי תזכורת לפני תפוגה',
@@ -656,9 +685,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       unlockRecovery: 'פתיחה עם סיסמה אישית',
       biometricSetup: 'פתיחה עם טביעת אצבע / זיהוי פנים',
       biometricUnlock: 'פתיחה ביומטרית',
-      biometricEnrolled: 'ביומטרי מופעל ✓',
+      biometricEnrolled: 'ביומטרי מופעל ✓ — לחץ לביטול',
       biometricFailed: 'אימות ביומטרי נכשל',
       copyCode: 'העתק קוד',
+      copyCard: 'העתק כרטיס',
+      openLink: 'פתח קישור',
       voucherCode: 'קוד שובר',
       use: 'שימוש',
       markUsed: 'סמן כמומש',
@@ -687,10 +718,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       category: 'קטגוריה',
       source: 'מקור',
       sourceText: 'טקסט מקור',
-      originalAmount: 'סכום מקורי',
+      originalAmount: 'סכום',
       remainingBalance: 'יתרה נוכחית',
       offerDesc: 'תיאור ההטבה',
       expiryDate: 'תאריך תפוגה',
+      relativeExpiryHint: 'תאריך משוער — מחושב מהיום, יש לוודא',
       validFrom: 'תקף מ',
       noExpiry: 'ללא תפוגה',
       notes: 'הערות',
@@ -735,6 +767,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       amountTooHigh: 'סכום גבוה מהיתרה',
       fullyUsedArchived: 'מומש במלואו — הועבר לארכיון',
       days: 'ימים',
+      oneDay: 'יום',
       months: 'חודשים',
       years: 'שנים',
       oneMonth: 'חודש',
@@ -754,6 +787,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       yes: 'כן',
       no: 'לא',
       members: 'חברים',
+      oneMember: 'חבר',
       you: 'את/ה',
       roleAdmin: 'מנהל',
       roleMember: 'חבר/ה',
@@ -767,7 +801,17 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       joinWelcome: 'ברוכים הבאים! קיבלת גישה לשוברים',
       joinPhoneTitle: 'הזן מספר טלפון להצטרפות',
       joinPhoneHint: 'כמעט סיימנו! הזן את מספר הטלפון שלך כדי להצטרף לשוברים המשותפים.',
-      appUpdated: 'האפליקציה עודכנה!'
+      appUpdated: 'האפליקציה עודכנה!',
+      walletPickerTitle: 'בחירת ארנק',
+      walletPickerHint: 'יש לך גישה ליותר מארנק אחד. בחר לאיזה להיכנס.',
+      walletNameLabel: 'שם הארנק',
+      walletNamePlaceholder: 'למשל: משפחה, עבודה...',
+      walletSwitchTitle: 'החלפת ארנק',
+      walletOwner: 'מנהל',
+      walletMember: 'חבר/ה',
+      walletNameSaved: 'שם הארנק עודכן',
+      walletSwitched: 'הוחלף לארנק: {name}',
+      myWallet: 'הארנק שלי'
     },
     en: {
       appName: 'Voucher Manager',
@@ -792,6 +836,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       totalBalance: 'Total active balance (NIS)',
       favorites: 'Favorites',
       activeOffers: 'Active offers',
+      myVouchers: 'Value Vouchers',
+      couponsAndDeals: 'Coupons & Deals',
+      showAll: 'Show all',
       dashEmpty: 'Add your first voucher',
       dashEmptyHint: 'Go to the Add tab below',
       statActive: 'Active',
@@ -827,16 +874,19 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       archiveEmpty: 'No archived items',
       restore: 'Restore',
       deleteForever: 'Delete permanently',
+      lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.2.2',
+      aboutVersion: 'Version 2.5.0',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
       addPhone: 'Add number',
       remove: 'Remove',
       displaySection: 'Display',
+      langLabel: 'Language',
       langHe: 'Hebrew',
       langEn: 'English',
+      themeLabel: 'Theme',
       themeAuto: 'Auto',
       themeLight: 'Light',
       themeDark: 'Dark',
@@ -844,6 +894,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       dataSection: 'Backup & Restore',
       exportJson: 'Save copy to device',
       importJson: 'Restore from file',
+      importConfirm: 'vouchers',
       lastBackup: 'Last copy saved',
       calendarSection: 'Calendar',
       calRemind: 'Reminder days before expiry',
@@ -857,9 +908,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       unlockRecovery: 'Unlock with personal passphrase',
       biometricSetup: 'Unlock with fingerprint / face',
       biometricUnlock: 'Biometric unlock',
-      biometricEnrolled: 'Biometric enabled ✓',
+      biometricEnrolled: 'Biometric enabled ✓ — tap to disable',
       biometricFailed: 'Biometric verification failed',
       copyCode: 'Copy code',
+      copyCard: 'Copy card',
+      openLink: 'Open link',
       voucherCode: 'Voucher code',
       use: 'Use',
       markUsed: 'Mark used',
@@ -888,10 +941,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       category: 'Category',
       source: 'Source',
       sourceText: 'Source text',
-      originalAmount: 'Original amount',
+      originalAmount: 'Amount',
       remainingBalance: 'Remaining balance',
       offerDesc: 'Offer description',
       expiryDate: 'Expiry date',
+      relativeExpiryHint: 'Estimated date — calculated from today, please verify',
       validFrom: 'Valid from',
       noExpiry: 'No expiry',
       notes: 'Notes',
@@ -936,6 +990,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       amountTooHigh: 'Amount exceeds balance',
       fullyUsedArchived: 'Fully used — moved to archive',
       days: 'days',
+      oneDay: 'day',
       months: 'months',
       years: 'years',
       oneMonth: 'month',
@@ -955,6 +1010,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       yes: 'Yes',
       no: 'No',
       members: 'members',
+      oneMember: 'member',
       you: 'you',
       roleAdmin: 'admin',
       roleMember: 'member',
@@ -968,7 +1024,17 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       joinWelcome: 'Welcome! You now have access to shared vouchers',
       joinPhoneTitle: 'Enter your phone to join',
       joinPhoneHint: 'Almost done! Enter your phone number to join the shared vouchers.',
-      appUpdated: 'App updated!'
+      appUpdated: 'App updated!',
+      walletPickerTitle: 'Choose wallet',
+      walletPickerHint: 'You have access to multiple wallets. Choose which one to open.',
+      walletNameLabel: 'Wallet name',
+      walletNamePlaceholder: 'e.g. Family, Work...',
+      walletSwitchTitle: 'Switch wallet',
+      walletOwner: 'Owner',
+      walletMember: 'Member',
+      walletNameSaved: 'Wallet name updated',
+      walletSwitched: 'Switched to wallet: {name}',
+      myWallet: 'My wallet'
     }
   };
 
@@ -982,16 +1048,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     normalizedPhone: '',
     activeAccountId: null,
     isOwner: false,
-    cryptoSalt: null,
     derivedKey: null,
     passMode: 'setup',
     vouchers: [],
     settingsDoc: null,
-    unsubVouchers: null,
-    unsubSettings: null,
     currentFilter: 'active',
     voucherView: 'card',
-    lastVisit: 0,
     showedExpiredToast: false,
     pendingShareText: '',
     pendingJoin: null,
@@ -1260,7 +1322,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
   async function fetchPhoneIndex(phone) {
     const snap = await phoneIndexRef(phone).get();
-    return snap.exists ? snap.data() : null;
+    if (!snap.exists) return { accounts: [] };
+    var d = snap.data();
+    if (d.accounts && Array.isArray(d.accounts)) return d;
+    if (d.accountId) return { accounts: [d.accountId] };
+    return { accounts: [] };
   }
 
   async function ensureAccountForOwner(uid, phone, saltB64) {
@@ -1273,6 +1339,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     };
     if (!snap.exists) {
       await ref.set(Object.assign({}, base, {
+        walletName: '',
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         settings: {
           language: state.lang,
@@ -1283,11 +1350,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           cryptoSalt: saltB64 || randomSalt()
         }
       }), { merge: true });
-      await phoneIndexRef(phone).set({ accountId: uid }, { merge: true });
     } else {
       await ref.set(base, { merge: true });
-      await phoneIndexRef(phone).set({ accountId: uid }, { merge: true });
     }
+    await upsertPhoneIndex(phone, uid);
   }
 
   async function loadSettings(accountId) {
@@ -1307,6 +1373,42 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     }, { merge: true });
   }
 
+  async function upsertPhoneIndex(phone, accountId) {
+    var ref = phoneIndexRef(phone);
+    var snap = await ref.get();
+    if (snap.exists) {
+      var d = snap.data();
+      if (d.accounts && Array.isArray(d.accounts)) {
+        if (d.accounts.indexOf(accountId) === -1) {
+          await ref.update({ accounts: firebase.firestore.FieldValue.arrayUnion(accountId) });
+        }
+      } else {
+        var arr = d.accountId ? [d.accountId] : [];
+        if (arr.indexOf(accountId) === -1) arr.push(accountId);
+        await ref.set({ accounts: arr });
+      }
+    } else {
+      await ref.set({ accounts: [accountId] });
+    }
+  }
+
+  async function removeFromPhoneIndex(phone, accountId) {
+    var ref = phoneIndexRef(phone);
+    var snap = await ref.get();
+    if (!snap.exists) return;
+    var d = snap.data();
+    if (d.accounts && Array.isArray(d.accounts)) {
+      var next = d.accounts.filter(function (id) { return id !== accountId; });
+      if (next.length === 0) {
+        await ref.delete().catch(function () {});
+      } else {
+        await ref.set({ accounts: next });
+      }
+    } else if (d.accountId === accountId) {
+      await ref.delete().catch(function () {});
+    }
+  }
+
   async function addApprovedPhone(accountId, phone, displayName) {
     const ref = accountRef(accountId);
     var upd = {
@@ -1317,7 +1419,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       upd['memberNames.' + phone] = displayName;
     }
     await ref.update(upd);
-    await phoneIndexRef(phone).set({ accountId: accountId }, { merge: true });
+    await upsertPhoneIndex(phone, accountId);
   }
 
   async function removeApprovedPhone(accountId, phone, ownerPhone) {
@@ -1327,7 +1429,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     if (phone !== ownerPhone) {
-      await phoneIndexRef(phone).delete().catch(function () {});
+      await removeFromPhoneIndex(phone, accountId);
     }
   }
 
@@ -1391,6 +1493,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   Va.saveSettingsPatch = saveSettingsPatch;
   Va.addApprovedPhone = addApprovedPhone;
   Va.removeApprovedPhone = removeApprovedPhone;
+  Va.upsertPhoneIndex = upsertPhoneIndex;
+  Va.removeFromPhoneIndex = removeFromPhoneIndex;
   Va.wrapKeyWithPassphrase = wrapKeyWithPassphrase;
   Va.unwrapKeyWithPassphrase = unwrapKeyWithPassphrase;
   Va.saveMemberKeyBackup = saveMemberKeyBackup;
@@ -1422,26 +1526,31 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     'Decathlon','דקטלון','Office Depot','אופיס דיפו'
   ];
   var KNOWN_SOURCES = [
-    { re: /DreamsCard|דרים\s*קארד|dcgift/i, id: 'dreamscard' },
-    { re: /GiftZone|גיפטזון/i, id: 'giftzone' },
-    { re: /multipass|מולטיפאס/i, id: 'multipass' },
-    { re: /buyme|באי\s*מי/i, id: 'buyme' },
-    { re: /HiTechZone|הייטקזון|הייטק\s*זון/i, id: 'hitechzone' },
-    { re: /\bSwish\b/i, id: 'swish' },
-    { re: /\bCSE\b|cse\.co\.il/i, id: 'cse' },
-    { re: /Isracard|ישראכרט/i, id: 'isracard' },
-    { re: /Leumi\s*Card|לאומי\s*קארד/i, id: 'leumicard' },
-    { re: /Cal\b|כאל\b/i, id: 'cal' },
-    { re: /Amdocs|אמדוקס/i, id: 'amdocs' },
-    { re: /\bWolt\b|וולט/i, id: 'wolt' },
-    { re: /10bis|תן\s*ביס/i, id: '10bis' },
-    { re: /Cibus|סיבוס/i, id: 'cibus' },
-    { re: /Pais\s*Plus|פיס\s*פלוס/i, id: 'pais' },
-    { re: /\bHOT\b|הוט\s+מועדון/i, id: 'hot' },
-    { re: /Partner|פרטנר/i, id: 'partner' },
-    { re: /Cellcom|סלקום/i, id: 'cellcom' },
-    { re: /Pelephone|פלאפון/i, id: 'pelephone' },
-    { re: /Bezeq|בזק/i, id: 'bezeq' }
+    { re: /Dreams?Card|דרים\s*קארד|dcgift|dream\s*card/i, id: 'dreamscard', tier: 1 },
+    { re: /GiftZone|גיפטזון/i, id: 'giftzone', tier: 1 },
+    { re: /multipass|מולטיפאס|מולטיפס/i, id: 'multipass', tier: 1 },
+    { re: /buyme|באי\s*מי/i, id: 'buyme', tier: 1 },
+    { re: /HiTechZone|הייטקזון|הייטק\s*זון/i, id: 'hitechzone', tier: 1 },
+    { re: /\bSwish\b|slink\.k4a/i, id: 'swish', tier: 1 },
+    { re: /praxell|פרקסל/i, id: 'praxell', tier: 1 },
+    { re: /love\s*card|לאב\s*קארד/i, id: 'lovecard', tier: 1 },
+    { re: /connex|קונקס/i, id: 'connex', tier: 1 },
+    { re: /max\s*(?:gift|benefits)/i, id: 'max', tier: 1 },
+    { re: /Pais\s*Plus|פיס\s*פלוס/i, id: 'pais', tier: 2 },
+    { re: /\bHOT\b|הוט\s+מועדון/i, id: 'hot', tier: 2 },
+    { re: /\bCSE\b|cse\.co\.il/i, id: 'cse', tier: 2 },
+    { re: /\bWolt\b|וולט/i, id: 'wolt', tier: 2 },
+    { re: /10bis|תן\s*ביס/i, id: '10bis', tier: 2 },
+    { re: /Cibus|סיבוס/i, id: 'cibus', tier: 2 },
+    { re: /שופרסל|Shufersal/i, id: 'shufersal', tier: 2 },
+    { re: /Isracard|ישראכרט/i, id: 'isracard', tier: 3 },
+    { re: /Leumi\s*Card|לאומי\s*קארד/i, id: 'leumicard', tier: 3 },
+    { re: /Cal\b|כאל\b/i, id: 'cal', tier: 3 },
+    { re: /Amdocs|אמדוקס/i, id: 'amdocs', tier: 3 },
+    { re: /Partner|פרטנר/i, id: 'partner', tier: 3 },
+    { re: /Cellcom|סלקום/i, id: 'cellcom', tier: 3 },
+    { re: /Pelephone|פלאפון/i, id: 'pelephone', tier: 3 },
+    { re: /Bezeq|בזק/i, id: 'bezeq', tier: 3 }
   ];
   var NETWORK_STORES = {
     dreamscard: ['FOX','FOX HOME','AMERICAN EAGLE','NIKE','FOOT LOCKER','LALINE','MANGO','AERIE','CONVERSE','SACKS','BILLABONG',"THE CHILDREN'S PLACE",'QUICKSILVER','FLYING TIGER','SUNGLASS HUT','Shilav','JUMBO','ITAY BRANDS','MINENE','RUBY BAY'],
@@ -1486,7 +1595,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
 
   var FOOD_KEYWORDS = /מקדונלד|McDonald|בורגר|burger|פיצה|pizza|ארוחה|meal|מזון|food|גלידה|ice\s*cream|קפה|coffee|מסעד|restaur|אגאדיר|Agadir|ארומה|Aroma|רולדין|Roladin|Wolt|וולט|10bis|תן ביס|Cibus|סיבוס|שוקולד|chocolate|בייגל/i;
-  var ENTERTAINMENT_KEYWORDS = /סרט|movie|cinema|סינמה|קולנוע|ספא|spa|מלון|hotel|נופש(?!ונית)|vacation|כרטיס הופעה|show|concert|הופעה|פארק|park|Yes Planet|יס פלאנט|Bug|באג/i;
+  var ENTERTAINMENT_KEYWORDS = /סרט|movie|cinema|סינמה|קולנוע|ספא|spa|נופש(?!ונית)|כרטיס הופעה|show|concert|הופעה|פארק|park|Yes Planet|יס פלאנט|Bug|באג/i;
   var TRAVEL_KEYWORDS = /טיסה|flight|אל על|Elal|מלון|hotel|Isrotel|ישרוטל|Fattal|פתאל|Dan Hotels|מלונות דן|נסיעה|travel|חופשה|vacation|booking/i;
 
   function preProcess(text) {
@@ -1505,13 +1614,23 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     return urls;
   }
 
-  function categorizeUrl(u) {
+  function categorizeUrl(u, text) {
     var low = u.toLowerCase();
     var links = { storesList: '', balanceCheck: '', voucherView: '', personalArea: '' };
-    if (/mltp\.co\.il|multipass|mycards/i.test(low)) links.balanceCheck = u;
-    else if (/htzone|hitechzone/i.test(low)) links.storesList = u;
+    var urlIdx = text ? text.indexOf(u) : -1;
+    var nearby = urlIdx >= 0 ? text.slice(Math.max(0, urlIdx - 120), Math.min(text.length, urlIdx + u.length + 80)) : '';
+    var balanceCtx = /balance|יתרה|בדיקת\s*יתרה|cardbalance|check.*balance/i;
+    var storesCtx = /stores|חנויות|סניפים|רשימת\s*(?:חנויות|סניפים)|רשתות|where.*redeem|היכן.*למימוש/i;
+    var personalCtx = /personal|אישי|אזור\s*אישי|my\s*account|חשבון/i;
+    var viewCtx = /לצפייה|לינק\s*ל|view|לחיצה/i;
+    if (balanceCtx.test(low) || (balanceCtx.test(nearby) && !viewCtx.test(nearby))) links.balanceCheck = u;
+    else if (/mltp\.co\.il|multipass|mycards/i.test(low)) {
+      if (viewCtx.test(nearby)) links.voucherView = links.voucherView || u;
+      else links.balanceCheck = u;
+    }
+    else if (storesCtx.test(low) || storesCtx.test(nearby) || /htzone|hitechzone/i.test(low)) links.storesList = u;
+    else if (personalCtx.test(low) || personalCtx.test(nearby) || /tbit\.be/i.test(low)) links.personalArea = u;
     else if (/slink\.k4a|swish\.co/i.test(low)) links.voucherView = u;
-    else if (/tbit\.be/i.test(low)) links.personalArea = u;
     else if (/dcgift\.co\.il|dreamcard/i.test(low)) links.voucherView = links.voucherView || u;
     else if (/buyme\.co\.il/i.test(low)) links.voucherView = links.voucherView || u;
     else if (/onelink\.to|app\.adjust/i.test(low)) { /* skip app links */ }
@@ -1526,10 +1645,15 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
 
   function detectSource(text) {
+    var best = null;
     for (var i = 0; i < KNOWN_SOURCES.length; i++) {
-      if (KNOWN_SOURCES[i].re.test(text)) return KNOWN_SOURCES[i].id;
+      if (KNOWN_SOURCES[i].re.test(text)) {
+        if (!best || KNOWN_SOURCES[i].tier < best.tier) {
+          best = KNOWN_SOURCES[i];
+        }
+      }
     }
-    return '';
+    return best ? best.id : '';
   }
 
   function detectStoresInText(text) {
@@ -1549,17 +1673,20 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
   function detectStoresFromContext(text) {
     var found = [];
+    var STORE_NAME = '([A-Za-z\u0590-\u05FF\'&\\s]{2,30})';
+    var JUNK = /קוד|קופון|הטבה|שובר|תוקף|בשווי|מימוש|קופה|קופאי|אתר|אפליקציה|הזמנה|להציג|להקליד|סניף|בלבד|כרטיס|לפרטים|https?:|הודעה|ש"ח|₪|שקל|חשבון|סכום|יתרה/i;
     var patterns = [
-      /(?:לרשת|ברשת|בסניפי|בחנויות|ב(?:חנות|סניף))\s+([A-Za-z\u0590-\u05FF'&\s]{2,30})/gi,
-      /(?:תו\s*קניה?\s*(?:דיגיטלי\s*)?ל)\s*(?:רשת\s*)?([A-Za-z\u0590-\u05FF'&\s]{2,25})/gi,
-      /(?:למימוש\s*ב)([A-Za-z\u0590-\u05FF'&\s]{2,25})/gi
+      new RegExp('(?:לרשת|ברשת|בסניפי|בחנויות|ב(?:חנות|סניף))\\s+' + STORE_NAME, 'gi'),
+      new RegExp('(?:תו\\s*קניה?\\s*(?:דיגיטלי\\s*)?ל)\\s*(?:רשת\\s*)?' + STORE_NAME, 'gi'),
+      new RegExp('(?:למימוש\\s*ב|ניתן\\s*למימוש\\s*ב|valid\\s*at|redeem\\s*(?:at|in))\\s*' + STORE_NAME, 'gi'),
+      new RegExp('(?:שובר\\s+(?:ל|של)|gift\\s*(?:card|voucher)\\s*(?:for|to))\\s*' + STORE_NAME, 'gi'),
+      new RegExp('(?:ב[-–])' + STORE_NAME + '(?=\\s+בשווי|\\s+בסך)', 'gi')
     ];
     patterns.forEach(function (re) {
       var m;
       while ((m = re.exec(text)) !== null) {
         var name = m[1].trim().replace(/^[-–—:.\s]+|[-–—:.\s]+$/g, '').replace(/\s+/g, ' ');
-        if (name.length >= 2 && name.length <= 30 && !/^\d+$/.test(name) &&
-            !/https?:/i.test(name) && !/קוד|קופון|הטבה|שובר|תוקף|בשווי|מימוש|קופה|קופאי|אתר|אפליקציה|הזמנה|להציג|להקליד|סניף|בלבד|כרטיס/i.test(name)) {
+        if (name.length >= 2 && name.length <= 30 && !/^\d+$/.test(name) && !JUNK.test(name)) {
           found.push(name);
         }
       }
@@ -1597,12 +1724,28 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
 
   function extractDates(text) {
-    var dates = [];
+    var EXPIRY_KW = /תוקף|expiry|expires?|valid|עד|until|thru|through/i;
+    var ORDER_KW = /הזמנה|ביצוע|order|purchased?|רכישה|נרכש|תאריך ושעת/i;
+    var results = [];
     var hasAmPm = /\b(?:AM|PM)\b/i.test(text);
     var isEnglish = !/[\u0590-\u05FF]/.test(text);
-    var reDateTime = /(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})(?:\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM)?)?/gi;
     var m;
-    while ((m = reDateTime.exec(text)) !== null) {
+
+    function scoreDate(idx) {
+      var nearby = text.slice(Math.max(0, idx - 80), Math.min(text.length, idx + 20));
+      if (EXPIRY_KW.test(nearby)) return 10;
+      if (ORDER_KW.test(nearby)) return 0;
+      return 1;
+    }
+
+    var reIso = /(\d{4})-(\d{2})-(\d{2})/g;
+    var stripped = text;
+    while ((m = reIso.exec(text)) !== null) {
+      results.push({ date: m[1] + '-' + m[2] + '-' + m[3], score: scoreDate(m.index) });
+      stripped = stripped.replace(m[0], ' __ISO__ ');
+    }
+    var reDateTime = /(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})(?:\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM)?)?/gi;
+    while ((m = reDateTime.exec(stripped)) !== null) {
       var a = m[1], b = m[2], y = m[3];
       if (y.length === 2) y = '20' + y;
       var nA = Number(a), nB = Number(b), day, mo;
@@ -1611,27 +1754,30 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       else if ((isEnglish || hasAmPm) && nA <= 12 && nB <= 31) { mo = nA; day = nB; }
       else { day = nA; mo = nB; }
       if (day > 0 && day <= 31 && mo > 0 && mo <= 12) {
-        dates.push(y + '-' + String(mo).padStart(2, '0') + '-' + String(day).padStart(2, '0'));
+        var ds = y + '-' + String(mo).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+        if (!results.some(function (r) { return r.date === ds; })) {
+          results.push({ date: ds, score: scoreDate(m.index) });
+        }
       }
     }
-    var reIso = /(\d{4})-(\d{2})-(\d{2})/g;
-    while ((m = reIso.exec(text)) !== null) {
-      var ds = m[1] + '-' + m[2] + '-' + m[3];
-      if (dates.indexOf(ds) < 0) dates.push(ds);
-    }
     var relPatterns = [
-      { re: /(\d+)\s*שנים/, unit: 'year' },
-      { re: /(\d+)\s*(?:חודשים|חודש)/, unit: 'month' },
-      { re: /(\d+)\s*(?:ימים|יום)/, unit: 'day' }
+      { re: /(\d+)\s*(?:שנים|שנה|years?)/i, unit: 'year' },
+      { re: /(\d+)\s*(?:חודשים|חודש|months?)/i, unit: 'month' },
+      { re: /(\d+)\s*(?:ימים|יום|days?)/i, unit: 'day' },
+      { re: /(\d+)\s*(?:שבועות|שבוע|weeks?)/i, unit: 'week' }
     ];
+    var _hasRelative = false;
     relPatterns.forEach(function (p) {
       var rm = text.match(p.re);
       if (rm) {
+        _hasRelative = true;
         var f = new Date();
-        if (p.unit === 'year') f.setFullYear(f.getFullYear() + Number(rm[1]));
-        else if (p.unit === 'month') f.setMonth(f.getMonth() + Number(rm[1]));
-        else f.setDate(f.getDate() + Number(rm[1]));
-        dates.push(f.getFullYear() + '-' + String(f.getMonth() + 1).padStart(2, '0') + '-' + String(f.getDate()).padStart(2, '0'));
+        var n = Number(rm[1]);
+        if (p.unit === 'year') f.setFullYear(f.getFullYear() + n);
+        else if (p.unit === 'month') f.setMonth(f.getMonth() + n);
+        else if (p.unit === 'week') f.setDate(f.getDate() + n * 7);
+        else f.setDate(f.getDate() + n);
+        results.push({ date: f.getFullYear() + '-' + String(f.getMonth() + 1).padStart(2, '0') + '-' + String(f.getDate()).padStart(2, '0'), score: 10 });
       }
     });
     var reCard = /(?:תוקף|exp(?:iry)?|valid\s*(?:until|thru|through))[^\d]{0,12}(\d{1,2})\s*\/\s*(\d{2,4})/i;
@@ -1639,61 +1785,93 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (cm) {
       var mm = cm[1], yy = cm[2];
       if (yy.length === 2) yy = '20' + yy;
-      dates.push('card:' + String(mm).padStart(2, '0') + '/' + yy.slice(-2));
+      results.push({ date: 'card:' + String(mm).padStart(2, '0') + '/' + yy.slice(-2), score: 10 });
     }
-    return dates;
+    results._hasRelative = _hasRelative;
+    return results;
   }
 
   function extractCardBlocks(text) {
+    var CARD_EVIDENCE = /CVV|CVC|cvc|cvv|קוד\s*אבטחה|כרטיס\s*(?:אשראי|מתנה|נטען)|card\s*number|credit\s*card|gift\s*card/i;
+    var CARD_EXP_PAT = /(?:תוקף|exp(?:iry)?|valid)[^\d]{0,12}\d{1,2}\s*\/\s*\d{2,4}/i;
+    var CODE_NEARBY = /(?:(?:ה)?קוד(?:\/ים)?|coupon\s*code|voucher\s*code|gift\s*code|promo\s*code|redemption\s*code|הינו|הינם)/im;
     var blocks = [], re = /\b(\d{4})[-\s]?(\d{4})[-\s]?(\d{4})[-\s]?(\d{4})\b/g, m;
     while ((m = re.exec(text)) !== null) {
       var num = m[1] + m[2] + m[3] + m[4];
-      var slice = text.slice(Math.max(0, m.index - 150), Math.min(text.length, m.index + 150));
+      var before80 = text.slice(Math.max(0, m.index - 80), m.index);
+      if (CODE_NEARBY.test(before80)) continue;
+      var slice = text.slice(Math.max(0, m.index - 200), Math.min(text.length, m.index + 200));
+      var hasEvidence = CARD_EVIDENCE.test(slice) || CARD_EXP_PAT.test(slice);
+      if (!hasEvidence) continue;
       var exp = '', cvv = '';
       var em = slice.match(/(?:תוקף|exp(?:iry)?|valid)[^\d]{0,12}(\d{1,2})\s*\/\s*(\d{2,4})/i);
       if (em) exp = em[1].padStart(2, '0') + '/' + (em[2].length === 2 ? em[2] : em[2].slice(-2));
       var cv = slice.match(/(?:CVV|cvv|CVC|cvc|קוד\s*אבטחה)[^\d]{0,8}(\d{3})\b/i);
-      if (!cv) cv = slice.match(/\b(\d{3})\b/);
       if (cv) cvv = cv[1];
       blocks.push({ cardNumber: num.replace(/(\d{4})(?=\d)/g, '$1-'), cardExpiry: exp, cardCvv: cvv, index: m.index });
     }
     return blocks;
   }
 
-  function extractCodes(text) {
+  function extractCodes(text, amounts) {
     var codes = [];
+    var amountSet = {};
+    (amounts || []).forEach(function (a) { amountSet[String(a).replace('.', '')] = true; amountSet[String(Math.round(a))] = true; });
+
+    var CARD_EVIDENCE = /CVV|CVC|cvc|cvv|קוד\s*אבטחה|כרטיס\s*(?:אשראי|מתנה|נטען)|card\s*number|credit\s*card|gift\s*card/i;
+    var CARD_EXP_PAT = /(?:תוקף|exp(?:iry)?|valid)[^\d]{0,12}\d{1,2}\s*\/\s*\d{2,4}/i;
+    var CODE_NEAR_RE = /(?:(?:ה)?קוד(?:\/ים)?|coupon\s*code|voucher\s*code|gift\s*code|promo\s*code|redemption\s*code|הינו|הינם)/im;
     var cardRe = /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g;
-    var cleaned = text.replace(cardRe, ' __CARD__ ');
+    var cleaned = text.replace(cardRe, function (match, offset) {
+      var before80 = text.slice(Math.max(0, offset - 80), offset);
+      if (CODE_NEAR_RE.test(before80)) return match;
+      var slice = text.slice(Math.max(0, offset - 200), Math.min(text.length, offset + 200));
+      if (CARD_EVIDENCE.test(slice) || CARD_EXP_PAT.test(slice)) return ' __CARD__ ';
+      return match;
+    });
     cleaned = cleaned.replace(/https?:\/\/[^\s]+/gi, ' __URL__ ');
-    cleaned = cleaned.replace(/\b\d{1,2}[./\-]\d{1,2}[./\-]\d{2,4}\b/g, ' __DATE__ ');
+    cleaned = cleaned.replace(/\b\d{1,2}[./\-]\d{1,2}[./\-]\d{2,4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM)?)?/gi, ' __DATE__ ');
     cleaned = cleaned.replace(/\b\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM)?\b/gi, ' __TIME__ ');
 
-    var STOP_WORDS = /^(?:valid|expires?|expiry|until|through|thru|for|at|in|on|the|and|or|is|to|of|with|from|your|this|can|be|will|not|has|have|been|are|was|were|do|does|did|תוקף|עד|בתוקף|למימוש|ניתן|יש|תודה|לנוחותך|מימוש|בסניפי|באתר|לפרטים|בכפוף|שמור|הנחיות|לתקנון|כולל|בהזמנה)$/i;
-    var codeKwSrc = '(?:(?:ה)?קוד\\s*(?:קופון|הטבה|שובר|מימוש|הזמנה|המתנה)?|coupon\\s*code|code|voucher\\s*code|gift\\s*code|promo\\s*code|redemption\\s*code|קוד\\s*מולטיפאס|הינו|is)\\s*[-–:]?\\s*';
-    var afterKeyword = new RegExp(codeKwSrc + '([\\dA-Za-z][-\\dA-Za-z\\s,]{4,80})', 'gi');
+    var CODE_PAT = /\d[\d-]{5,}\d/;
+    var ALPHA_CODE_PAT = /[A-Za-z0-9][-A-Za-z0-9]{4,}[A-Za-z0-9]/;
+    var CODE_KW_RE = /(?:(?:ה)?קוד(?:\/ים)?(?:\s*(?:קופון|הטבה|שובר|מימוש|הזמנה|המתנה|מולטיפאס|מולטיפס))?|coupon\s*code|voucher\s*code|gift\s*code|promo\s*code|redemption\s*code|הינו|הינם)\s*[-–:.]?\s*/gi;
+
     var km;
-    while ((km = afterKeyword.exec(cleaned)) !== null) {
-      var raw = km[1].trim();
-      var parts = raw.split(/[,،]\s*/);
-      parts.forEach(function (p) {
-        var tokens = p.trim().split(/\s+/);
-        var codeTokens = [];
-        for (var ti = 0; ti < tokens.length; ti++) {
-          if (STOP_WORDS.test(tokens[ti]) || /^[\u0590-\u05FF]/.test(tokens[ti])) break;
-          codeTokens.push(tokens[ti]);
+    while ((km = CODE_KW_RE.exec(cleaned)) !== null) {
+      var after = cleaned.slice(km.index + km[0].length, km.index + km[0].length + 300);
+      var codeMatch = after.match(/^[\s\S]*?(\d[\d-]{5,}\d)/);
+      if (!codeMatch) codeMatch = after.match(/^[\s\S]*?([A-Za-z0-9][-A-Za-z0-9]{4,}[A-Za-z0-9])/);
+      if (codeMatch) {
+        var firstCode = codeMatch[1].trim().replace(/[.\s]+$/, '');
+        var digits0 = firstCode.replace(/\D/g, '');
+        if (digits0.length >= 6 || (firstCode.length >= 6 && /[A-Za-z]/.test(firstCode) && /\d/.test(firstCode))) {
+          codes.push({ code: firstCode, index: km.index });
         }
-        var code = codeTokens.join('').replace(/[-–]$/, '');
-        if (code.replace(/\D/g, '').length >= 6 || (code.length >= 6 && /[A-Za-z]/.test(code) && /\d/.test(code))) {
-          codes.push({ code: code, index: km.index });
+        var restAfter = after.slice(codeMatch.index + codeMatch[0].length);
+        var consecutive = restAfter.match(/^(?:\s*[,،\n]\s*(\d[\d-]{5,}\d|[A-Za-z0-9][-A-Za-z0-9]{4,}[A-Za-z0-9]))+/);
+        if (consecutive) {
+          var moreRe = /(\d[\d-]{5,}\d|[A-Za-z0-9][-A-Za-z0-9]{4,}[A-Za-z0-9])/g;
+          var mm;
+          while ((mm = moreRe.exec(consecutive[0])) !== null) {
+            var c2 = mm[1].trim();
+            var d2 = c2.replace(/\D/g, '');
+            if (d2.length >= 6 || (c2.length >= 6 && /[A-Za-z]/.test(c2) && /\d/.test(c2))) {
+              codes.push({ code: c2, index: km.index });
+            }
+          }
         }
-      });
+      }
     }
 
     if (!codes.length) {
-      var longNum = /(?:^|[\s:])(\d{7,20})(?=[\s,.\n]|$)/gm;
-      while ((km = longNum.exec(cleaned)) !== null) {
+      var longNumDash = /(?:^|[\s:])(\d[\d-]{6,24}\d)(?=[\s,.\n]|$)/gm;
+      while ((km = longNumDash.exec(cleaned)) !== null) {
         var c = km[1];
-        if (c.length >= 8 && c.length <= 20 && !/^0[0-9]{8,9}$/.test(c) && !/^(19|20)\d{6}$/.test(c)) {
+        var digits = c.replace(/\D/g, '');
+        if (digits.length >= 8 && digits.length <= 20 &&
+            !/^0[0-9]{8,9}$/.test(digits) && !/^972\d{8,9}$/.test(digits) &&
+            !/^(19|20)\d{6}$/.test(digits) && !amountSet[digits]) {
           codes.push({ code: c, index: km.index });
         }
       }
@@ -1701,10 +1879,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
     if (!codes.length) {
       var alphaNum = /\b([A-Za-z0-9][-A-Za-z0-9]{4,25}[A-Za-z0-9])\b/g;
+      var STOP = /^(?:valid|expires?|expiry|DREAM|CARD|LOVE|ARMY|GIFTZONE|until|through|for|the|and|not|תוקף|עד|בתוקף|למימוש|ניתן|יש|תודה|מימוש|בסניפי|באתר|לפרטים|בכפוף|שמור|הנחיות|לתקנון|כולל|בהזמנה)$/i;
       while ((km = alphaNum.exec(cleaned)) !== null) {
         var v = km[1];
         if (/[A-Za-z]/.test(v) && /\d/.test(v) && v.length >= 6 && !/^__\w+__$/.test(v) &&
-            !/^https?$/i.test(v) && !/^[A-Z]{2,5}$/i.test(v) && !STOP_WORDS.test(v)) {
+            !/^https?$/i.test(v) && !/^[A-Z]{2,5}$/i.test(v) && !STOP.test(v)) {
           codes.push({ code: v, index: km.index });
         }
       }
@@ -1750,78 +1929,150 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
 
   function bestExpiryDate(dates) {
-    var plain = dates.filter(function (x) { return !String(x).startsWith('card:'); });
-    if (!plain.length) return '';
-    var now = new Date();
-    var future = plain.filter(function (d) {
-      var p = d.split('-');
-      return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])) >= now;
-    });
-    if (future.length) {
-      future.sort();
-      return future[future.length - 1];
+    var candidates = dates.filter(function (r) { return r.score > 0 && !String(r.date).startsWith('card:'); });
+    if (!candidates.length) {
+      var cardEntry = dates.find(function (r) { return String(r.date).startsWith('card:'); });
+      if (cardEntry) {
+        var parts = cardEntry.date.replace('card:', '').split('/');
+        var mm = Number(parts[0]), yy = Number(parts[1]);
+        if (yy < 100) yy += 2000;
+        var lastDay = new Date(yy, mm, 0).getDate();
+        return yy + '-' + String(mm).padStart(2, '0') + '-' + String(lastDay).padStart(2, '0');
+      }
+      return '';
     }
-    plain.sort();
-    return plain[plain.length - 1];
+    var now = new Date();
+    candidates.sort(function (a, b) {
+      if (a.score !== b.score) return b.score - a.score;
+      return a.date < b.date ? 1 : -1;
+    });
+    var best = candidates[0];
+    var p = best.date.split('-');
+    var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    if (d >= now) return best.date;
+    var futureHigh = candidates.filter(function (r) {
+      var pp = r.date.split('-');
+      return new Date(Number(pp[0]), Number(pp[1]) - 1, Number(pp[2])) >= now;
+    });
+    if (futureHigh.length) return futureHigh[0].date;
+    return best.date;
   }
 
+  var MULTI_STORE_SOURCES = ['dreamscard', 'giftzone', 'multipass', 'lovecard', 'max', 'connex'];
+
   function buildSmartName(text, storeTags, amount, sourceId, lang) {
+    var isMultiStore = MULTI_STORE_SOURCES.indexOf(sourceId) >= 0 || storeTags.length > 2;
+
+    var brandName = '';
+    var brandPats = [
+      /שובר\s+([\w\u0590-\u05FF][\w\u0590-\u05FF\s&'-]{1,25}?)(?:\s*[-–]\s*|\s+ב)/i,
+      /(?:gift\s*(?:card|voucher)|תו\s*קניי?ה?)\s+(?:ל|של\s+)?([A-Za-z\u0590-\u05FF][\w\u0590-\u05FF\s&'-]{1,25})/i,
+      /קיבלת\s+שובר\s+([\w\u0590-\u05FF][\w\u0590-\u05FF\s&'-]{1,25}?)(?:\s*[-–]\s*|\s+ב)/i
+    ];
+    for (var bp = 0; bp < brandPats.length; bp++) {
+      var brandMatch = text.match(brandPats[bp]);
+      if (brandMatch) {
+        var b = brandMatch[1].trim().replace(/[-–—:.\s]+$/, '');
+        if (b.length >= 2 && !/^\d+$/.test(b) && !/בשווי|שווי|₪|ש"ח/i.test(b)) { brandName = b; break; }
+      }
+    }
+
+    if (isMultiStore && (brandName || sourceId)) {
+      return brandName || sourceId;
+    }
+
     var mainStore = '';
-    if (storeTags.length) mainStore = storeTags[0];
+    if (storeTags.length === 1) mainStore = storeTags[0];
+    else if (storeTags.length === 2) mainStore = storeTags[0];
 
-    if (!mainStore) {
-      var brandMatch = text.match(/(?:לרשת|ברשת|ב(?:סניפי)?)\s+([^\n,]{2,25})/i);
-      if (brandMatch) mainStore = brandMatch[1].trim();
+    if (!mainStore && !brandName) {
+      var storeCtx = text.match(/(?:לרשת|ברשת|ב(?:סניפי)?)\s+([^\n,]{2,25})/i);
+      if (storeCtx) mainStore = storeCtx[1].trim();
     }
 
+    var primary = brandName || mainStore;
     var parts = [];
-    if (mainStore) parts.push(mainStore);
+    if (primary) parts.push(primary);
 
-    if (amount) {
-      parts.push(String(amount) + ' ₪');
+    if (sourceId && (!primary || sourceId.toLowerCase() !== primary.toLowerCase())) {
+      parts.push(primary ? '(' + sourceId + ')' : sourceId);
     }
 
-    if (sourceId && !mainStore) {
-      parts.push('(' + sourceId + ')');
-    } else if (sourceId && mainStore) {
-      parts.push('(' + sourceId + ')');
-    }
-
+    var isOffer = isOfferType(text, amount);
     if (!parts.length) {
-      var isOffer = /קופון|הטבה|coupon|offer|deal|הנחה|discount/i.test(text);
-      return isOffer ? (lang === 'he' ? 'קופון' : 'Coupon') : (lang === 'he' ? 'שובר' : 'Voucher');
+      if (isOffer) {
+        var desc = extractOfferDescription(text);
+        if (desc && desc.length <= 40) return desc;
+        return lang === 'he' ? 'קופון' : 'Coupon';
+      }
+      return lang === 'he' ? 'שובר' : 'Voucher';
     }
 
     return parts.join(' ').trim();
   }
 
   function isOfferType(text, amount) {
-    if (/(?:חינם|free|buy\s*one\s*get|קנה\s*\d\s*קבל|מתנה|במתנה)/i.test(text) && (!amount || amount <= 10)) return true;
-    if (amount && amount > 0) return false;
-    if (/(?:הטבה|קופון|coupon|deal|offer|הנחה|discount|הנחת|off\b|\d+%)/i.test(text)) return true;
+    var OFFER_KW = /(?:הטבה|קופון|coupon|deal|offer|הנחה|discount|הנחת|off\b|\d+%)/i;
+    var FREE_KW = /(?:חינם|free|buy\s*one\s*get|קנה\s*\d\s*קבל)/i;
+    var GIFT_CTX = /(?:מתנה|במתנה)/i;
+    var LOW_VALUE_CTX = /ב[- ]?₪?\s*\d{1,2}\b|\bב[- ]?\d{1,2}\s*₪/;
+    if (FREE_KW.test(text) && (!amount || amount <= 10)) return true;
+    if (GIFT_CTX.test(text) && (!amount || amount === 0)) return true;
+    if (amount && amount <= 20 && (OFFER_KW.test(text) || LOW_VALUE_CTX.test(text))) return true;
+    if (!amount || amount === 0) {
+      if (OFFER_KW.test(text)) return true;
+    }
     return false;
   }
 
   function extractOfferDescription(text) {
+    var CUT_RE = /(?:הינו\s*:?|הוא\s*:?|\bis\b\s*:?|הקוד\s|קוד\s*:?|code\s*:?|למימוש|לפרטים|בכפוף|בתוקף|תוקף\s|שמור|באתר|באפליקצי|בסניפ|על\s*מנת\s*ל|\d{5,})/i;
+    var storeEsc = KNOWN_STORES.map(function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|');
+    var STORE_RE = new RegExp('[-–—]\\s*(?:' + storeEsc + ')\\s*$', 'i');
+    var PUNCT_TAIL = /[-–—:,.\s]+$/;
+
+    function cleanTail(s) {
+      s = s.replace(STORE_RE, '').trim();
+      s = s.replace(PUNCT_TAIL, '').trim();
+      return s;
+    }
+
+    function extract(raw) {
+      var s = raw.trim();
+      var cutIdx = s.search(CUT_RE);
+      if (cutIdx > 3) s = s.slice(0, cutIdx);
+      s = cleanTail(s);
+      return s.slice(0, 200);
+    }
+
     var patterns = [
-      /(?:הטבה\s*[-–:]?\s*)(.*?)(?:\n|$)/i,
-      /(?:קופון\s*(?:ל)?(?:הטבה)?\s*[-–:]?\s*)(.*?)(?:\n|$)/i,
-      /(?:coupon\s*(?:for)?\s*[-–:]?\s*)(.*?)(?:\n|$)/i
+      /(?:ה)?הטבה\s*[-–:]?\s*(.*?)(?:\n|$)/i,
+      /(?:קופון|coupon)\s*(?:ל|for)?\s*(?:הטבה)?\s*[-–:]?\s*(.*?)(?:\n|$)/i,
+      /(?:deal|offer|הנחה|discount)\s*[-–:]?\s*(.*?)(?:\n|$)/i
     ];
     for (var i = 0; i < patterns.length; i++) {
       var m = text.match(patterns[i]);
-      if (m && m[1] && m[1].trim().length > 5) return m[1].trim().slice(0, 200);
+      if (m && m[1]) {
+        var result = extract(m[1]);
+        if (result.length > 3) return result;
+      }
     }
-    var lines = text.split('\n').filter(function (l) { return l.trim().length > 10; });
-    if (lines.length > 0) return lines[0].trim().slice(0, 200);
-    return text.slice(0, 200);
+
+    var lines = text.split('\n').map(function (l) { return l.trim(); }).filter(function (l) { return l.length > 10; });
+    for (var j = 0; j < lines.length; j++) {
+      if (/^(?:תודה|thank|שמור|בכפוף|הקוד|קוד|code)/i.test(lines[j])) continue;
+      if (CUT_RE.test(lines[j].slice(0, 5))) continue;
+      var result = extract(lines[j]);
+      if (result.length > 5) return result;
+    }
+    return '';
   }
 
   function parsePastedText(raw, lang, learnMap) {
     var text = preProcess(raw);
     var urls = extractUrls(text);
     var links = { storesList: '', balanceCheck: '', voucherView: '', personalArea: '' };
-    urls.forEach(function (u) { links = mergeLinks(links, categorizeUrl(u)); });
+    urls.forEach(function (u) { links = mergeLinks(links, categorizeUrl(u, text)); });
 
     var sourceId = detectSource(text);
     var storeTags = detectStoresInText(text);
@@ -1835,7 +2086,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var amounts = extractAmounts(text);
     var dates = extractDates(text);
     var cards = extractCardBlocks(text);
-    var simples = extractCodes(text);
+    var simples = extractCodes(text, amounts);
     var howToUse = extractHowToUse(text);
     var network = /dreamscard|dcgift/i.test(sourceId) ? 'dreamscard' : sourceId === 'giftzone' ? 'giftzone' : '';
     var inherited = (network && learnMap && learnMap[network]) ? learnMap[network].slice() : [];
@@ -1844,6 +2095,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
     var drafts = [];
     var mainAmount = amounts.length ? amounts[0] : null;
+    var totalItems = (cards.length || 0) + (simples.length || 0);
+    var shouldDistribute = amounts.length === 1 && totalItems > 1;
 
     function baseDraft() {
       return {
@@ -1855,7 +2108,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         offerDescription: '', expiryDate: expiryDate, validFromDate: '',
         noExpiry: false, links: Object.assign({}, links), howToUse: howToUse,
         notes: '', favorite: false, photo: null, usageHistory: [],
-        _manyStores: !!links.storesList
+        _manyStores: !!links.storesList,
+        _relativeExpiry: !!dates._hasRelative
       };
     }
 
@@ -1866,8 +2120,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         d.cardExpiry = c.cardExpiry; d.cardCvv = c.cardCvv;
         d.name = buildSmartName(text, allStores, mainAmount, sourceId, lang) + (cards.length > 1 ? ' #' + (idx + 1) : '');
         if (network) d.storeTags = Array.from(new Set(d.storeTags.concat(networkStores(network))));
-        var cd = dates.find(function (x) { return String(x).startsWith('card:'); });
-        if (cd) d.cardExpiry = cd.replace('card:', '');
+        var cd = dates.find(function (r) { return String(r.date).startsWith('card:'); });
+        if (cd) d.cardExpiry = cd.date.replace('card:', '');
+        if (shouldDistribute) {
+          var per = Math.round(mainAmount / totalItems * 100) / 100;
+          d.originalAmount = per; d.remainingBalance = per;
+        }
         drafts.push(d);
       });
     }
@@ -1878,7 +2136,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         d.code = s.code;
         d.name = buildSmartName(text, allStores, mainAmount, sourceId, lang) + (simples.length > 1 ? ' #' + (idx + 1) : '');
         if (network) d.storeTags = Array.from(new Set(d.storeTags.concat(networkStores(network))));
-        if (amounts[idx]) { d.originalAmount = amounts[idx]; d.remainingBalance = amounts[idx]; }
+        if (shouldDistribute) {
+          var per = Math.round(mainAmount / totalItems * 100) / 100;
+          d.originalAmount = per; d.remainingBalance = per;
+        } else if (amounts[idx]) {
+          d.originalAmount = amounts[idx]; d.remainingBalance = amounts[idx];
+        }
         drafts.push(d);
       });
     }
@@ -1886,6 +2149,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (!drafts.length) {
       var d = baseDraft();
       d.name = buildSmartName(text, allStores, mainAmount, sourceId, lang);
+      if (links.voucherView) {
+        d.code = links.voucherView;
+        d.codeType = 'url';
+      }
       if (isOfferType(text, mainAmount)) {
         d.type = 'offer';
         d.offerDescription = extractOfferDescription(text);
@@ -1923,10 +2190,55 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   function $(id) { return document.getElementById(id); }
 
   function showOnly(el) {
-    ['screen-welcome', 'screen-rejected', 'screen-phone-collect', 'screen-passphrase', 'main-app'].forEach(function (id) {
+    ['screen-welcome', 'screen-rejected', 'screen-phone-collect', 'screen-passphrase', 'screen-wallet-picker', 'main-app'].forEach(function (id) {
       const n = $(id);
       if (n) n.hidden = id !== el;
     });
+  }
+
+  function sessionKey(uid) { return 'vm_session_' + uid; }
+
+  function loadSession(uid) {
+    var raw = localStorage.getItem(sessionKey(uid));
+    if (!raw) return null;
+    try {
+      var s = JSON.parse(raw);
+      if (s.wallets) return s;
+      if (s.accountId && s.keyB64 && s.phone) {
+        return {
+          phone: s.phone,
+          activeAccountId: s.accountId,
+          wallets: (function () {
+            var w = {};
+            w[s.accountId] = { isOwner: !!s.isOwner, keyB64: s.keyB64, keyVersion: s.keyVersion || null, walletName: '' };
+            return w;
+          })()
+        };
+      }
+      return null;
+    } catch (e) { return null; }
+  }
+
+  function saveSession(uid, session) {
+    localStorage.setItem(sessionKey(uid), JSON.stringify(session));
+  }
+
+  function saveWalletToSession(uid, phone, accountId, isOwner, keyB64, keyVersion, walletName) {
+    var session = loadSession(uid) || { phone: phone, activeAccountId: accountId, wallets: {} };
+    session.phone = phone;
+    session.activeAccountId = accountId;
+    if (!session.wallets) session.wallets = {};
+    session.wallets[accountId] = {
+      isOwner: !!isOwner,
+      keyB64: keyB64,
+      keyVersion: keyVersion || null,
+      walletName: walletName || ''
+    };
+    saveSession(uid, session);
+  }
+
+  function clearSession(uid) {
+    localStorage.removeItem(sessionKey(uid));
   }
 
   var _navFromPop = false;
@@ -1976,13 +2288,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       var absD = Math.abs(d);
       var expText = absD > 365 ? Math.floor(absD / 365) + ' ' + (Math.floor(absD / 365) === 1 ? Va.t('oneYear') : Va.t('years'))
         : absD > 60 ? Math.floor(absD / 30) + ' ' + Va.t('months')
-        : absD + ' ' + Va.t('days');
+        : daysLabel(absD);
       return { cls: 'red', text: Va.t('expired') + ' (' + expText + ')' };
     }
     if (d === 0) return { cls: 'red', text: Va.t('expiresToday') };
-    if (d <= 7) return { cls: 'orange', text: d + ' ' + Va.t('days') };
-    if (d <= 30) return { cls: 'yellow', text: d + ' ' + Va.t('days') };
-    if (d <= 90) return { cls: 'green', text: d + ' ' + Va.t('days') };
+    if (d <= 7) return { cls: 'orange', text: daysLabel(d) };
+    if (d <= 30) return { cls: 'yellow', text: daysLabel(d) };
+    if (d <= 90) return { cls: 'green', text: daysLabel(d) };
     if (d <= 365) {
       var mo = Math.floor(d / 30);
       return { cls: 'green', text: '~' + mo + ' ' + (mo === 1 ? Va.t('oneMonth') : Va.t('months')) };
@@ -2112,6 +2424,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
 
   function renderDashboard() {
+    var wsBtn = $('wallet-switch-btn');
+    if (wsBtn) {
+      var wc = getWalletCount();
+      wsBtn.hidden = wc < 2;
+    }
     var q = ($('dash-search') ? $('dash-search').value : '').toLowerCase().trim();
     var active = state.vouchers.filter(function (v) { return v.status === 'active' && daysUntilExpiry(v) >= 0; });
     var matched = active.filter(function (v) { return dashSearchMatch(v, q); });
@@ -2146,7 +2463,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           card.style.position = 'relative';
           card.innerHTML = '<div class="card-strip" style="background:var(--' + cm.color + ')"></div>' +
             '<button type="button" class="fav-remove" title="' + escapeHtml(Va.t('removeFav')) + '">★</button>' +
-            '<b style="padding-inline-end:24px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.88rem">' + escapeHtml(v.name) + '</b><div class="small" style="opacity:0.7">' + (v.type === 'value' ? Va.money(v.remainingBalance) : escapeHtml((v.offerDescription || '').slice(0, 40))) + '</div>';
+            '<b style="padding-inline-end:28px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:0.85rem;line-height:1.3">' + escapeHtml(v.name) + '</b>' +
+            '<div class="small" style="opacity:0.7;margin-top:4px;font-weight:600">' + (v.type === 'value' ? Va.money(v.remainingBalance) : escapeHtml((v.offerDescription || '').slice(0, 40))) + '</div>';
           card.querySelector('.fav-remove').onclick = function (e) {
             e.stopPropagation();
             toggleFav(v);
@@ -2158,20 +2476,57 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         favs.innerHTML = '<div class="small" style="padding:12px 0;opacity:0.6">' + Va.t('noFavorites') + '</div>';
       }
     }
+    var DASH_MAX = 5;
+    var valueList = matched.filter(function (v) { return v.type === 'value'; });
+    valueList.sort(function (a, b) { return daysUntilExpiry(a) - daysUntilExpiry(b); });
+    var vTitle = $('dash-vouchers-title');
+    var vBox = $('dash-vouchers');
+    if (vTitle) vTitle.hidden = !valueList.length;
+    if (vBox) {
+      vBox.innerHTML = '';
+      valueList.slice(0, DASH_MAX).forEach(function (v) {
+        var eb = expiryBadge(v);
+        var row = document.createElement('div');
+        row.className = 'list-row';
+        row.innerHTML = '<div style="min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:0.9rem">' + escapeHtml(v.name) + '</div>' +
+          '<div style="flex-shrink:0;font-weight:700;font-size:0.9rem;margin:0 8px">' + Va.money(v.remainingBalance) + '</div>' +
+          '<span class="badge ' + eb.cls + '" style="flex-shrink:0;font-size:0.7rem">' + eb.text + '</span>';
+        row.onclick = function () { openSheet(v); };
+        vBox.appendChild(row);
+      });
+      if (valueList.length > DASH_MAX) {
+        var link = document.createElement('div');
+        link.className = 'small';
+        link.style.cssText = 'text-align:center;padding:8px 0;cursor:pointer;color:var(--primary);font-weight:600';
+        link.textContent = Va.t('showAll') + ' (' + valueList.length + ')';
+        link.onclick = function () { state.currentFilter = 'active'; showTab('vouchers'); };
+        vBox.appendChild(link);
+      }
+    }
+    var offerList = matched.filter(function (v) { return v.type === 'offer'; });
+    offerList.sort(function (a, b) { return daysUntilExpiry(a) - daysUntilExpiry(b); });
+    var oTitle = $('dash-offers-title');
     var off = $('dash-offers');
+    if (oTitle) oTitle.hidden = !offerList.length;
     if (off) {
       off.innerHTML = '';
-      var offerList = matched.filter(function (v) { return v.type === 'offer'; }).slice(0, 8);
-      if (offerList.length) {
-        offerList.forEach(function (v) {
-          var row = document.createElement('div');
-          row.className = 'list-row';
-          row.innerHTML = '<div style="min-width:0;flex:1"><div style="font-weight:600;font-size:0.92rem">' + escapeHtml(v.name) + '</div><div class="small">' + escapeHtml((v.offerDescription || '').slice(0, 80)) + '</div></div>';
-          row.onclick = function () { openSheet(v); };
-          off.appendChild(row);
-        });
-      } else if (!q) {
-        off.innerHTML = '<div class="small" style="padding:12px 0;opacity:0.6">' + Va.t('noOffers') + '</div>';
+      offerList.slice(0, DASH_MAX).forEach(function (v) {
+        var eb = expiryBadge(v);
+        var row = document.createElement('div');
+        row.className = 'list-row';
+        row.innerHTML = '<div style="min-width:0;flex:1"><div style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(v.name) + '</div>' +
+          '<div class="small" style="opacity:0.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml((v.offerDescription || '').slice(0, 60)) + '</div></div>' +
+          '<span class="badge ' + eb.cls + '" style="flex-shrink:0;font-size:0.7rem;margin-inline-start:8px">' + eb.text + '</span>';
+        row.onclick = function () { openSheet(v); };
+        off.appendChild(row);
+      });
+      if (offerList.length > DASH_MAX) {
+        var oLink = document.createElement('div');
+        oLink.className = 'small';
+        oLink.style.cssText = 'text-align:center;padding:8px 0;cursor:pointer;color:var(--primary);font-weight:600';
+        oLink.textContent = Va.t('showAll') + ' (' + offerList.length + ')';
+        oLink.onclick = function () { state.currentFilter = 'active'; showTab('vouchers'); };
+        off.appendChild(oLink);
       }
     }
     var empty = $('dash-empty');
@@ -2182,6 +2537,22 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     return String(s || '').replace(/[&<>"']/g, function (c) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
     });
+  }
+
+  function daysLabel(n) {
+    return n + ' ' + (n === 1 ? Va.t('oneDay') : Va.t('days'));
+  }
+
+  function formatDate(isoStr) {
+    if (!isoStr) return '—';
+    var d = new Date(isoStr);
+    if (isNaN(d.getTime())) return isoStr;
+    var dd = String(d.getDate()).padStart(2, '0');
+    var mm = String(d.getMonth() + 1).padStart(2, '0');
+    var yy = d.getFullYear();
+    var hh = String(d.getHours()).padStart(2, '0');
+    var mi = String(d.getMinutes()).padStart(2, '0');
+    return dd + '/' + mm + '/' + yy + ' ' + hh + ':' + mi;
   }
 
   function updateFilterChips() {
@@ -2282,9 +2653,6 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         return;
       }
       var storeStr = truncStores(v.storeTags);
-      var valueHtml = v.type === 'value'
-        ? '<div style="font-size:1.6rem;font-weight:900;letter-spacing:-0.03em;margin:10px 0 4px">' + Va.money(v.remainingBalance) + '</div>'
-        : '<div style="font-size:0.88rem;color:var(--muted);margin:8px 0 4px;line-height:1.4">' + escapeHtml((v.offerDescription || '').slice(0, 100)) + '</div>';
       var isExpired = daysUntilExpiry(v) < 0;
       var card = document.createElement('div');
       card.className = 'card' + (urgent ? ' urgent' : '');
@@ -2298,21 +2666,45 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           '</div>' +
           '<button type="button" class="star-btn" data-id="' + v.id + '" style="position:static;width:44px;height:44px;font-size:1rem;flex-shrink:0">' + (v.favorite ? '★' : '☆') + '</button>' +
         '</div>' +
-        valueHtml +
-        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 4px">' +
+          (v.type === 'value'
+            ? '<div style="font-size:1.6rem;font-weight:900;letter-spacing:-0.03em">' + Va.money(v.remainingBalance) + '</div>'
+            : '<div style="font-size:0.88rem;color:var(--muted);line-height:1.4;flex:1;min-width:0">' + escapeHtml((v.offerDescription || '').slice(0, 100)) + '</div>') +
+          '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;flex-shrink:0">' +
             '<span class="badge ' + eb.cls + '">' + eb.text + '</span>' +
             (miss ? '<span class="badge code-miss">' + Va.t('codeMissing') + '</span>' : '') +
             (low ? '<span class="badge orange">' + Va.t('almostEmpty') + '</span>' : '') +
+          '</div>' +
         '</div>' +
         '<div style="display:flex;gap:6px;margin-top:8px">' +
-            '<button type="button" class="btn ghost" data-copy="' + v.id + '" style="flex:1;min-height:44px;padding:8px 10px;font-size:0.8rem;border-radius:999px">' + Va.t('copyCode') + '</button>' +
+            '<button type="button" class="btn secondary" data-copy="' + v.id + '" style="flex:1;min-height:44px;padding:8px 10px;font-size:0.8rem;border-radius:999px"></button>' +
             '<button type="button" class="btn" data-use="' + v.id + '" style="flex:1;min-height:44px;padding:8px 10px;font-size:0.8rem;border-radius:999px">' + Va.t('use') + '</button>' +
         '</div>';
-      card.querySelector('[data-copy]').onclick = function (e) {
-        e.stopPropagation();
-        const p = plainMap[v.id] || {};
-        Va.copyText(p.code || p.cardNumber || '');
-      };
+      (function () {
+        var p = plainMap[v.id] || {};
+        var rawCode = p.code || p.cardNumber || '';
+        var isUrl = /^https?:\/\//i.test(rawCode);
+        var isCard = v.codeType === 'card' && p.cardNumber;
+        var btn = card.querySelector('[data-copy]');
+        if (!rawCode) {
+          btn.style.display = 'none';
+        } else if (isUrl) {
+          btn.textContent = '🔗 ' + Va.t('openLink');
+          btn.onclick = function (e) { e.stopPropagation(); window.open(rawCode, '_blank', 'noopener'); };
+        } else if (isCard) {
+          btn.textContent = '📋 •••• ' + rawCode.replace(/\D/g, '').slice(-4);
+          btn.style.direction = 'ltr';
+          btn.style.fontFamily = 'monospace';
+          btn.style.letterSpacing = '0.03em';
+          btn.onclick = function (e) { e.stopPropagation(); Va.copyText(rawCode); };
+        } else {
+          btn.textContent = '📋 ' + rawCode;
+          btn.style.direction = 'ltr';
+          btn.style.fontFamily = 'monospace';
+          btn.style.letterSpacing = '0.03em';
+          btn.onclick = function (e) { e.stopPropagation(); Va.copyText(rawCode); };
+        }
+      })();
       card.querySelector('[data-use]').onclick = function (e) {
         e.stopPropagation();
         markQuickUse(v);
@@ -2437,11 +2829,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (links.personalArea) linkRow.push('<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(links.personalArea) + '">' + Va.t('linkPersonal') + '</a>');
     let codeBlock = '';
     if (v.codeType === 'card') {
-      codeBlock = '<div class="mt12" style="background:var(--surface);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border)"><div class="small" style="font-weight:600">PAN</div><div style="font-size:1.15rem;font-weight:800;word-break:break-all;letter-spacing:0.05em;margin:4px 0 10px">' + escapeHtml(p.cardNumber || '') +
-        '</div><div class="row" style="gap:12px"><div><div class="small" style="font-weight:600">EXP</div><button type="button" class="btn secondary" id="cp-exp" style="font-family:monospace">' + escapeHtml(p.cardExpiry || '') + '</button></div>' +
+      codeBlock = '<div class="mt12" style="background:var(--surface);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border)"><div class="small" style="font-weight:600">' + Va.t('cardNumber') + '</div><div style="font-size:1.15rem;font-weight:800;word-break:break-all;letter-spacing:0.05em;margin:4px 0 10px">' + escapeHtml(p.cardNumber || '') +
+        '</div><div class="row" style="gap:12px"><div><div class="small" style="font-weight:600">' + Va.t('cardExpiry') + '</div><button type="button" class="btn secondary" id="cp-exp" style="font-family:monospace">' + escapeHtml(p.cardExpiry || '') + '</button></div>' +
         '<div><div class="small" style="font-weight:600">CVV</div><button type="button" class="btn secondary" id="cp-cvv" style="font-family:monospace">' + escapeHtml(p.cardCvv || '') + '</button></div></div></div>';
-    } else {
-      codeBlock = '<div class="mt12" style="background:var(--surface);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border);text-align:center"><div class="small" style="font-weight:600">' + Va.t('copyCode') + '</div><div style="font-size:1.3rem;font-weight:800;word-break:break-all;letter-spacing:0.06em;font-family:monospace;margin:8px 0">' + escapeHtml(p.code || '') + '</div>' +
+    } else if (p.code && /^https?:\/\//i.test(p.code)) {
+      codeBlock = '<div class="mt12" style="background:var(--surface);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border);text-align:center">' +
+        '<a class="btn mt8" id="cp-code" href="' + escapeHtml(p.code) + '" target="_blank" rel="noopener" style="width:100%;display:inline-block;text-decoration:none">🔗 ' + Va.t('openLink') + '</a></div>';
+    } else if (p.code) {
+      codeBlock = '<div class="mt12" style="background:var(--surface);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border);text-align:center"><div class="small" style="font-weight:600">' + Va.t('voucherCode') + '</div><div style="font-size:1.3rem;font-weight:800;word-break:break-all;letter-spacing:0.06em;font-family:monospace;margin:8px 0">' + escapeHtml(p.code) + '</div>' +
         '<button type="button" class="btn mt8" id="cp-code" style="width:100%">' + Va.t('copyCode') + '</button></div>';
     }
     sc.innerHTML = '<div class="row-between"><b>' + escapeHtml(v.name) + '</b><button type="button" class="btn ghost" id="sheet-close">' + Va.t('close') + '</button></div>' +
@@ -2455,15 +2850,20 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     history.pushState({ overlay: 'sheet' }, '', '');
     $('sheet-close').onclick = closeSheet;
     const cpc = $('cp-code');
-    if (cpc) cpc.onclick = function () { Va.copyText(p.code || ''); };
+    if (cpc && cpc.tagName === 'BUTTON') cpc.onclick = function () { Va.copyText(p.code || ''); };
     const cpe = $('cp-exp');
     if (cpe) cpe.onclick = function () { Va.copyText(p.cardExpiry || ''); };
     const cpv = $('cp-cvv');
     if (cpv) cpv.onclick = function () { Va.copyText(p.cardCvv || ''); };
-    $('sheet-use').onclick = function () { closeSheet(); markQuickUse(v); };
+    $('sheet-use').onclick = function () {
+      $('overlay-sheet').hidden = true;
+      history.replaceState(null, '', '');
+      markQuickUse(v);
+    };
     $('sheet-more').onclick = function () {
       var sh2 = $('overlay-sheet');
       if (sh2) sh2.hidden = true;
+      history.replaceState(null, '', '');
       openDetailModal(v);
     };
     $('sheet-cal').onclick = function () {
@@ -2497,7 +2897,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     const p = plainMap[v.id] || {};
     var detLinks = v.links || {};
     var detHistory = (v.usageHistory || []).map(function (h) {
-      return '<div class="small">' + escapeHtml(h.date || '') + ' — ' + Va.money(h.amount) + (h.note ? ' (' + escapeHtml(h.note) + ')' : '') + '</div>';
+      var dd = (h.date || '').split('-'); var fmtD = dd.length === 3 ? dd[2] + '/' + dd[1] + '/' + dd[0] : h.date || '';
+      return '<div class="small">' + escapeHtml(fmtD) + ' — ' + Va.money(h.amount) + (h.note ? ' (' + escapeHtml(h.note) + ')' : '') + '</div>';
     }).join('');
     mc.innerHTML = '<div class="row-between"><b>' + escapeHtml(v.name) + '</b><button type="button" class="btn ghost" id="mod-close">' + Va.t('close') + '</button></div>' +
       '<div class="mt8"><span class="badge ' + expiryBadge(v).cls + '">' + expiryBadge(v).text + '</span></div>' +
@@ -2661,7 +3062,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           field('links-stores', Va.t('linkStores'), 'text', (v.links && v.links.storesList) || '') +
         '</div>' +
         field('notes', Va.t('notes'), 'textarea', v.notes || '') +
-        '<label class="lbl">' + Va.t('photo') + '</label><input type="file" accept="image/*" capture="environment" id="mf-photo" />' +
+        '<label class="lbl">' + Va.t('photo') + '</label>' +
+        '<input type="file" accept="image/*" capture="environment" id="mf-photo" style="display:none" />' +
+        '<button type="button" class="btn secondary" id="mf-photo-btn" style="width:100%;border-radius:999px;padding:10px 18px;font-size:0.85rem">' +
+          '<span id="mf-photo-label">📷 ' + Va.t('photo') + '</span>' +
+        '</button>' +
       '</div>';
   }
 
@@ -2678,6 +3083,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       cancelBtn.onclick = function () {
         _editingVoucher = null;
         window._mfPhotoB64 = null;
+        $('add-manual-panel').hidden = true;
+        $('add-paste-panel').hidden = false;
+        $('paste-area').value = '';
+        document.querySelectorAll('#add-mode-chips .chip').forEach(function (c) { c.classList.toggle('active', c.getAttribute('data-add') === 'paste'); });
         showTab('vouchers');
       };
     }
@@ -2741,18 +3150,28 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       }
       _editingVoucher = null;
       window._mfPhotoB64 = null;
+      $('add-manual-panel').hidden = true;
+      $('add-paste-panel').hidden = false;
+      $('paste-area').value = '';
+      document.querySelectorAll('#add-mode-chips .chip').forEach(function (c) { c.classList.toggle('active', c.getAttribute('data-add') === 'paste'); });
       Va.toast(Va.t('save'));
       state.currentFilter = 'active';
       showTab('vouchers');
       });
     };
     var ph = $('mf-photo');
+    var phBtn = $('mf-photo-btn');
+    if (phBtn && ph) {
+      phBtn.onclick = function () { ph.click(); };
+    }
     if (ph) {
       ph.onchange = async function () {
         const f = ph.files && ph.files[0];
         if (!f) return;
         const b64 = await fileToB64(f);
         window._mfPhotoB64 = b64;
+        var lbl = $('mf-photo-label');
+        if (lbl) lbl.textContent = '✅ ' + Va.t('imageReady');
         Va.toast(Va.t('imageReady'));
       };
     }
@@ -2814,15 +3233,25 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     list.innerHTML = '';
     empty.hidden = arr.length > 0;
     arr.forEach(function (v) {
-      const row = document.createElement('div');
-      row.className = 'card';
-      row.innerHTML = '<b>' + escapeHtml(v.name) + '</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">' +
-        '<button type="button" class="btn secondary" data-rest="' + v.id + '" style="flex:1 1 auto;min-width:0">' + Va.t('restore') + '</button>' +
-        '<button type="button" class="btn danger" data-del="' + v.id + '" style="flex:1 1 auto;min-width:0">' + Va.t('deleteForever') + '</button></div>';
-      row.querySelector('[data-rest]').onclick = async function () {
+      var eb = expiryBadge(v);
+      var row = document.createElement('div');
+      row.className = 'list-row';
+      row.style.opacity = '0.7';
+      row.innerHTML =
+        '<div style="min-width:0;flex:1">' +
+          '<div style="font-weight:600;font-size:0.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(v.name) + '</div>' +
+          '<div class="small" style="opacity:0.7">' + (v.type === 'value' ? Va.money(v.remainingBalance) : escapeHtml((v.offerDescription || '').slice(0, 50))) + '</div>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">' +
+          '<button type="button" class="btn ghost" data-rest="' + v.id + '" style="padding:4px 10px;font-size:0.72rem;border-radius:999px">' + Va.t('restore') + '</button>' +
+          '<button type="button" class="btn ghost" data-del="' + v.id + '" style="padding:4px 10px;font-size:0.72rem;border-radius:999px;color:var(--danger)">' + Va.t('deleteForever') + '</button>' +
+        '</div>';
+      row.querySelector('[data-rest]').onclick = async function (e) {
+        e.stopPropagation();
         await Va.vouchersCol(state.activeAccountId).doc(v.id).update({ status: 'active', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
       };
-      row.querySelector('[data-del]').onclick = async function () {
+      row.querySelector('[data-del]').onclick = async function (e) {
+        e.stopPropagation();
         if (!confirm(Va.t('confirmDelete'))) return;
         await Va.vouchersCol(state.activeAccountId).doc(v.id).delete();
         Va.toast(Va.t('deleted'));
@@ -2835,17 +3264,44 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     const u = state.authUser;
     const su = $('settings-user');
     if (su) {
-      su.innerHTML = '<h3>' + Va.t('userSection') + '</h3><div class="small">' + Va.t('signedInAs') + ': ' + escapeHtml(u && u.displayName || '') + '</div>' +
-        '<div class="small">' + Va.t('phone') + ': ' + escapeHtml(state.normalizedPhone) + '</div>' +
-        '<div class="small">' + Va.t('method') + ': ' + (u && u.phoneNumber ? Va.t('phoneAuth') : Va.t('google')) + '</div>' +
-        '<button type="button" class="btn danger mt12" id="btn-so">' + Va.t('signOut') + '</button>';
-      $('btn-so').onclick = function () { localStorage.removeItem('vm_session_' + (state.authUser && state.authUser.uid)); Va.auth().signOut(); location.reload(); };
+      var displayName = escapeHtml(u && u.displayName || '');
+      var authMethod = u && u.phoneNumber ? Va.t('phoneAuth') : Va.t('google');
+      su.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">' +
+          '<div style="min-width:0;flex:1">' +
+            (displayName ? '<div style="font-weight:700;font-size:0.9rem;line-height:1.3">' + displayName + '</div>' : '') +
+            '<div style="font-size:0.75rem;color:var(--muted);line-height:1.5">' + escapeHtml(state.normalizedPhone) + ' · ' + authMethod + '</div>' +
+          '</div>' +
+          '<button type="button" class="btn ghost" id="btn-so" style="flex-shrink:0;font-size:0.75rem;padding:6px 14px;border-radius:999px;color:var(--danger)">' + Va.t('signOut') + '</button>' +
+        '</div>';
+      $('btn-so').onclick = function () { clearSession(state.authUser && state.authUser.uid); Va.auth().signOut(); location.reload(); };
     }
     const sh = $('settings-sharing');
     if (sh && state.isOwner) {
       const phones = (state.settingsDoc && state.settingsDoc.approvedPhones) ? state.settingsDoc.approvedPhones.slice() : [];
-      var memberCount = phones.length > 1 ? ' (' + (phones.length - 1) + ' ' + Va.t('members') + ')' : '';
-      sh.innerHTML = '<h3>' + Va.t('sharingSection') + memberCount + '</h3><div id="ap-list" class="mt8"></div>';
+      var memberCount = phones.length > 0 ? ' (' + phones.length + ' ' + (phones.length === 1 ? Va.t('oneMember') : Va.t('members')) + ')' : '';
+      var currentWalletName = (state.settingsDoc && state.settingsDoc.walletName) || '';
+      sh.innerHTML = '<h3>' + Va.t('sharingSection') + memberCount + '</h3>' +
+        '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">' +
+          '<label class="small" style="white-space:nowrap">' + Va.t('walletNameLabel') + '</label>' +
+          '<input class="input" id="wallet-name-input" value="' + escapeHtml(currentWalletName) + '" placeholder="' + Va.t('walletNamePlaceholder') + '" style="flex:1;font-size:0.8rem;padding:6px 10px;border-radius:8px" />' +
+          '<button type="button" class="btn" id="btn-save-wallet-name" style="font-size:0.75rem;padding:6px 12px;border-radius:999px">💾</button>' +
+        '</div>' +
+        '<div id="ap-list"></div>';
+      $('btn-save-wallet-name').onclick = async function () {
+        var newName = ($('wallet-name-input').value || '').trim();
+        await Va.accountRef(state.activeAccountId).update({
+          walletName: newName,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        var uid = state.authUser.uid;
+        var sess = loadSession(uid);
+        if (sess && sess.wallets && sess.wallets[state.activeAccountId]) {
+          sess.wallets[state.activeAccountId].walletName = newName;
+          saveSession(uid, sess);
+        }
+        Va.toast(Va.t('walletNameSaved'));
+      };
       const lst = $('ap-list');
       var nameMap = (state.settingsDoc && state.settingsDoc.memberNames) || {};
       var ownerPhone = state.normalizedPhone;
@@ -2874,14 +3330,15 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         lst.appendChild(row);
       });
       var invWrap = document.createElement('div');
-      invWrap.className = 'invite-wrap mt12';
+      invWrap.className = 'invite-wrap';
+      invWrap.style.cssText = 'display:flex;gap:6px;margin-top:10px';
       var invBtn = document.createElement('button');
       invBtn.className = 'btn whatsapp';
-      invBtn.style.width = '100%';
+      invBtn.style.cssText = 'flex:1;font-size:0.8rem;padding:8px 12px;border-radius:999px';
       invBtn.textContent = '\uD83D\uDCE9 ' + Va.t('inviteWhatsapp');
       var copyBtn = document.createElement('button');
-      copyBtn.className = 'btn secondary mt8';
-      copyBtn.style.width = '100%';
+      copyBtn.className = 'btn secondary';
+      copyBtn.style.cssText = 'flex:1;font-size:0.8rem;padding:8px 12px;border-radius:999px';
       copyBtn.textContent = '\uD83D\uDD17 ' + Va.t('inviteCopyLink');
       var lastLink = null;
       async function getOrCreateLink(btn) {
@@ -2921,8 +3378,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       sh.appendChild(invWrap);
     } else if (sh) {
       var phones = (state.settingsDoc && state.settingsDoc.approvedPhones) ? state.settingsDoc.approvedPhones.slice() : [];
-      var memberCount = phones.length > 1 ? ' (' + phones.length + ' ' + Va.t('members') + ')' : '';
-      sh.innerHTML = '<h3>' + Va.t('sharingSection') + memberCount + '</h3><p class="small" style="margin-bottom:12px">' + Va.t('memberOfWallet') + '</p><div id="ap-list" class="mt8"></div>';
+      var memberCount = phones.length > 0 ? ' (' + phones.length + ' ' + (phones.length === 1 ? Va.t('oneMember') : Va.t('members')) + ')' : '';
+      sh.innerHTML = '<h3>' + Va.t('sharingSection') + memberCount + '</h3><p style="font-size:0.75rem;color:var(--muted);margin:0 0 6px">' + Va.t('memberOfWallet') + '</p><div id="ap-list"></div>';
       var lst = $('ap-list');
       var nameMap = (state.settingsDoc && state.settingsDoc.memberNames) || {};
       var myPhone = state.normalizedPhone;
@@ -2952,12 +3409,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         return '<button type="button" class="' + (isActive ? 'btn' : 'btn secondary') + '" id="' + id + '" style="flex:1;min-width:0">' + label + '</button>';
       }
       disp.innerHTML = '<h3>' + Va.t('displaySection') + '</h3>' +
-        '<label class="lbl">' + Va.t('langHe').split(' ')[0] + '</label>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:6px">' + settingBtn('lg-he', Va.t('langHe'), state.lang === 'he') + settingBtn('lg-en', Va.t('langEn'), state.lang === 'en') + '</div>' +
-        '<label class="lbl mt8">' + Va.t('themeAuto') + '</label>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">' + settingBtn('th-a', Va.t('themeAuto'), state.themePref === 'auto') + settingBtn('th-l', Va.t('themeLight'), state.themePref === 'light') + settingBtn('th-d', Va.t('themeDark'), state.themePref === 'dark') + '</div>' +
-        '<label class="lbl mt8">' + Va.t('viewCard') + '</label>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">' + settingBtn('dv-c', Va.t('viewCard'), state.voucherView === 'card') + settingBtn('dv-l', Va.t('viewList'), state.voucherView === 'list') + '</div>';
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:0.78rem;color:var(--muted);white-space:nowrap;min-width:40px">' + Va.t('langLabel') + '</span>' +
+        '<div style="display:flex;gap:4px;flex:1">' + settingBtn('lg-he', Va.t('langHe'), state.lang === 'he') + settingBtn('lg-en', Va.t('langEn'), state.lang === 'en') + '</div></div>' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:0.78rem;color:var(--muted);white-space:nowrap;min-width:40px">' + Va.t('themeLabel') + '</span>' +
+        '<div style="display:flex;gap:4px;flex:1">' + settingBtn('th-a', Va.t('themeAuto'), state.themePref === 'auto') + settingBtn('th-l', Va.t('themeLight'), state.themePref === 'light') + settingBtn('th-d', Va.t('themeDark'), state.themePref === 'dark') + '</div></div>' +
+        '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.78rem;color:var(--muted);white-space:nowrap;min-width:40px">' + Va.t('defaultView') + '</span>' +
+        '<div style="display:flex;gap:4px;flex:1">' + settingBtn('dv-c', Va.t('viewCard'), state.voucherView === 'card') + settingBtn('dv-l', Va.t('viewList'), state.voucherView === 'list') + '</div></div>';
       $('lg-he').onclick = function () { persistLang('he'); };
       $('lg-en').onclick = function () { persistLang('en'); };
       $('th-a').onclick = function () { persistTheme('auto'); };
@@ -2970,10 +3427,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (sec) {
       var secHtml = '<h3>' + Va.t('securitySection') + '</h3>';
       if (state.isOwner) {
-        secHtml += '<button type="button" class="btn ghost" id="btn-chg-pass" style="width:100%">' + Va.t('changePass') + '</button>';
+        secHtml += '<button type="button" class="btn ghost" id="btn-chg-pass" style="font-size:0.8rem;padding:8px 16px;border-radius:999px">' + Va.t('changePass') + '</button>';
       } else {
-        secHtml += '<p class="small" style="margin-bottom:10px">' + Va.t('recoveryPassDesc') + '</p>';
-        secHtml += '<button type="button" class="btn secondary" id="btn-set-recovery" style="width:100%">' + Va.t('setRecoveryPass') + '</button>';
+        secHtml += '<p class="small" style="margin-bottom:8px">' + Va.t('recoveryPassDesc') + '</p>';
+        secHtml += '<button type="button" class="btn secondary" id="btn-set-recovery" style="font-size:0.8rem;padding:8px 16px;border-radius:999px">' + Va.t('setRecoveryPass') + '</button>';
         secHtml += '<div id="recovery-status" class="small mt8" hidden></div>';
       }
       secHtml += '<div id="bio-section" class="mt12" hidden></div>';
@@ -3004,13 +3461,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           await Va.saveSettingsPatch(state.activeAccountId, { cryptoSalt: newSalt, keyVersion: chgKv });
           state.derivedKey = newKey;
           var chgExported = await Va.exportKeyB64(newKey);
-          localStorage.setItem('vm_session_' + state.authUser.uid, JSON.stringify({
-            phone: state.normalizedPhone,
-            accountId: state.activeAccountId,
-            isOwner: state.isOwner,
-            keyB64: chgExported,
-            keyVersion: chgKv
-          }));
+          saveWalletToSession(state.authUser.uid, state.normalizedPhone, state.activeAccountId, state.isOwner, chgExported, chgKv, '');
           Va.toast(Va.t('save'));
         };
       }
@@ -3085,12 +3536,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     const data = $('settings-data');
     if (data) {
       data.innerHTML = '<h3>' + Va.t('dataSection') + '</h3>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:6px"><button type="button" class="btn secondary" id="ex-json" style="flex:1 1 auto;min-width:0">' + Va.t('exportJson') + '</button>' +
-        '<button type="button" class="btn secondary" id="im-json" style="flex:1 1 auto;min-width:0">' + Va.t('importJson') + '</button></div>' +
-        '<div class="small mt8" id="lb-bak">' + Va.t('lastBackup') + ': —</div>' +
+        '<div style="display:flex;gap:6px"><button type="button" class="btn secondary" id="ex-json" style="flex:1;min-width:0;font-size:0.8rem;padding:8px 12px;border-radius:999px">' + Va.t('exportJson') + '</button>' +
+        '<button type="button" class="btn secondary" id="im-json" style="flex:1;min-width:0;font-size:0.8rem;padding:8px 12px;border-radius:999px">' + Va.t('importJson') + '</button></div>' +
+        '<div style="font-size:0.7rem;color:var(--muted);margin-top:6px" id="lb-bak">' + Va.t('lastBackup') + ': —</div>' +
         '<input type="file" id="im-file" hidden accept=".json" />';
       const lb = (state.settingsDoc && state.settingsDoc.settings && state.settingsDoc.settings.lastBackup) || '';
-      $('lb-bak').textContent = Va.t('lastBackup') + ': ' + (lb || '—');
+      $('lb-bak').textContent = Va.t('lastBackup') + ': ' + formatDate(lb);
       $('ex-json').onclick = async function () {
         var exportData = [];
         for (var i = 0; i < state.vouchers.length; i++) {
@@ -3115,7 +3566,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           const arr = JSON.parse(txt);
           if (!Array.isArray(arr)) throw new Error('Invalid format');
           if (!arr.length) return;
-          if (!confirm(Va.t('importJson') + ' — ' + arr.length + ' items?')) return;
+          if (!confirm(Va.t('importJson') + ' — ' + arr.length + ' ' + Va.t('importConfirm') + '?')) return;
           for (let i = 0; i < arr.length; i++) {
             const row = arr[i];
             const enc = await Va.encryptVoucherFields(state.derivedKey, row);
@@ -3139,62 +3590,77 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     }
     var cal = $('settings-calendar');
     if (cal) {
-      var presets = [1, 3, 7, 14, 30];
       var cur = (state.settingsDoc && state.settingsDoc.settings && state.settingsDoc.settings.calendarReminders) || [7, 3, 1];
       cal.innerHTML = '<h3>' + Va.t('calendarSection') + '</h3>' +
-        '<p class="small" style="margin-bottom:10px">' + Va.t('calRemind') + '</p>' +
-        '<div id="cal-chips" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"></div>' +
-        '<div id="cal-custom" style="display:flex;gap:8px;align-items:center;margin-top:10px">' +
-          '<input class="input" id="cal-custom-input" type="number" min="1" max="365" placeholder="' + Va.t('calCustom') + '" style="width:90px;border-radius:999px;text-align:center;padding:8px 12px" />' +
-          '<button type="button" class="btn" id="cal-custom-add" style="border-radius:999px;min-height:44px;padding:8px 18px">+</button>' +
+        '<p style="font-size:0.75rem;color:var(--muted);margin:0 0 8px">' + Va.t('calRemind') + '</p>' +
+        '<div id="cal-tags"></div>' +
+        '<div style="display:flex;gap:6px;align-items:center;margin-top:8px">' +
+          '<select class="input" id="cal-add-select" style="flex:1;border-radius:999px;padding:6px 12px;font-size:0.8rem"></select>' +
+          '<button type="button" class="btn" id="cal-add-btn" style="border-radius:999px;min-height:36px;padding:6px 16px;font-size:0.85rem">+</button>' +
         '</div>';
-      var chipsEl = $('cal-chips');
       var selected = cur.slice();
 
-      function chipStyle(on) {
-        return 'padding:8px 16px;border-radius:999px;font-size:0.82rem;font-weight:600;cursor:pointer;border:2px solid var(--primary);transition:all .2s;min-height:44px;' +
-          (on ? 'background:var(--primary);color:#fff;' : 'background:transparent;color:var(--primary);');
-      }
-
-      function renderChips() {
-        chipsEl.innerHTML = '';
-        var all = presets.slice();
-        selected.forEach(function (d) { if (all.indexOf(d) < 0) all.push(d); });
-        all.sort(function (a, b) { return a - b; });
-        all.forEach(function (d) {
-          var on = selected.indexOf(d) >= 0;
-          var isCustom = presets.indexOf(d) < 0;
-          var btn = document.createElement('button');
-          btn.type = 'button';
-          btn.textContent = d + ' ' + Va.t('days');
-          btn.style.cssText = chipStyle(on);
-          btn.onclick = async function () {
+      function renderCalTags() {
+        var tagsEl = $('cal-tags');
+        tagsEl.innerHTML = '';
+        selected.sort(function (a, b) { return a - b; });
+        if (!selected.length) {
+          tagsEl.innerHTML = '<p class="small" style="color:var(--muted)">—</p>';
+          return;
+        }
+        selected.forEach(function (d) {
+          var tag = document.createElement('span');
+          tag.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:var(--primary);color:#fff;padding:6px 10px 6px 14px;border-radius:999px;font-size:0.82rem;font-weight:600;margin:0 6px 8px 0;';
+          var label = document.createElement('span');
+          label.textContent = daysLabel(d);
+          var rm = document.createElement('button');
+          rm.type = 'button';
+          rm.textContent = '✕';
+          rm.style.cssText = 'background:rgba(255,255,255,0.25);border:none;border-radius:50%;width:22px;height:22px;min-width:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-size:0.7rem;color:#fff;line-height:1;-webkit-tap-highlight-color:transparent;';
+          rm.onclick = async function (e) {
+            e.stopPropagation();
             var idx = selected.indexOf(d);
-            if (idx >= 0) { selected.splice(idx, 1); } else { selected.push(d); }
-            selected.sort(function (a, b) { return b - a; });
-            renderChips();
+            if (idx >= 0) selected.splice(idx, 1);
+            renderCalTags();
+            updateCalSelect();
             await Va.saveSettingsPatch(state.activeAccountId, { calendarReminders: selected });
-            Va.toast(Va.t('save'));
           };
-          chipsEl.appendChild(btn);
+          tag.appendChild(label);
+          tag.appendChild(rm);
+          tagsEl.appendChild(tag);
         });
       }
-      renderChips();
 
-      $('cal-custom-add').onclick = async function () {
-        var val = parseInt($('cal-custom-input').value, 10);
-        if (!val || val < 1 || val > 365) return;
-        if (selected.indexOf(val) < 0) {
-          selected.push(val);
-          selected.sort(function (a, b) { return b - a; });
-          renderChips();
-          await Va.saveSettingsPatch(state.activeAccountId, { calendarReminders: selected });
-          Va.toast(Va.t('save'));
+      function updateCalSelect() {
+        var sel = $('cal-add-select');
+        var opts = [1, 2, 3, 5, 7, 10, 14, 21, 30, 60, 90];
+        sel.innerHTML = '';
+        var available = opts.filter(function (o) { return selected.indexOf(o) < 0; });
+        if (!available.length) {
+          var o = document.createElement('option');
+          o.textContent = '—';
+          o.disabled = true;
+          sel.appendChild(o);
+          return;
         }
-        $('cal-custom-input').value = '';
-      };
-      $('cal-custom-input').onkeydown = function (e) {
-        if (e.key === 'Enter') { e.preventDefault(); $('cal-custom-add').click(); }
+        available.forEach(function (d) {
+          var o = document.createElement('option');
+          o.value = d;
+          o.textContent = daysLabel(d);
+          sel.appendChild(o);
+        });
+      }
+
+      renderCalTags();
+      updateCalSelect();
+
+      $('cal-add-btn').onclick = async function () {
+        var val = parseInt($('cal-add-select').value, 10);
+        if (!val || selected.indexOf(val) >= 0) return;
+        selected.push(val);
+        renderCalTags();
+        updateCalSelect();
+        await Va.saveSettingsPatch(state.activeAccountId, { calendarReminders: selected });
       };
     }
     var verEl = $('settings-version');
@@ -3371,13 +3837,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           await Va.saveSettingsPatch(state.activeAccountId, { keyVersion: kv });
         }
         var exported = await Va.exportKeyB64(state.derivedKey);
-        localStorage.setItem('vm_session_' + state.authUser.uid, JSON.stringify({
-          phone: state.normalizedPhone,
-          accountId: state.activeAccountId,
-          isOwner: state.isOwner,
-          keyB64: exported,
-          keyVersion: kv
-        }));
+        saveWalletToSession(state.authUser.uid, state.normalizedPhone, state.activeAccountId, state.isOwner, exported, kv, '');
         showOnly('main-app');
         startDataListeners();
       } catch (e) {
@@ -3389,6 +3849,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       var btn = e.target.closest('.nav-item');
       if (!btn) return;
       showTab(btn.getAttribute('data-tab'));
+    };
+    $('wallet-switch-btn').onclick = function () {
+      openWalletSwitchSheet();
+    };
+    $('overlay-wallet-switch').onclick = function (e) {
+      if (e.target === $('overlay-wallet-switch')) {
+        $('overlay-wallet-switch').hidden = true;
+      }
     };
     document.getElementById('v-filter-toggle').onclick = function () {
       var panel = $('v-filter-panel');
@@ -3437,7 +3905,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       $('pass-title').textContent = Va.t('passSetupTitle');
       $('pass-desc').textContent = Va.t('passSetupDesc');
     };
-    document.getElementById('btn-signout-rejected').onclick = function () { localStorage.removeItem('vm_session_' + (state.authUser && state.authUser.uid)); Va.auth().signOut(); };
+    document.getElementById('btn-signout-rejected').onclick = function () { clearSession(state.authUser && state.authUser.uid); Va.auth().signOut(); };
     $('dash-search') && ($('dash-search').oninput = function () { renderDashboard(); });
     $('v-search') && ($('v-search').oninput = function () { renderVouchers(); });
     const fc = $('filter-category');
@@ -3476,15 +3944,16 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         '<label class="lbl">' + Va.t('storeTags') + '</label><input class="input rv-tags" value="' + escapeHtml((d.storeTags || []).join(', ')) + '" />' +
         '<div class="row mt8"><select class="input rv-type" style="flex:1"><option value="value"' + (d.type === 'value' ? ' selected' : '') + '>' + Va.t('typeValue') + '</option><option value="offer"' + (d.type === 'offer' ? ' selected' : '') + '>' + Va.t('typeOffer') + '</option></select></div>';
       if (d.codeType === 'card') {
-        html += '<label class="lbl">PAN</label><input class="input rv-pan" value="' + escapeHtml(d.cardNumber || '') + '" />' +
-          '<label class="lbl">' + Va.t('expiryDate') + '</label><input class="input rv-cexp" value="' + escapeHtml(d.cardExpiry || '') + '" />' +
+        html += '<label class="lbl">' + Va.t('cardNumber') + '</label><input class="input rv-pan" value="' + escapeHtml(d.cardNumber || '') + '" />' +
+          '<label class="lbl">' + Va.t('cardExpiry') + '</label><input class="input rv-cexp" value="' + escapeHtml(d.cardExpiry || '') + '" />' +
           '<label class="lbl">CVV</label><input class="input rv-cvv" value="' + escapeHtml(d.cardCvv || '') + '" />';
       } else {
         html += '<label class="lbl">' + Va.t('voucherCode') + '</label><input class="input rv-code" value="' + escapeHtml(d.code || '') + '" />';
       }
-      html += '<label class="lbl">' + Va.t('remainingBalance') + '</label><input class="input rv-bal" type="number" inputmode="decimal" value="' + escapeHtml(d.remainingBalance != null ? String(d.remainingBalance) : '') + '" />' +
-        (d.type === 'offer' ? '<label class="lbl rv-offer-row">' + Va.t('offerDesc') + '</label><input class="input rv-offer rv-offer-row" value="' + escapeHtml(d.offerDescription || '') + '" />' : '') +
+      html += '<div class="rv-bal-row"' + (d.type === 'offer' ? ' hidden' : '') + '><label class="lbl">' + Va.t('remainingBalance') + '</label><input class="input rv-bal" type="number" inputmode="decimal" value="' + escapeHtml(d.remainingBalance != null ? String(d.remainingBalance) : '') + '" /></div>' +
+        '<div class="rv-offer-row"' + (d.type !== 'offer' ? ' hidden' : '') + '><label class="lbl">' + Va.t('offerDesc') + '</label><input class="input rv-offer" value="' + escapeHtml(d.offerDescription || '') + '" /></div>' +
         '<label class="lbl">' + Va.t('expiryDate') + '</label><input class="input rv-exp" type="date" value="' + escapeHtml(d.expiryDate || '') + '" />' +
+        (d._relativeExpiry ? '<div class="small" style="color:var(--warning, #f59e0b);opacity:0.85;margin-top:2px">⚠ ' + Va.t('relativeExpiryHint') + '</div>' : '') +
         '</div>';
     });
     html += '<button type="button" class="btn mt12" id="rv-save">' + Va.t('saveAll') + '</button><button type="button" class="btn secondary mt8" id="rv-back">' + Va.t('cancel') + '</button>';
@@ -3492,28 +3961,16 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     box.querySelectorAll('.rv-type').forEach(function (sel) {
       sel.onchange = function () {
         var card = sel.closest('.card');
+        var isOffer = sel.value === 'offer';
+        var balRow = card.querySelector('.rv-bal-row');
         var offerRow = card.querySelector('.rv-offer-row');
-        if (sel.value === 'offer') {
-          if (!offerRow) {
-            var lbl = document.createElement('label');
-            lbl.className = 'lbl rv-offer-row';
-            lbl.textContent = Va.t('offerDesc');
-            var inp = document.createElement('input');
-            inp.className = 'input rv-offer rv-offer-row';
-            inp.value = '';
-            var expLbl = card.querySelector('.rv-exp');
-            if (expLbl) {
-              card.insertBefore(inp, expLbl.previousElementSibling || expLbl);
-              card.insertBefore(lbl, inp);
-            }
-          }
-        } else {
-          card.querySelectorAll('.rv-offer-row').forEach(function (el) { el.remove(); });
-        }
+        if (balRow) balRow.hidden = isOffer;
+        if (offerRow) offerRow.hidden = !isOffer;
       };
     });
     $('rv-back').onclick = function () {
       box.hidden = true;
+      $('paste-area').value = '';
       $('add-paste-panel').hidden = false;
     };
     $('rv-save').onclick = function () {
@@ -3548,6 +4005,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           if (!confirm(Va.t('duplicateWarn') + ' — ' + Va.t('continue'))) continue;
         }
         delete d._manyStores;
+        delete d._relativeExpiry;
         var enc = await Va.encryptVoucherFields(state.derivedKey, d);
         ['code', 'cardNumber', 'cardExpiry', 'cardCvv'].forEach(function (k) { delete d[k]; });
         Object.assign(d, enc);
@@ -3606,24 +4064,145 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     });
   }
 
+  async function switchWallet(accountId) {
+    var uid = state.authUser.uid;
+    var session = loadSession(uid);
+    if (!session || !session.wallets || !session.wallets[accountId]) return;
+    var w = session.wallets[accountId];
+
+    if (unsubV) { unsubV(); unsubV = null; }
+    if (unsubS) { unsubS(); unsubS = null; }
+
+    state.activeAccountId = accountId;
+    state.isOwner = !!w.isOwner;
+    state.vouchers = [];
+    state.settingsDoc = null;
+    Object.keys(plainMap).forEach(function (k) { delete plainMap[k]; });
+
+    try {
+      state.derivedKey = await Va.importKeyB64(w.keyB64);
+    } catch (e) {
+      Va.toast(Va.t('wrongPass'));
+      return;
+    }
+
+    session.activeAccountId = accountId;
+    saveSession(uid, session);
+
+    startDataListeners();
+    showTab('dashboard');
+
+    var walletLabel = w.walletName || accountId.slice(0, 8);
+    Va.toast(Va.t('walletSwitched').replace('{name}', walletLabel));
+  }
+
+  function getWalletCount() {
+    if (!state.authUser) return 0;
+    var session = loadSession(state.authUser.uid);
+    if (!session || !session.wallets) return 0;
+    return Object.keys(session.wallets).length;
+  }
+
+  function openWalletSwitchSheet() {
+    var uid = state.authUser.uid;
+    var session = loadSession(uid);
+    if (!session || !session.wallets) return;
+    var list = $('wallet-switch-list');
+    list.innerHTML = '';
+    var ids = Object.keys(session.wallets);
+    for (var i = 0; i < ids.length; i++) {
+      var accId = ids[i];
+      var w = session.wallets[accId];
+      var isCurrent = accId === state.activeAccountId;
+      var label = w.walletName || accId.slice(0, 8);
+      var role = w.isOwner ? Va.t('walletOwner') : Va.t('walletMember');
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn' + (isCurrent ? '' : ' ghost');
+      btn.style.cssText = 'width:100%;text-align:start;padding:12px 16px;margin-bottom:8px;border-radius:12px;display:flex;justify-content:space-between;align-items:center';
+      btn.innerHTML =
+        '<div><div style="font-weight:700">' + escapeHtml(label) + '</div>' +
+        '<div class="small" style="color:var(--muted)">' + role + '</div></div>' +
+        (isCurrent ? '<span style="font-size:1rem">✓</span>' : '');
+      if (!isCurrent) {
+        (function (id) {
+          btn.onclick = function () {
+            $('overlay-wallet-switch').hidden = true;
+            switchWallet(id);
+          };
+        })(accId);
+      }
+      list.appendChild(btn);
+    }
+    $('overlay-wallet-switch').hidden = false;
+  }
+
   async function afterPhoneResolved() {
     const phone = state.normalizedPhone;
     const uid = state.authUser.uid;
     const idx = await Va.fetchPhoneIndex(phone);
-    if (idx && idx.accountId) {
-      state.activeAccountId = idx.accountId;
-      state.isOwner = idx.accountId === uid;
+    var accounts = idx.accounts || [];
+
+    var ownSnap = await Va.accountRef(uid).get();
+    if (ownSnap.exists && accounts.indexOf(uid) === -1) accounts.push(uid);
+
+    if (accounts.length === 0) {
+      showOnly('screen-rejected');
+      return;
+    }
+
+    if (accounts.length === 1) {
+      var accId = accounts[0];
+      var accSnap = await Va.accountRef(accId).get();
+      if (!accSnap.exists) { showOnly('screen-rejected'); return; }
+      var d = accSnap.data();
+      if (d.approvedPhones && d.approvedPhones.indexOf(phone) === -1 && d.ownerUid !== uid) {
+        showOnly('screen-rejected');
+        return;
+      }
+      state.activeAccountId = accId;
+      state.isOwner = (accId === uid) || (d.ownerUid === uid);
       showPassphraseEnter();
       return;
     }
-    const accSnap = await Va.accountRef(uid).get();
-    if (accSnap.exists) {
-      state.activeAccountId = uid;
-      state.isOwner = true;
-      showPassphraseEnter();
-      return;
+
+    showWalletPicker(accounts);
+  }
+
+  async function showWalletPicker(accountIds) {
+    showOnly('screen-wallet-picker');
+    var list = $('wallet-picker-list');
+    list.innerHTML = '';
+    var uid = state.authUser.uid;
+    var phone = state.normalizedPhone;
+
+    for (var i = 0; i < accountIds.length; i++) {
+      var accId = accountIds[i];
+      var snap = await Va.accountRef(accId).get();
+      if (!snap.exists) continue;
+      var d = snap.data();
+      if (d.approvedPhones && d.approvedPhones.indexOf(phone) === -1 && d.ownerUid !== uid) continue;
+      var isOwn = (accId === uid) || (d.ownerUid === uid);
+      var name = d.walletName || (isOwn ? Va.t('myWallet') : accId.slice(0, 8));
+      var role = isOwn ? Va.t('walletOwner') : Va.t('walletMember');
+      var members = (d.approvedPhones || []).length;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn ghost';
+      btn.style.cssText = 'width:100%;text-align:start;padding:12px 16px;margin-bottom:8px;border-radius:12px;display:flex;justify-content:space-between;align-items:center';
+      btn.innerHTML =
+        '<div><div style="font-weight:700">' + escapeHtml(name) + '</div>' +
+        '<div class="small" style="color:var(--muted)">' + role + ' · ' + members + ' ' + Va.t('members') + '</div></div>' +
+        '<span style="font-size:1.2rem">→</span>';
+      (function (id, own) {
+        btn.onclick = function () {
+          state.activeAccountId = id;
+          state.isOwner = own;
+          showPassphraseEnter();
+        };
+      })(accId, isOwn);
+      list.appendChild(btn);
     }
-    showOnly('screen-rejected');
   }
 
   async function showPassphraseEnter() {
@@ -3658,13 +4237,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
               }
             });
             if (assertion) {
-              var raw = localStorage.getItem('vm_session_' + uid);
-              if (raw) {
-                var s = JSON.parse(raw);
-                state.normalizedPhone = s.phone;
-                state.activeAccountId = s.accountId;
-                state.isOwner = !!s.isOwner;
-                state.derivedKey = await Va.importKeyB64(s.keyB64);
+              var sess = loadSession(uid);
+              if (sess && sess.wallets && sess.wallets[sess.activeAccountId]) {
+                var ww = sess.wallets[sess.activeAccountId];
+                state.normalizedPhone = sess.phone;
+                state.activeAccountId = sess.activeAccountId;
+                state.isOwner = !!ww.isOwner;
+                state.derivedKey = await Va.importKeyB64(ww.keyB64);
                 showOnly('main-app');
                 startDataListeners();
                 return;
@@ -3692,13 +4271,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
               var exported = await Va.exportKeyB64(recoveredKey);
               var accSnap = await Va.accountRef(state.activeAccountId).get();
               var kv = accSnap.exists && accSnap.data().settings ? accSnap.data().settings.keyVersion : null;
-              localStorage.setItem('vm_session_' + uid, JSON.stringify({
-                phone: state.normalizedPhone,
-                accountId: state.activeAccountId,
-                isOwner: state.isOwner,
-                keyB64: exported,
-                keyVersion: kv
-              }));
+              saveWalletToSession(uid, state.normalizedPhone, state.activeAccountId, state.isOwner, exported, kv, '');
               showOnly('main-app');
               startDataListeners();
             } catch (e) {
@@ -3713,36 +4286,56 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
 
   async function tryResumeSession(user) {
-    var raw = localStorage.getItem('vm_session_' + user.uid);
-    if (!raw) return false;
+    var session = loadSession(user.uid);
+    if (!session) return false;
     try {
-      var s = JSON.parse(raw);
-      if (!s.keyB64 || !s.accountId || !s.phone) return false;
-      var accSnap = await Va.accountRef(s.accountId).get();
-      if (!accSnap.exists) { localStorage.removeItem('vm_session_' + user.uid); return false; }
-      var liveSettings = accSnap.data().settings || {};
+      var activeId = session.activeAccountId;
+      var w = session.wallets && session.wallets[activeId];
+      if (!activeId || !w || !w.keyB64 || !session.phone) return false;
+
+      var accSnap = await Va.accountRef(activeId).get();
+      if (!accSnap.exists) {
+        delete session.wallets[activeId];
+        if (Object.keys(session.wallets).length === 0) { clearSession(user.uid); return false; }
+        session.activeAccountId = Object.keys(session.wallets)[0];
+        saveSession(user.uid, session);
+        return tryResumeSession(user);
+      }
+
+      var accData = accSnap.data();
+      var liveOwner = (accData.ownerUid === user.uid) || (activeId === user.uid);
+      if (!liveOwner && accData.approvedPhones && accData.approvedPhones.indexOf(session.phone) === -1) {
+        delete session.wallets[activeId];
+        if (Object.keys(session.wallets).length === 0) { clearSession(user.uid); return false; }
+        session.activeAccountId = Object.keys(session.wallets)[0];
+        saveSession(user.uid, session);
+        return tryResumeSession(user);
+      }
+
+      var liveSettings = accData.settings || {};
       var liveKv = liveSettings.keyVersion;
-      if (liveKv != null && s.keyVersion != null && s.keyVersion !== liveKv) {
-        localStorage.removeItem('vm_session_' + user.uid);
+      if (liveKv != null && w.keyVersion != null && w.keyVersion !== liveKv) {
+        delete session.wallets[activeId];
+        saveSession(user.uid, session);
         return false;
       }
+
+      state.normalizedPhone = session.phone;
+      state.activeAccountId = activeId;
+      state.isOwner = liveOwner;
+      w.walletName = accData.walletName || w.walletName || '';
+
       if (localStorage.getItem('vm_bio_cred_' + user.uid)) {
-        state.normalizedPhone = s.phone;
-        state.activeAccountId = s.accountId;
-        state.isOwner = !!s.isOwner;
         await showPassphraseEnter();
         return true;
       }
-      state.normalizedPhone = s.phone;
-      state.activeAccountId = s.accountId;
-      state.isOwner = !!s.isOwner;
-      state.derivedKey = await Va.importKeyB64(s.keyB64);
+      state.derivedKey = await Va.importKeyB64(w.keyB64);
       showOnly('main-app');
       startDataListeners();
       return true;
     } catch (e) {
       console.error('tryResumeSession failed:', e);
-      localStorage.removeItem('vm_session_' + user.uid);
+      clearSession(user.uid);
       return false;
     }
   }
@@ -3788,16 +4381,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     state.derivedKey = await Va.importKeyB64(join.keyB64);
 
     var joinAccSnap = await Va.accountRef(inv.accountId).get();
-    var joinSettings = joinAccSnap.exists && joinAccSnap.data().settings || {};
+    var joinData = joinAccSnap.exists ? joinAccSnap.data() : {};
+    var joinSettings = joinData.settings || {};
     var joinKv = joinSettings.keyVersion || null;
     var exported = await Va.exportKeyB64(state.derivedKey);
-    localStorage.setItem('vm_session_' + state.authUser.uid, JSON.stringify({
-      phone: state.normalizedPhone,
-      accountId: state.activeAccountId,
-      isOwner: false,
-      keyB64: exported,
-      keyVersion: joinKv
-    }));
+    saveWalletToSession(state.authUser.uid, state.normalizedPhone, inv.accountId, false, exported, joinKv, joinData.walletName || '');
 
     clearPendingJoin();
     showOnly('main-app');
