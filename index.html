@@ -376,13 +376,18 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 #tab-settings .card .btn { min-height: 28px; padding: 4px 10px; font-size: 0.72rem; }
 #tab-settings .card .input { min-height: 28px; padding: 4px 8px; font-size: 0.72rem; }
 
-.member-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
-.member-row:last-child { border-bottom: none; }
+.member-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .member-info { flex: 1; min-width: 0; }
+.member-info .m-top { display: flex; align-items: center; gap: 6px; }
 .member-name { font-weight: 600; font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .member-phone { font-size: 0.68rem; color: var(--muted); direction: ltr; unicode-bidi: isolate; }
-.member-badges { display: flex; gap: 4px; margin-top: 2px; flex-wrap: wrap; }
+.member-badges { display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
 .member-badge { display: inline-block; font-size: 0.58rem; font-weight: 700; padding: 1px 6px; border-radius: 999px; }
+.badge-admin { background: rgba(251,191,36,0.15); color: #f59e0b; }
+.badge-you { background: rgba(52,211,153,0.15); color: #34d399; }
+.badge-member { background: rgba(148,163,184,0.12); color: var(--muted); }
+.badge-perm { background: rgba(124,107,240,0.12); color: rgba(124,107,240,0.8); }
+.member-actions { display: flex; gap: 4px; flex-shrink: 0; }
 .member-row .btn { min-height: 26px; padding: 3px 8px; font-size: 0.65rem; white-space: nowrap; }
 
 .mf-section { padding-top: 4px; }
@@ -584,7 +589,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.8.1';
+  const APP_VERSION = '2.8.3';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -661,7 +666,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.8.1',
+      aboutVersion: 'גרסה 2.8.3',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -897,7 +902,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.8.1',
+      aboutVersion: 'Version 2.8.3',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -3471,32 +3476,37 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         var name = nameMap[p] || '';
         var isMe = p === ownerPhone;
         var displayName = name || (isMe ? (u && u.displayName || u && u.email || '') : '');
-        var roleTag = isMe ? Va.t('roleAdmin') : Va.t('roleMember');
-        var roleStyle = isMe ? 'background:rgba(124,107,240,0.15);color:var(--primary)' : 'background:var(--surface);color:var(--muted)';
         var memberPerms = permMap[p] || [];
-        var badges = '<span class="member-badge" style="' + roleStyle + '">' + roleTag + '</span>';
-        if (isMe) badges += '<span class="member-badge" style="background:rgba(76,175,80,0.15);color:#4CAF50">' + Va.t('you') + '</span>';
-        if (!isMe && memberPerms.length > 0) {
-          memberPerms.forEach(function (perm) {
-            var lbl = PERM_LABELS[perm] ? Va.t(PERM_LABELS[perm]) : perm;
-            badges += '<span class="member-badge" style="background:rgba(124,107,240,0.12);color:var(--primary)">' + escapeHtml(lbl) + '</span>';
-          });
+        var badges = '';
+        if (isMe) {
+          badges += '<span class="member-badge badge-admin">' + Va.t('roleAdmin') + '</span>';
+          badges += '<span class="member-badge badge-you">' + Va.t('you') + '</span>';
+        } else {
+          badges += '<span class="member-badge badge-member">' + Va.t('roleMember') + '</span>';
+          if (memberPerms.length > 0) {
+            memberPerms.forEach(function (perm) {
+              var lbl = PERM_LABELS[perm] ? Va.t(PERM_LABELS[perm]) : perm;
+              badges += '<span class="member-badge badge-perm">' + escapeHtml(lbl) + '</span>';
+            });
+          }
         }
         const row = document.createElement('div');
         row.className = 'member-row';
-        var actionBtns = '';
+        var actionHtml = '';
         if (!isMe) {
-          actionBtns =
-            '<button type="button" class="btn ghost" data-perms="' + escapeHtml(p) + '" title="' + Va.t('editPermissions') + '">⚙</button>' +
-            '<button type="button" class="btn danger" data-rm="' + escapeHtml(p) + '">' + Va.t('remove') + '</button>';
+          actionHtml =
+            '<div class="member-actions">' +
+              '<button type="button" class="btn ghost" data-perms="' + escapeHtml(p) + '" title="' + Va.t('editPermissions') + '">⚙</button>' +
+              '<button type="button" class="btn danger" data-rm="' + escapeHtml(p) + '">' + Va.t('remove') + '</button>' +
+            '</div>';
         }
         row.innerHTML =
           '<div class="member-info">' +
-            '<div class="member-name">' + escapeHtml(displayName) + '</div>' +
+            '<div class="m-top"><div class="member-name">' + escapeHtml(displayName) + '</div></div>' +
             '<div class="member-phone">' + escapeHtml(p) + '</div>' +
             '<div class="member-badges">' + badges + '</div>' +
           '</div>' +
-          actionBtns;
+          actionHtml;
         if (!isMe) {
           row.querySelector('[data-rm]').onclick = async function () {
             await Va.removeApprovedPhone(state.activeAccountId, p, state.normalizedPhone || '');
@@ -3514,7 +3524,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         lst.appendChild(row);
       });
       var invWrap = document.createElement('div');
-      invWrap.style.cssText = 'display:flex;gap:6px;margin-top:8px';
+      invWrap.style.cssText = 'display:flex;gap:6px;padding-top:10px;border-top:1px solid var(--border)';
       var invBtn = document.createElement('button');
       invBtn.className = 'btn whatsapp';
       invBtn.style.cssText = 'flex:1';
@@ -3586,23 +3596,26 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         var isMe = p === myPhone;
         var isAdmin = idx === 0;
         var displayName = name || (isMe ? (u && u.displayName || u && u.email || '') : '');
-        var roleTag = isAdmin ? Va.t('roleAdmin') : Va.t('roleMember');
-        var roleStyle = isAdmin ? 'background:rgba(124,107,240,0.15);color:var(--primary)' : 'background:var(--surface);color:var(--muted)';
-        var badges = '<span class="member-badge" style="' + roleStyle + '">' + roleTag + '</span>';
-        if (isMe) badges += '<span class="member-badge" style="background:rgba(76,175,80,0.15);color:#4CAF50">' + Va.t('you') + '</span>';
+        var badges = '';
+        if (isAdmin) {
+          badges += '<span class="member-badge badge-admin">' + Va.t('roleAdmin') + '</span>';
+        } else {
+          badges += '<span class="member-badge badge-member">' + Va.t('roleMember') + '</span>';
+        }
+        if (isMe) badges += '<span class="member-badge badge-you">' + Va.t('you') + '</span>';
         var row = document.createElement('div');
         row.className = 'member-row';
-        var removeBtn = '';
+        var actionHtml = '';
         if (canRemove && !isMe && !isAdmin) {
-          removeBtn = '<button type="button" class="btn danger" data-rm="' + escapeHtml(p) + '">' + Va.t('remove') + '</button>';
+          actionHtml = '<div class="member-actions"><button type="button" class="btn danger" data-rm="' + escapeHtml(p) + '">' + Va.t('remove') + '</button></div>';
         }
         row.innerHTML =
           '<div class="member-info">' +
-            '<div class="member-name">' + escapeHtml(displayName) + '</div>' +
+            '<div class="m-top"><div class="member-name">' + escapeHtml(displayName) + '</div></div>' +
             '<div class="member-phone">' + escapeHtml(p) + '</div>' +
             '<div class="member-badges">' + badges + '</div>' +
           '</div>' +
-          removeBtn;
+          actionHtml;
         if (canRemove && !isMe && !isAdmin) {
           row.querySelector('[data-rm]').onclick = async function () {
             try {
@@ -3614,7 +3627,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       });
       if (canInvite) {
         var invWrap = document.createElement('div');
-        invWrap.style.cssText = 'display:flex;gap:6px;margin-top:8px';
+        invWrap.style.cssText = 'display:flex;gap:6px;padding-top:10px;border-top:1px solid var(--border)';
         var invBtn = document.createElement('button');
         invBtn.className = 'btn whatsapp';
         invBtn.style.cssText = 'flex:1';
@@ -4038,7 +4051,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   });
 
   function attachListeners() {
-    document.getElementById('btn-google').onclick = function () {
+    var _el;
+    _el = document.getElementById('btn-google');
+    if (_el) _el.onclick = function () {
       const prov = new firebase.auth.GoogleAuthProvider();
       Va.auth().signInWithPopup(prov).catch(function (e) {
         if (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request') {
@@ -4056,7 +4071,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         $('dev-email').value = saved.email || '';
         $('dev-pass').value = saved.pass || '';
       }
-      $('btn-dev-login').onclick = function () {
+      if ($('btn-dev-login')) $('btn-dev-login').onclick = function () {
         var email = $('dev-email').value.trim();
         var pass = $('dev-pass').value;
         if (!email || !pass) return Va.toast('Enter email and password');
@@ -4066,7 +4081,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         });
       };
     }
-    document.getElementById('btn-save-google-phone').onclick = async function () {
+    _el = document.getElementById('btn-save-google-phone');
+    if (_el) _el.onclick = async function () {
       var p = Va.normalizeIsraeliPhone($('google-phone-input').value);
       if (p.length < 12) return Va.toast(Va.t('errorGeneric'));
       state.normalizedPhone = p;
@@ -4083,7 +4099,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         showOnly('screen-welcome');
       }
     };
-    document.getElementById('btn-pass-submit').onclick = async function () {
+    _el = document.getElementById('btn-pass-submit');
+    if (_el) _el.onclick = async function () {
       const p1 = $('pass-1').value;
       const p2 = $('pass-2').value;
       if (state.passMode === 'setup' && p1 !== p2) return Va.toast(Va.t('errorGeneric'));
@@ -4133,7 +4150,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         Va.toast(e.message || Va.t('errorGeneric'));
       }
     };
-    document.getElementById('bottom-nav').onclick = function (e) {
+    _el = document.getElementById('bottom-nav');
+    if (_el) _el.onclick = function (e) {
       var btn = e.target.closest('.nav-item');
       if (!btn) return;
       showTab(btn.getAttribute('data-tab'));
@@ -4150,11 +4168,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         }
       };
     }
-    document.getElementById('v-filter-toggle').onclick = function () {
+    _el = document.getElementById('v-filter-toggle');
+    if (_el) _el.onclick = function () {
       var panel = $('v-filter-panel');
       panel.hidden = !panel.hidden;
     };
-    document.getElementById('view-toggle').onclick = function (e) {
+    _el = document.getElementById('view-toggle');
+    if (_el) _el.onclick = function (e) {
       var b = e.target.closest('.chip');
       if (!b) return;
       state.voucherView = b.getAttribute('data-view');
@@ -4162,14 +4182,16 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       b.classList.add('active');
       renderVouchers();
     };
-    document.getElementById('btn-parse').onclick = function () {
+    _el = document.getElementById('btn-parse');
+    if (_el) _el.onclick = function () {
       var txt = ($('paste-area').value || '').trim();
       if (!txt) return Va.toast(Va.t('errorGeneric'));
       var res = Va.parsePastedText(txt, state.lang, state.learnTagsByNetwork);
       if (!res.drafts || !res.drafts.length) return Va.toast(Va.t('noResults'));
       showReview(res.drafts, res.raw);
     };
-    document.getElementById('add-mode-chips').onclick = function (e) {
+    _el = document.getElementById('add-mode-chips');
+    if (_el) _el.onclick = function (e) {
       const b = e.target.closest('.chip');
       if (!b) return;
       const mode = b.getAttribute('data-add');
@@ -4186,7 +4208,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         wireManualForm(null);
       }
     };
-    document.getElementById('btn-create-wallet').onclick = async function () {
+    _el = document.getElementById('btn-create-wallet');
+    if (_el) _el.onclick = async function () {
       state.activeAccountId = state.authUser.uid;
       state.isOwner = true;
       showOnly('screen-passphrase');
@@ -4197,7 +4220,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       $('pass-title').textContent = Va.t('passSetupTitle');
       $('pass-desc').textContent = Va.t('passSetupDesc');
     };
-    document.getElementById('btn-signout-rejected').onclick = function () { clearSession(state.authUser && state.authUser.uid); Va.auth().signOut(); };
+    _el = document.getElementById('btn-signout-rejected');
+    if (_el) _el.onclick = function () { clearSession(state.authUser && state.authUser.uid); Va.auth().signOut(); };
     $('dash-search') && ($('dash-search').oninput = function () { renderDashboard(); });
     $('v-search') && ($('v-search').oninput = function () { renderVouchers(); });
     const fc = $('filter-category');
@@ -4404,6 +4428,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var session = loadSession(uid);
     if (!session || !session.wallets) return;
     var list = $('wallet-switch-list');
+    var overlay = $('overlay-wallet-switch');
+    if (!list || !overlay) return;
     list.innerHTML = '';
     var ids = Object.keys(session.wallets);
     for (var i = 0; i < ids.length; i++) {
@@ -4423,14 +4449,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       if (!isCurrent) {
         (function (id) {
           btn.onclick = function () {
-            $('overlay-wallet-switch').hidden = true;
+            overlay.hidden = true;
             switchWallet(id);
           };
         })(accId);
       }
       list.appendChild(btn);
     }
-    $('overlay-wallet-switch').hidden = false;
+    overlay.hidden = false;
   }
 
   async function afterPhoneResolved() {
@@ -4468,6 +4494,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   async function showWalletPicker(accountIds) {
     showOnly('screen-wallet-picker');
     var list = $('wallet-picker-list');
+    if (!list) return;
     list.innerHTML = '';
     var uid = state.authUser.uid;
     var phone = state.normalizedPhone;
