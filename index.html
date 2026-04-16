@@ -135,17 +135,18 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
   position: relative; overflow: hidden; backdrop-filter: var(--glass);
   transition: transform .2s cubic-bezier(.4,0,.2,1), box-shadow .2s;
 }
-#tab-settings .card { padding: 12px 16px; margin-bottom: 10px; }
-#tab-settings .card h3 { font-size: 0.85rem; margin: 0 0 8px; }
+#tab-settings .screen-title { font-size: 1.1rem; margin: 8px 0 10px; }
+#tab-settings .card { padding: 12px; margin-bottom: 8px; }
+#tab-settings .card h3 { font-size: 0.82rem; margin: 0 0 6px; }
+#voucher-list .card { padding: 12px; margin-bottom: 10px; }
 .card:active { transform: scale(0.985); }
 .card-strip {
   position: absolute; inset-inline-start: 0; top: 0; bottom: 0; width: 4px;
-  border-radius: 0 4px 4px 0;
 }
 
 .badge {
-  display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 999px;
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; backdrop-filter: var(--glass);
+  display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 999px;
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em; backdrop-filter: var(--glass);
 }
 .badge.green { background: rgba(52,211,153,0.15); color: var(--ex-green); }
 .badge.yellow { background: rgba(251,191,36,0.15); color: var(--ex-yellow); }
@@ -257,9 +258,10 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
   pointer-events: none; z-index: 1;
 }
 .h-scroll {
-  display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px;
+  display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 8px;
   scrollbar-width: none;
 }
+.h-scroll::after { content: ''; flex: 0 0 16px; }
 .h-scroll::-webkit-scrollbar { display: none; }
 .h-scroll .card { width: calc((100% - 16px) / 3); min-width: 120px; max-width: 170px; flex: 0 0 auto; margin-bottom: 0; padding: 10px; }
 
@@ -348,7 +350,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
 @media (max-width: 380px) {
   .balance-big { font-size: 1.6rem; }
-  .grid2 { grid-template-columns: 1fr; }
+  .grid2 { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-card { padding: 10px; min-height: 60px; }
   .stat-card b { font-size: 1.2rem; }
   .card { padding: 12px; }
   .screen { padding: 0 10px 16px; }
@@ -370,12 +373,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
 .invite-wrap .btn { font-size: 0.85rem; padding: 10px 16px; min-height: 42px; }
 
-.member-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.member-row { display: flex; justify-content: space-between; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
 .member-info { flex: 1; min-width: 0; }
 .member-name { font-weight: 500; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .member-phone { font-size: 0.78rem; color: var(--muted); direction: ltr; unicode-bidi: isolate; flex-shrink: 0; }
 .member-tag { font-size: 0.72rem; color: var(--primary); opacity: 0.8; margin-inline-start: 4px; }
-.member-row .btn { font-size: 0.82rem; padding: 9px 14px; min-height: 40px; white-space: nowrap; }
+.member-row .btn { font-size: 0.7rem; padding: 4px 10px; min-height: 28px; white-space: nowrap; border-radius: 999px; }
 
 .mf-section { padding-top: 4px; }
 .mf-section .lbl:first-child { margin-top: 8px; }
@@ -2659,26 +2662,26 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       if (isExpired) card.style.opacity = '0.55';
       card.innerHTML =
         '<div class="card-strip" style="background:var(--' + cm.color + ')"></div>' +
-        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px">' +
           '<div style="min-width:0;flex:1">' +
-            '<div style="font-size:1rem;font-weight:700;line-height:1.3;margin-bottom:2px">' + escapeHtml(v.name) + '</div>' +
-            (storeStr ? '<div style="font-size:0.72rem;color:var(--muted);opacity:0.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(storeStr) + '</div>' : '') +
+            '<div style="font-size:0.9rem;font-weight:700;line-height:1.3">' + escapeHtml(v.name) + '</div>' +
+            (storeStr ? '<div style="font-size:0.68rem;color:var(--muted);opacity:0.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(storeStr) + '</div>' : '') +
           '</div>' +
-          '<button type="button" class="star-btn" data-id="' + v.id + '" style="position:static;width:44px;height:44px;font-size:1rem;flex-shrink:0">' + (v.favorite ? '★' : '☆') + '</button>' +
+          '<button type="button" class="star-btn" data-id="' + v.id + '" style="position:static;width:32px;height:32px;font-size:0.9rem;flex-shrink:0">' + (v.favorite ? '★' : '☆') + '</button>' +
         '</div>' +
-        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 4px">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin:4px 0 2px">' +
           (v.type === 'value'
-            ? '<div style="font-size:1.6rem;font-weight:900;letter-spacing:-0.03em">' + Va.money(v.remainingBalance) + '</div>'
-            : '<div style="font-size:0.88rem;color:var(--muted);line-height:1.4;flex:1;min-width:0">' + escapeHtml((v.offerDescription || '').slice(0, 100)) + '</div>') +
+            ? '<div style="font-size:1.25rem;font-weight:900;letter-spacing:-0.03em">' + Va.money(v.remainingBalance) + '</div>'
+            : '<div style="font-size:0.82rem;color:var(--muted);line-height:1.3;flex:1;min-width:0">' + escapeHtml((v.offerDescription || '').slice(0, 80)) + '</div>') +
           '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;flex-shrink:0">' +
             '<span class="badge ' + eb.cls + '">' + eb.text + '</span>' +
             (miss ? '<span class="badge code-miss">' + Va.t('codeMissing') + '</span>' : '') +
             (low ? '<span class="badge orange">' + Va.t('almostEmpty') + '</span>' : '') +
           '</div>' +
         '</div>' +
-        '<div style="display:flex;gap:6px;margin-top:8px">' +
-            '<button type="button" class="btn secondary" data-copy="' + v.id + '" style="flex:1;min-height:44px;padding:8px 10px;font-size:0.8rem;border-radius:999px"></button>' +
-            '<button type="button" class="btn" data-use="' + v.id + '" style="flex:1;min-height:44px;padding:8px 10px;font-size:0.8rem;border-radius:999px">' + Va.t('use') + '</button>' +
+        '<div style="display:flex;gap:6px;margin-top:6px">' +
+            '<button type="button" class="btn secondary" data-copy="' + v.id + '" style="flex:1;min-height:36px;padding:6px 8px;font-size:0.75rem;border-radius:999px"></button>' +
+            '<button type="button" class="btn" data-use="' + v.id + '" style="flex:1;min-height:36px;padding:6px 8px;font-size:0.75rem;border-radius:999px">' + Va.t('use') + '</button>' +
         '</div>';
       (function () {
         var p = plainMap[v.id] || {};
@@ -3272,7 +3275,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
             (displayName ? '<div style="font-weight:700;font-size:0.9rem;line-height:1.3">' + displayName + '</div>' : '') +
             '<div style="font-size:0.75rem;color:var(--muted);line-height:1.5">' + escapeHtml(state.normalizedPhone) + ' · ' + authMethod + '</div>' +
           '</div>' +
-          '<button type="button" class="btn ghost" id="btn-so" style="flex-shrink:0;font-size:0.75rem;padding:6px 14px;border-radius:999px;color:var(--danger)">' + Va.t('signOut') + '</button>' +
+          '<button type="button" class="btn ghost" id="btn-so" style="flex-shrink:0;font-size:0.7rem;padding:4px 10px;border-radius:999px;color:var(--danger)">' + Va.t('signOut') + '</button>' +
         '</div>';
       $('btn-so').onclick = function () { clearSession(state.authUser && state.authUser.uid); Va.auth().signOut(); location.reload(); };
     }
@@ -3281,15 +3284,25 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       const phones = (state.settingsDoc && state.settingsDoc.approvedPhones) ? state.settingsDoc.approvedPhones.slice() : [];
       var memberCount = phones.length > 0 ? ' (' + phones.length + ' ' + (phones.length === 1 ? Va.t('oneMember') : Va.t('members')) + ')' : '';
       var currentWalletName = (state.settingsDoc && state.settingsDoc.walletName) || '';
+      var nameIsSet = !!currentWalletName;
       sh.innerHTML = '<h3>' + Va.t('sharingSection') + memberCount + '</h3>' +
-        '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">' +
-          '<label class="small" style="white-space:nowrap">' + Va.t('walletNameLabel') + '</label>' +
-          '<input class="input" id="wallet-name-input" value="' + escapeHtml(currentWalletName) + '" placeholder="' + Va.t('walletNamePlaceholder') + '" style="flex:1;font-size:0.8rem;padding:6px 10px;border-radius:8px" />' +
-          '<button type="button" class="btn" id="btn-save-wallet-name" style="font-size:0.75rem;padding:6px 12px;border-radius:999px">💾</button>' +
+        '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">' +
+          '<label style="font-size:0.72rem;color:var(--muted);white-space:nowrap">' + Va.t('walletNameLabel') + '</label>' +
+          '<input class="input" id="wallet-name-input" value="' + escapeHtml(currentWalletName) + '" placeholder="' + Va.t('walletNamePlaceholder') + '" style="flex:1;font-size:0.78rem;padding:4px 8px;border-radius:8px"' + (nameIsSet ? ' readonly' : '') + ' />' +
+          '<button type="button" class="btn ghost" id="btn-edit-wallet-name" style="font-size:0.7rem;padding:3px 8px;border-radius:999px">' + (nameIsSet ? '✏️' : '💾') + '</button>' +
         '</div>' +
         '<div id="ap-list"></div>';
-      $('btn-save-wallet-name').onclick = async function () {
-        var newName = ($('wallet-name-input').value || '').trim();
+      var wnInput = $('wallet-name-input');
+      var wnBtn = $('btn-edit-wallet-name');
+      function setEditMode(editing) {
+        wnInput.readOnly = !editing;
+        wnBtn.textContent = editing ? '💾' : '✏️';
+        if (editing) wnInput.focus();
+      }
+      wnBtn.onclick = async function () {
+        if (wnInput.readOnly) { setEditMode(true); return; }
+        var newName = (wnInput.value || '').trim();
+        wnBtn.disabled = true;
         await Va.accountRef(state.activeAccountId).update({
           walletName: newName,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -3300,6 +3313,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           sess.wallets[state.activeAccountId].walletName = newName;
           saveSession(uid, sess);
         }
+        wnBtn.disabled = false;
+        setEditMode(false);
         Va.toast(Va.t('walletNameSaved'));
       };
       const lst = $('ap-list');
@@ -3320,7 +3335,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         var infoHtml = '<span class="member-name">' + (nameText ? nameText + ' ' : '') + phoneText + ' ' + roleBadge + youBadge + '</span>';
         const row = document.createElement('div');
         row.className = 'member-row';
-        var removeBtn = isMe ? '' : '<button type="button" class="btn secondary" data-rm="' + escapeHtml(p) + '">' + Va.t('remove') + '</button>';
+        var removeBtn = isMe ? '' : '<button type="button" class="btn ghost" data-rm="' + escapeHtml(p) + '" style="color:var(--danger);font-size:0.68rem;padding:3px 8px;min-height:auto;border-radius:999px;opacity:0.7">' + Va.t('remove') + '</button>';
         row.innerHTML = '<div class="member-info">' + infoHtml + '</div>' + removeBtn;
         if (!isMe) {
           row.querySelector('button').onclick = async function () {
@@ -3331,14 +3346,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       });
       var invWrap = document.createElement('div');
       invWrap.className = 'invite-wrap';
-      invWrap.style.cssText = 'display:flex;gap:6px;margin-top:10px';
+      invWrap.style.cssText = 'display:flex;gap:6px;margin-top:8px';
       var invBtn = document.createElement('button');
       invBtn.className = 'btn whatsapp';
-      invBtn.style.cssText = 'flex:1;font-size:0.8rem;padding:8px 12px;border-radius:999px';
+      invBtn.style.cssText = 'flex:1;font-size:0.72rem;padding:6px 10px;border-radius:999px';
       invBtn.textContent = '\uD83D\uDCE9 ' + Va.t('inviteWhatsapp');
       var copyBtn = document.createElement('button');
       copyBtn.className = 'btn secondary';
-      copyBtn.style.cssText = 'flex:1;font-size:0.8rem;padding:8px 12px;border-radius:999px';
+      copyBtn.style.cssText = 'flex:1;font-size:0.72rem;padding:6px 10px;border-radius:999px';
       copyBtn.textContent = '\uD83D\uDD17 ' + Va.t('inviteCopyLink');
       var lastLink = null;
       async function getOrCreateLink(btn) {
@@ -3406,14 +3421,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var disp = $('settings-display');
     if (disp) {
       function settingBtn(id, label, isActive) {
-        return '<button type="button" class="' + (isActive ? 'btn' : 'btn secondary') + '" id="' + id + '" style="flex:1;min-width:0">' + label + '</button>';
+        return '<button type="button" class="' + (isActive ? 'btn' : 'btn secondary') + '" id="' + id + '" style="flex:1;min-width:0;font-size:0.75rem;padding:5px 6px;min-height:32px">' + label + '</button>';
       }
       disp.innerHTML = '<h3>' + Va.t('displaySection') + '</h3>' +
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:0.78rem;color:var(--muted);white-space:nowrap;min-width:40px">' + Va.t('langLabel') + '</span>' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;min-width:80px">' + Va.t('langLabel') + '</span>' +
         '<div style="display:flex;gap:4px;flex:1">' + settingBtn('lg-he', Va.t('langHe'), state.lang === 'he') + settingBtn('lg-en', Va.t('langEn'), state.lang === 'en') + '</div></div>' +
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:0.78rem;color:var(--muted);white-space:nowrap;min-width:40px">' + Va.t('themeLabel') + '</span>' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;min-width:80px">' + Va.t('themeLabel') + '</span>' +
         '<div style="display:flex;gap:4px;flex:1">' + settingBtn('th-a', Va.t('themeAuto'), state.themePref === 'auto') + settingBtn('th-l', Va.t('themeLight'), state.themePref === 'light') + settingBtn('th-d', Va.t('themeDark'), state.themePref === 'dark') + '</div></div>' +
-        '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.78rem;color:var(--muted);white-space:nowrap;min-width:40px">' + Va.t('defaultView') + '</span>' +
+        '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;min-width:80px">' + Va.t('defaultView') + '</span>' +
         '<div style="display:flex;gap:4px;flex:1">' + settingBtn('dv-c', Va.t('viewCard'), state.voucherView === 'card') + settingBtn('dv-l', Va.t('viewList'), state.voucherView === 'list') + '</div></div>';
       $('lg-he').onclick = function () { persistLang('he'); };
       $('lg-en').onclick = function () { persistLang('en'); };
@@ -3427,10 +3442,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (sec) {
       var secHtml = '<h3>' + Va.t('securitySection') + '</h3>';
       if (state.isOwner) {
-        secHtml += '<button type="button" class="btn ghost" id="btn-chg-pass" style="font-size:0.8rem;padding:8px 16px;border-radius:999px">' + Va.t('changePass') + '</button>';
+        secHtml += '<button type="button" class="btn ghost" id="btn-chg-pass" style="font-size:0.75rem;padding:5px 12px;border-radius:999px">' + Va.t('changePass') + '</button>';
       } else {
-        secHtml += '<p class="small" style="margin-bottom:8px">' + Va.t('recoveryPassDesc') + '</p>';
-        secHtml += '<button type="button" class="btn secondary" id="btn-set-recovery" style="font-size:0.8rem;padding:8px 16px;border-radius:999px">' + Va.t('setRecoveryPass') + '</button>';
+        secHtml += '<p class="small" style="margin-bottom:6px">' + Va.t('recoveryPassDesc') + '</p>';
+        secHtml += '<button type="button" class="btn secondary" id="btn-set-recovery" style="font-size:0.75rem;padding:5px 12px;border-radius:999px">' + Va.t('setRecoveryPass') + '</button>';
         secHtml += '<div id="recovery-status" class="small mt8" hidden></div>';
       }
       secHtml += '<div id="bio-section" class="mt12" hidden></div>';
@@ -3536,9 +3551,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     const data = $('settings-data');
     if (data) {
       data.innerHTML = '<h3>' + Va.t('dataSection') + '</h3>' +
-        '<div style="display:flex;gap:6px"><button type="button" class="btn secondary" id="ex-json" style="flex:1;min-width:0;font-size:0.8rem;padding:8px 12px;border-radius:999px">' + Va.t('exportJson') + '</button>' +
-        '<button type="button" class="btn secondary" id="im-json" style="flex:1;min-width:0;font-size:0.8rem;padding:8px 12px;border-radius:999px">' + Va.t('importJson') + '</button></div>' +
-        '<div style="font-size:0.7rem;color:var(--muted);margin-top:6px" id="lb-bak">' + Va.t('lastBackup') + ': —</div>' +
+        '<div style="display:flex;gap:6px"><button type="button" class="btn secondary" id="ex-json" style="flex:1;min-width:0;font-size:0.75rem;padding:5px 10px;border-radius:999px">' + Va.t('exportJson') + '</button>' +
+        '<button type="button" class="btn secondary" id="im-json" style="flex:1;min-width:0;font-size:0.75rem;padding:5px 10px;border-radius:999px">' + Va.t('importJson') + '</button></div>' +
+        '<div style="font-size:0.68rem;color:var(--muted);margin-top:4px" id="lb-bak">' + Va.t('lastBackup') + ': —</div>' +
         '<input type="file" id="im-file" hidden accept=".json" />';
       const lb = (state.settingsDoc && state.settingsDoc.settings && state.settingsDoc.settings.lastBackup) || '';
       $('lb-bak').textContent = Va.t('lastBackup') + ': ' + formatDate(lb);
@@ -3592,11 +3607,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (cal) {
       var cur = (state.settingsDoc && state.settingsDoc.settings && state.settingsDoc.settings.calendarReminders) || [7, 3, 1];
       cal.innerHTML = '<h3>' + Va.t('calendarSection') + '</h3>' +
-        '<p style="font-size:0.75rem;color:var(--muted);margin:0 0 8px">' + Va.t('calRemind') + '</p>' +
+        '<p style="font-size:0.72rem;color:var(--muted);margin:0 0 6px">' + Va.t('calRemind') + '</p>' +
         '<div id="cal-tags"></div>' +
-        '<div style="display:flex;gap:6px;align-items:center;margin-top:8px">' +
-          '<select class="input" id="cal-add-select" style="flex:1;border-radius:999px;padding:6px 12px;font-size:0.8rem"></select>' +
-          '<button type="button" class="btn" id="cal-add-btn" style="border-radius:999px;min-height:36px;padding:6px 16px;font-size:0.85rem">+</button>' +
+        '<div style="display:flex;gap:6px;align-items:center;margin-top:6px">' +
+          '<select class="input" id="cal-add-select" style="flex:1;border-radius:999px;padding:4px 10px;font-size:0.75rem"></select>' +
+          '<button type="button" class="btn" id="cal-add-btn" style="border-radius:999px;min-height:30px;padding:4px 14px;font-size:0.8rem">+</button>' +
         '</div>';
       var selected = cur.slice();
 
@@ -3610,13 +3625,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         }
         selected.forEach(function (d) {
           var tag = document.createElement('span');
-          tag.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:var(--primary);color:#fff;padding:6px 10px 6px 14px;border-radius:999px;font-size:0.82rem;font-weight:600;margin:0 6px 8px 0;';
+          tag.style.cssText = 'display:inline-flex;align-items:center;gap:4px;background:var(--primary);color:#fff;padding:4px 8px 4px 10px;border-radius:999px;font-size:0.75rem;font-weight:600;margin:0 4px 6px 0;';
           var label = document.createElement('span');
           label.textContent = daysLabel(d);
           var rm = document.createElement('button');
           rm.type = 'button';
           rm.textContent = '✕';
-          rm.style.cssText = 'background:rgba(255,255,255,0.25);border:none;border-radius:50%;width:22px;height:22px;min-width:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-size:0.7rem;color:#fff;line-height:1;-webkit-tap-highlight-color:transparent;';
+          rm.style.cssText = 'background:rgba(255,255,255,0.25);border:none;border-radius:50%;width:18px;height:18px;min-width:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-size:0.6rem;color:#fff;line-height:1;-webkit-tap-highlight-color:transparent;';
           rm.onclick = async function (e) {
             e.stopPropagation();
             var idx = selected.indexOf(d);
