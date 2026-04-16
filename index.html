@@ -589,7 +589,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.8.3';
+  const APP_VERSION = '2.8.4';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -666,7 +666,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.8.3',
+      aboutVersion: 'גרסה 2.8.4',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -902,7 +902,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.8.3',
+      aboutVersion: 'Version 2.8.4',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -3786,13 +3786,17 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       if (bioSec && window.PublicKeyCredential) {
         PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(function (avail) {
           if (!avail) return;
+          var liveBio = $('bio-section');
+          if (!liveBio) return;
           var uid = state.authUser && state.authUser.uid;
           if (!uid) return;
           var enrolled = !!localStorage.getItem('vm_bio_cred_' + uid);
-          bioSec.hidden = false;
-          bioSec.innerHTML = '<button type="button" class="btn' + (enrolled ? ' active' : '') + '" id="btn-bio-toggle" style="width:100%">' +
+          liveBio.hidden = false;
+          liveBio.innerHTML = '<button type="button" class="btn' + (enrolled ? ' active' : '') + '" id="btn-bio-toggle" style="width:100%">' +
             (enrolled ? Va.t('biometricEnrolled') : Va.t('biometricSetup')) + '</button>';
-          $('btn-bio-toggle').onclick = async function () {
+          var bioBtn = $('btn-bio-toggle');
+          if (!bioBtn) return;
+          bioBtn.onclick = async function () {
             if (enrolled) {
               localStorage.removeItem('vm_bio_cred_' + uid);
               renderSettings();
