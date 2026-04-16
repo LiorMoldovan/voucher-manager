@@ -589,7 +589,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.8.4';
+  const APP_VERSION = '2.8.5';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -666,7 +666,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.8.4',
+      aboutVersion: 'גרסה 2.8.5',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -902,7 +902,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.8.4',
+      aboutVersion: 'Version 2.8.5',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -3503,10 +3503,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         row.innerHTML =
           '<div class="member-info">' +
             '<div class="m-top"><div class="member-name">' + escapeHtml(displayName) + '</div></div>' +
-            '<div class="member-phone">' + escapeHtml(p) + '</div>' +
             '<div class="member-badges">' + badges + '</div>' +
           '</div>' +
-          actionHtml;
+          actionHtml +
+          '<div class="member-phone" style="flex-shrink:0;white-space:nowrap">' + escapeHtml(p) + '</div>';
         if (!isMe) {
           row.querySelector('[data-rm]').onclick = async function () {
             await Va.removeApprovedPhone(state.activeAccountId, p, state.normalizedPhone || '');
