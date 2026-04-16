@@ -589,7 +589,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.8.5';
+  const APP_VERSION = '2.9.0';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -666,7 +666,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.8.5',
+      aboutVersion: 'גרסה 2.9.0',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -902,7 +902,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.8.5',
+      aboutVersion: 'Version 2.9.0',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -2872,7 +2872,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           Va.toast(Va.t('currentBalance') + ': ' + Va.money(rem));
           setTimeout(function () {
             var fresh = state.vouchers.find(function (x) { return x.id === vid; });
-            if (fresh) openDetailModal(fresh);
+            if (fresh) openSheet(fresh);
           }, 400);
         }
       } catch (e) {
@@ -2884,18 +2884,20 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
   var _sheetOpener = null;
   function openSheet(v) {
-    const p = plainMap[v.id] || {};
-    const sh = $('overlay-sheet');
-    const sc = $('sheet-content');
+    var p = plainMap[v.id] || {};
+    var sh = $('overlay-sheet');
+    var sc = $('sheet-content');
     if (!sh || !sc) return;
     _sheetOpener = document.activeElement;
-    const links = v.links || {};
-    const linkRow = [];
+
+    var links = v.links || {};
+    var linkRow = [];
     if (links.balanceCheck) linkRow.push('<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(links.balanceCheck) + '">' + Va.t('linkBalance') + '</a>');
     if (links.storesList) linkRow.push('<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(links.storesList) + '">' + Va.t('linkStores') + '</a>');
     if (links.voucherView) linkRow.push('<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(links.voucherView) + '">' + Va.t('linkVoucher') + '</a>');
     if (links.personalArea) linkRow.push('<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(links.personalArea) + '">' + Va.t('linkPersonal') + '</a>');
-    let codeBlock = '';
+
+    var codeBlock = '';
     if (v.codeType === 'card') {
       codeBlock = '<div class="mt12" style="background:var(--surface);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border)"><div class="small" style="font-weight:600">' + Va.t('cardNumber') + '</div><div style="font-size:1.15rem;font-weight:800;word-break:break-all;letter-spacing:0.05em;margin:4px 0 10px">' + escapeHtml(p.cardNumber || '') +
         '</div><div class="row" style="gap:12px"><div><div class="small" style="font-weight:600">' + Va.t('cardExpiry') + '</div><button type="button" class="btn" id="cp-exp" style="font-family:monospace">' + escapeHtml(p.cardExpiry || '') + '</button></div>' +
@@ -2907,38 +2909,82 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       codeBlock = '<div class="mt12" style="background:var(--surface);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border);text-align:center"><div class="small" style="font-weight:600">' + Va.t('voucherCode') + '</div><div style="font-size:1.3rem;font-weight:800;word-break:break-all;letter-spacing:0.06em;font-family:monospace;margin:8px 0">' + escapeHtml(p.code) + '</div>' +
         '<button type="button" class="btn active mt8" id="cp-code" style="width:100%">' + Va.t('copyCode') + '</button></div>';
     }
-    sc.innerHTML = '<div class="row-between"><b>' + escapeHtml(v.name) + '</b><button type="button" class="btn ghost" id="sheet-close">' + Va.t('close') + '</button></div>' +
+
+    var eb = expiryBadge(v);
+    var histHtml = (v.usageHistory || []).map(function (h) {
+      var dd = (h.date || '').split('-'); var fmtD = dd.length === 3 ? dd[2] + '/' + dd[1] + '/' + dd[0] : h.date || '';
+      return '<div class="small">' + escapeHtml(fmtD) + ' — ' + Va.money(h.amount) + (h.note ? ' (' + escapeHtml(h.note) + ')' : '') + '</div>';
+    }).join('');
+
+    sc.innerHTML =
+      '<div class="row-between"><b>' + escapeHtml(v.name) + '</b><button type="button" class="btn ghost" id="sheet-close">' + Va.t('close') + '</button></div>' +
+      '<div class="mt8"><span class="badge ' + eb.cls + '">' + eb.text + '</span></div>' +
+      (v.type === 'value' ? '<div class="mt8"><div class="small">' + Va.t('remainingBalance') + '</div><div class="balance-big">' + Va.money(v.remainingBalance) + '</div></div>' : '') +
+      (v.type === 'offer' && v.offerDescription ? '<div class="mt8"><div class="small">' + Va.t('offerDesc') + '</div><div>' + escapeHtml(v.offerDescription) + '</div></div>' : '') +
       codeBlock +
-      '<p class="mt12 small">' + escapeHtml(v.howToUse || '') + '</p>' +
-      '<div class="dl-links mt12">' + linkRow.join('') + '</div>' +
-      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px"><button type="button" class="btn active" id="sheet-use" style="flex:1 1 100%;min-width:0">' + Va.t('sheetUse') + '</button>' +
-      '<button type="button" class="btn" id="sheet-cal" style="flex:1 1 45%;min-width:0">' + Va.t('addToCalendar') + '</button>' +
-      '<button type="button" class="btn" id="sheet-more" style="flex:1 1 45%;min-width:0">' + Va.t('moreDetails') + '</button></div>';
+      '<div class="mt8"><div class="small">' + Va.t('storeTags') + '</div><div>' + escapeHtml((v.storeTags || []).join(', ') || '—') + '</div></div>' +
+      '<div class="mt8"><div class="small">' + Va.t('category') + '</div><div>' + escapeHtml(state.lang === 'he' ? categoryMeta(v.category).he : categoryMeta(v.category).en) + '</div></div>' +
+      (v.howToUse ? '<div class="mt8"><div class="small">' + Va.t('howToUse') + '</div><div>' + escapeHtml(v.howToUse) + '</div></div>' : '') +
+      (v.notes ? '<div class="mt8"><div class="small">' + Va.t('notes') + '</div><div>' + escapeHtml(v.notes) + '</div></div>' : '') +
+      (linkRow.length ? '<div class="dl-links mt8">' + linkRow.join('') + '</div>' : '') +
+      (histHtml ? '<div class="mt12"><div class="small"><b>' + Va.t('usageHistory') + '</b></div>' + histHtml +
+        '<button type="button" class="btn ghost" id="sheet-undo" style="font-size:0.78rem;margin-top:6px;padding:4px 10px">' + Va.t('undoLastUse') + '</button></div>' : '') +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px">' +
+        '<button type="button" class="btn active" id="sheet-use" style="flex:1 1 100%;min-width:0">' + Va.t('sheetUse') + '</button>' +
+        '<button type="button" class="btn" id="sheet-edit" style="flex:1 1 auto;min-width:0">' + Va.t('edit') + '</button>' +
+        '<button type="button" class="btn" id="sheet-cal" style="flex:1 1 auto;min-width:0">' + Va.t('addToCalendar') + '</button>' +
+        '<button type="button" class="btn" id="sheet-arch" style="flex:1 1 auto;min-width:0">' + Va.t('archive') + '</button>' +
+        '<button type="button" class="btn danger" id="sheet-del" style="flex:1 1 auto;min-width:0">' + Va.t('delete') + '</button>' +
+      '</div>';
+
+    sc.style.transform = '';
+    sc.style.transition = '';
     sh.hidden = false;
     history.pushState({ overlay: 'sheet' }, '', '');
     var firstBtn = sc.querySelector('button, a');
     if (firstBtn) firstBtn.focus();
+
     $('sheet-close').onclick = closeSheet;
-    const cpc = $('cp-code');
+    var cpc = $('cp-code');
     if (cpc && cpc.tagName === 'BUTTON') cpc.onclick = function () { Va.copyText(p.code || ''); };
-    const cpe = $('cp-exp');
+    var cpe = $('cp-exp');
     if (cpe) cpe.onclick = function () { Va.copyText(p.cardExpiry || ''); };
-    const cpv = $('cp-cvv');
+    var cpv = $('cp-cvv');
     if (cpv) cpv.onclick = function () { Va.copyText(p.cardCvv || ''); };
+
     $('sheet-use').onclick = function () {
-      $('overlay-sheet').hidden = true;
+      sh.hidden = true;
+      _sheetOpener = null;
       history.replaceState(null, '', '');
       markQuickUse(v);
     };
-    $('sheet-more').onclick = function () {
-      var sh2 = $('overlay-sheet');
-      if (sh2) sh2.hidden = true;
+    $('sheet-edit').onclick = function () {
+      sh.hidden = true;
+      _sheetOpener = null;
       history.replaceState(null, '', '');
-      openDetailModal(v);
+      openEditForm(v);
+    };
+    $('sheet-arch').onclick = async function () {
+      try {
+        await Va.vouchersCol(state.activeAccountId).doc(v.id).update({ status: 'archived', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        closeSheet();
+        Va.toast(Va.t('movedToArchive'));
+      } catch (e) { console.error(e); Va.toast(Va.t('errorGeneric')); }
+    };
+    $('sheet-del').onclick = function () {
+      sh.hidden = true;
+      _sheetOpener = null;
+      history.replaceState(null, '', '');
+      showConfirmModal(Va.t('confirmDelete'), async function () {
+        try {
+          await Va.vouchersCol(state.activeAccountId).doc(v.id).delete();
+          Va.toast(Va.t('deleted'));
+        } catch (e) { console.error(e); Va.toast(Va.t('errorGeneric')); }
+      });
     };
     $('sheet-cal').onclick = function () {
-      const title = encodeURIComponent(v.name);
-      const det = encodeURIComponent((p.code || p.cardNumber || '') + ' ' + (v.notes || ''));
+      var title = encodeURIComponent(v.name);
+      var det = encodeURIComponent((p.code || p.cardNumber || '') + ' ' + (v.notes || ''));
       var d = (v.expiryDate || '').replace(/-/g, '');
       var nextDay = '';
       if (d) {
@@ -2949,8 +2995,79 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       var calDates = d ? (d + '/' + nextDay) : '';
       window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + title + '&details=' + det + (calDates ? '&dates=' + calDates : ''), '_blank');
     };
+    var undoBtn = $('sheet-undo');
+    if (undoBtn) {
+      undoBtn.onclick = async function () {
+        var hist = (v.usageHistory || []).slice();
+        if (!hist.length) return;
+        undoBtn.disabled = true;
+        undoBtn.style.opacity = '0.5';
+        try {
+          var last = hist.pop();
+          var restoredBal = Number(v.remainingBalance || 0) + Number(last.amount || 0);
+          var newStatus = v.status === 'archived' ? 'active' : v.status;
+          var vid = v.id;
+          await Va.vouchersCol(state.activeAccountId).doc(vid).update({
+            usageHistory: hist,
+            remainingBalance: restoredBal,
+            status: newStatus,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          sh.hidden = true;
+          _sheetOpener = null;
+          history.replaceState(null, '', '');
+          Va.toast(Va.t('balanceRestored') + ': ' + Va.money(restoredBal));
+          setTimeout(function () {
+            var fresh = state.vouchers.find(function (x) { return x.id === vid; });
+            if (fresh) openSheet(fresh);
+          }, 400);
+        } catch (e) {
+          console.error(e); Va.toast(Va.t('errorGeneric'));
+          undoBtn.disabled = false; undoBtn.style.opacity = '';
+        }
+      };
+    }
+
     sh.onclick = function (e) { if (e.target === sh) closeSheet(); };
   }
+
+  (function initSheetSwipe() {
+    var sc = $('sheet-content');
+    if (!sc) return;
+    var startY = 0, currentY = 0, dragging = false;
+    sc.addEventListener('touchstart', function (e) {
+      if (sc.scrollTop > 0) return;
+      startY = e.touches[0].clientY;
+      currentY = startY;
+      dragging = true;
+      sc.style.transition = 'none';
+    }, { passive: true });
+    sc.addEventListener('touchmove', function (e) {
+      if (!dragging) return;
+      currentY = e.touches[0].clientY;
+      var dy = currentY - startY;
+      if (dy > 0) {
+        sc.style.transform = 'translateY(' + dy + 'px)';
+      }
+    }, { passive: true });
+    sc.addEventListener('touchend', function () {
+      if (!dragging) return;
+      dragging = false;
+      var dy = currentY - startY;
+      sc.style.transition = 'transform .25s cubic-bezier(.32,.72,0,1)';
+      if (dy > 100) {
+        sc.style.transform = 'translateY(100%)';
+        setTimeout(function () {
+          sc.style.transform = '';
+          sc.style.transition = '';
+          closeSheet();
+        }, 250);
+      } else {
+        sc.style.transform = '';
+        setTimeout(function () { sc.style.transition = ''; }, 250);
+      }
+    }, { passive: true });
+  })();
 
   function closeSheet(fromPop) {
     var sh = $('overlay-sheet');
@@ -4654,6 +4771,27 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       w.walletName = accData.walletName || w.walletName || '';
 
       if (localStorage.getItem('vm_bio_cred_' + user.uid)) {
+        try {
+          var credId = localStorage.getItem('vm_bio_cred_' + user.uid);
+          var rawId = Uint8Array.from(atob(credId), function (c) { return c.charCodeAt(0); });
+          var challenge = crypto.getRandomValues(new Uint8Array(32));
+          var assertion = await navigator.credentials.get({
+            publicKey: {
+              challenge: challenge,
+              allowCredentials: [{ id: rawId, type: 'public-key' }],
+              userVerification: 'required',
+              timeout: 60000
+            }
+          });
+          if (assertion) {
+            state.derivedKey = await Va.importKeyB64(w.keyB64);
+            showOnly('main-app');
+            startDataListeners();
+            return true;
+          }
+        } catch (e) {
+          console.warn('Biometric auto-unlock failed, falling back to passphrase:', e);
+        }
         await showPassphraseEnter();
         return true;
       }
