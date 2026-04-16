@@ -376,12 +376,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 #tab-settings .card .btn { min-height: 28px; padding: 4px 10px; font-size: 0.72rem; }
 #tab-settings .card .input { min-height: 28px; padding: 4px 8px; font-size: 0.72rem; }
 
-.member-row { display: flex; justify-content: space-between; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.member-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.member-row:last-child { border-bottom: none; }
 .member-info { flex: 1; min-width: 0; }
-.member-name { font-weight: 500; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.member-phone { font-size: 0.78rem; color: var(--muted); direction: ltr; unicode-bidi: isolate; flex-shrink: 0; }
-.member-tag { font-size: 0.72rem; color: var(--primary); opacity: 0.8; margin-inline-start: 4px; }
-.member-row .btn { min-height: 34px; padding: 6px 10px; font-size: 0.7rem; white-space: nowrap; }
+.member-name { font-weight: 600; font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.member-phone { font-size: 0.68rem; color: var(--muted); direction: ltr; unicode-bidi: isolate; }
+.member-badges { display: flex; gap: 4px; margin-top: 2px; flex-wrap: wrap; }
+.member-badge { display: inline-block; font-size: 0.58rem; font-weight: 700; padding: 1px 6px; border-radius: 999px; }
+.member-row .btn { min-height: 26px; padding: 3px 8px; font-size: 0.65rem; white-space: nowrap; }
 
 .mf-section { padding-top: 4px; }
 .mf-section .lbl:first-child { margin-top: 8px; }
@@ -582,7 +584,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.7.0';
+  const APP_VERSION = '2.8.0';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -659,7 +661,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.7.0',
+      aboutVersion: 'גרסה 2.8.0',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -895,7 +897,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.7.0',
+      aboutVersion: 'Version 2.8.0',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -3436,38 +3438,30 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       const phones = (state.settingsDoc && state.settingsDoc.approvedPhones) ? state.settingsDoc.approvedPhones.slice() : [];
       var memberCount = phones.length > 0 ? ' (' + phones.length + ' ' + (phones.length === 1 ? Va.t('oneMember') : Va.t('members')) + ')' : '';
       var currentWalletName = (state.settingsDoc && state.settingsDoc.walletName) || '';
-      var nameIsSet = !!currentWalletName;
       sh.innerHTML = '<h3>' + Va.t('sharingSection') + memberCount + '</h3>' +
-        '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">' +
-          '<label style="font-size:0.72rem;color:var(--muted);white-space:nowrap">' + Va.t('walletNameLabel') + '</label>' +
-          '<input class="input" id="wallet-name-input" value="' + escapeHtml(currentWalletName) + '" placeholder="' + Va.t('walletNamePlaceholder') + '" style="flex:1;font-size:0.78rem;padding:4px 8px;border-radius:8px"' + (nameIsSet ? ' readonly' : '') + ' />' +
-          '<button type="button" class="btn" id="btn-edit-wallet-name" style="min-width:34px;padding:6px;min-height:32px">' + (nameIsSet ? '✏️' : '💾') + '</button>' +
+        '<div style="display:flex;gap:4px;align-items:center;margin-bottom:8px">' +
+          '<span style="font-size:0.68rem;color:var(--muted);white-space:nowrap">' + Va.t('walletNameLabel') + '</span>' +
+          '<input class="input" id="wallet-name-input" value="' + escapeHtml(currentWalletName) + '" placeholder="' + Va.t('walletNamePlaceholder') + '" style="flex:1;font-size:0.72rem;padding:3px 8px;border-radius:8px;min-height:26px" />' +
+          '<button type="button" class="btn" id="btn-save-wallet-name" style="min-height:26px;min-width:26px;padding:0 6px;font-size:0.7rem;border-radius:999px">💾</button>' +
         '</div>' +
         '<div id="ap-list"></div>';
-      var wnInput = $('wallet-name-input');
-      var wnBtn = $('btn-edit-wallet-name');
-      function setEditMode(editing) {
-        wnInput.readOnly = !editing;
-        wnBtn.textContent = editing ? '💾' : '✏️';
-        if (editing) wnInput.focus();
-      }
-      wnBtn.onclick = async function () {
-        if (wnInput.readOnly) { setEditMode(true); return; }
-        var newName = (wnInput.value || '').trim();
-        wnBtn.disabled = true;
-        await Va.accountRef(state.activeAccountId).update({
-          walletName: newName,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        var uid = state.authUser.uid;
-        var sess = loadSession(uid);
-        if (sess && sess.wallets && sess.wallets[state.activeAccountId]) {
-          sess.wallets[state.activeAccountId].walletName = newName;
-          saveSession(uid, sess);
-        }
-        wnBtn.disabled = false;
-        setEditMode(false);
-        Va.toast(Va.t('walletNameSaved'));
+      $('btn-save-wallet-name').onclick = async function () {
+        var newName = ($('wallet-name-input').value || '').trim();
+        var btn = $('btn-save-wallet-name');
+        btn.disabled = true;
+        try {
+          await Va.accountRef(state.activeAccountId).update({
+            walletName: newName,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          var uid = state.authUser.uid;
+          var sess = loadSession(uid);
+          if (sess && sess.wallets && sess.wallets[state.activeAccountId]) {
+            sess.wallets[state.activeAccountId].walletName = newName;
+            saveSession(uid, sess);
+          }
+          Va.toast(Va.t('walletNameSaved'));
+        } finally { btn.disabled = false; }
       };
       const lst = $('ap-list');
       var nameMap = (state.settingsDoc && state.settingsDoc.memberNames) || {};
@@ -3476,34 +3470,33 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       phones.forEach(function (p) {
         var name = nameMap[p] || '';
         var isMe = p === ownerPhone;
+        var displayName = name || (isMe ? (u && u.displayName || u && u.email || '') : '');
         var roleTag = isMe ? Va.t('roleAdmin') : Va.t('roleMember');
-        var roleStyle = isMe
-          ? 'background:rgba(124,107,240,0.15);color:var(--primary);'
-          : 'background:var(--surface);color:var(--muted);';
-        var roleBadge = '<span style="display:inline-block;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:999px;' + roleStyle + '">' + roleTag + '</span>';
-        var youBadge = isMe ? '<span style="display:inline-block;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(76,175,80,0.15);color:#4CAF50;">' + Va.t('you') + '</span>' : '';
+        var roleStyle = isMe ? 'background:rgba(124,107,240,0.15);color:var(--primary)' : 'background:var(--surface);color:var(--muted)';
         var memberPerms = permMap[p] || [];
-        var permBadges = '';
+        var badges = '<span class="member-badge" style="' + roleStyle + '">' + roleTag + '</span>';
+        if (isMe) badges += '<span class="member-badge" style="background:rgba(76,175,80,0.15);color:#4CAF50">' + Va.t('you') + '</span>';
         if (!isMe && memberPerms.length > 0) {
           memberPerms.forEach(function (perm) {
             var lbl = PERM_LABELS[perm] ? Va.t(PERM_LABELS[perm]) : perm;
-            permBadges += ' <span style="display:inline-block;font-size:0.6rem;font-weight:600;padding:1px 6px;border-radius:999px;background:rgba(124,107,240,0.12);color:var(--primary)">' + escapeHtml(lbl) + '</span>';
+            badges += '<span class="member-badge" style="background:rgba(124,107,240,0.12);color:var(--primary)">' + escapeHtml(lbl) + '</span>';
           });
         }
-        var displayName = name || (isMe ? (u && u.displayName || u && u.email || '') : '');
-        var nameText = displayName ? escapeHtml(displayName) : '';
-        var phoneText = '<span class="member-phone">' + escapeHtml(p) + '</span>';
-        var infoHtml = '<span class="member-name">' + (nameText ? nameText + ' ' : '') + phoneText + ' ' + roleBadge + youBadge + permBadges + '</span>';
         const row = document.createElement('div');
         row.className = 'member-row';
         var actionBtns = '';
         if (!isMe) {
-          actionBtns = '<div style="display:flex;gap:4px;flex-shrink:0">' +
-            '<button type="button" class="btn" data-perms="' + escapeHtml(p) + '" title="' + Va.t('editPermissions') + '" style="font-size:0.75rem;min-height:28px;padding:4px 8px">⚙</button>' +
-            '<button type="button" class="btn danger" data-rm="' + escapeHtml(p) + '" style="font-size:0.7rem">' + Va.t('remove') + '</button>' +
-          '</div>';
+          actionBtns =
+            '<button type="button" class="btn ghost" data-perms="' + escapeHtml(p) + '" title="' + Va.t('editPermissions') + '">⚙</button>' +
+            '<button type="button" class="btn danger" data-rm="' + escapeHtml(p) + '">' + Va.t('remove') + '</button>';
         }
-        row.innerHTML = '<div class="member-info">' + infoHtml + '</div>' + actionBtns;
+        row.innerHTML =
+          '<div class="member-info">' +
+            '<div class="member-name">' + escapeHtml(displayName) + '</div>' +
+            '<div class="member-phone">' + escapeHtml(p) + '</div>' +
+            '<div class="member-badges">' + badges + '</div>' +
+          '</div>' +
+          actionBtns;
         if (!isMe) {
           row.querySelector('[data-rm]').onclick = async function () {
             await Va.removeApprovedPhone(state.activeAccountId, p, state.normalizedPhone || '');
@@ -3521,7 +3514,6 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         lst.appendChild(row);
       });
       var invWrap = document.createElement('div');
-      invWrap.className = 'invite-wrap';
       invWrap.style.cssText = 'display:flex;gap:6px;margin-top:8px';
       var invBtn = document.createElement('button');
       invBtn.className = 'btn whatsapp';
@@ -3583,7 +3575,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     } else if (sh) {
       var phones = (state.settingsDoc && state.settingsDoc.approvedPhones) ? state.settingsDoc.approvedPhones.slice() : [];
       var memberCount = phones.length > 0 ? ' (' + phones.length + ' ' + (phones.length === 1 ? Va.t('oneMember') : Va.t('members')) + ')' : '';
-      sh.innerHTML = '<h3>' + Va.t('sharingSection') + memberCount + '</h3><p style="font-size:0.75rem;color:var(--muted);margin:0 0 6px">' + Va.t('memberOfWallet') + '</p><div id="ap-list"></div>';
+      sh.innerHTML = '<h3>' + Va.t('sharingSection') + memberCount + '</h3><p style="font-size:0.68rem;color:var(--muted);margin:0 0 6px">' + Va.t('memberOfWallet') + '</p><div id="ap-list"></div>';
       var lst = $('ap-list');
       var nameMap = (state.settingsDoc && state.settingsDoc.memberNames) || {};
       var myPhone = state.normalizedPhone;
@@ -3593,23 +3585,24 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         var name = nameMap[p] || '';
         var isMe = p === myPhone;
         var isAdmin = idx === 0;
-        var roleTag = isAdmin ? Va.t('roleAdmin') : Va.t('roleMember');
-        var roleStyle = isAdmin
-          ? 'background:rgba(124,107,240,0.15);color:var(--primary);'
-          : 'background:var(--surface);color:var(--muted);';
-        var roleBadge = '<span style="display:inline-block;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:999px;' + roleStyle + '">' + roleTag + '</span>';
-        var youBadge = isMe ? '<span style="display:inline-block;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(76,175,80,0.15);color:#4CAF50;">' + Va.t('you') + '</span>' : '';
         var displayName = name || (isMe ? (u && u.displayName || u && u.email || '') : '');
-        var nameText = displayName ? escapeHtml(displayName) : '';
-        var phoneText = '<span class="member-phone">' + escapeHtml(p) + '</span>';
-        var infoHtml = '<span class="member-name">' + (nameText ? nameText + ' ' : '') + phoneText + ' ' + roleBadge + youBadge + '</span>';
+        var roleTag = isAdmin ? Va.t('roleAdmin') : Va.t('roleMember');
+        var roleStyle = isAdmin ? 'background:rgba(124,107,240,0.15);color:var(--primary)' : 'background:var(--surface);color:var(--muted)';
+        var badges = '<span class="member-badge" style="' + roleStyle + '">' + roleTag + '</span>';
+        if (isMe) badges += '<span class="member-badge" style="background:rgba(76,175,80,0.15);color:#4CAF50">' + Va.t('you') + '</span>';
         var row = document.createElement('div');
         row.className = 'member-row';
         var removeBtn = '';
         if (canRemove && !isMe && !isAdmin) {
-          removeBtn = '<button type="button" class="btn danger" data-rm="' + escapeHtml(p) + '" style="font-size:0.7rem">' + Va.t('remove') + '</button>';
+          removeBtn = '<button type="button" class="btn danger" data-rm="' + escapeHtml(p) + '">' + Va.t('remove') + '</button>';
         }
-        row.innerHTML = '<div class="member-info">' + infoHtml + '</div>' + removeBtn;
+        row.innerHTML =
+          '<div class="member-info">' +
+            '<div class="member-name">' + escapeHtml(displayName) + '</div>' +
+            '<div class="member-phone">' + escapeHtml(p) + '</div>' +
+            '<div class="member-badges">' + badges + '</div>' +
+          '</div>' +
+          removeBtn;
         if (canRemove && !isMe && !isAdmin) {
           row.querySelector('[data-rm]').onclick = async function () {
             try {
@@ -3883,12 +3876,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (cal) {
       var cur = (state.settingsDoc && state.settingsDoc.settings && state.settingsDoc.settings.calendarReminders) || [7, 3, 1];
       cal.innerHTML = '<h3>' + Va.t('calendarSection') + '</h3>' +
-        '<div class="s-row" style="align-items:flex-start"><span class="s-label" style="padding-top:4px">' + Va.t('calRemind') + '</span>' +
-        '<div style="flex:1"><div id="cal-tags" style="margin-bottom:6px;display:flex;flex-wrap:wrap;justify-content:flex-start;gap:4px"></div>' +
-        '<div style="display:flex;gap:4px;justify-content:flex-start">' +
-          '<select class="input" id="cal-add-select" style="width:auto;border-radius:999px;padding:3px 8px;font-size:0.7rem;min-height:26px"></select>' +
+        '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">' + Va.t('calRemind') + '</div>' +
+        '<div id="cal-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px"></div>' +
+        '<div style="display:flex;gap:4px;align-items:center">' +
+          '<select class="input" id="cal-add-select" style="width:auto;min-width:80px;border-radius:999px;padding:3px 8px;font-size:0.7rem;min-height:26px"></select>' +
           '<button type="button" class="btn" id="cal-add-btn" style="min-height:26px;min-width:26px;padding:0 7px;font-size:0.72rem;border-radius:999px">+</button>' +
-        '</div></div></div>';
+        '</div>';
       var selected = cur.slice();
 
       function renderCalTags() {
@@ -4145,14 +4138,18 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       if (!btn) return;
       showTab(btn.getAttribute('data-tab'));
     };
-    $('wallet-switch-btn').onclick = function () {
-      openWalletSwitchSheet();
-    };
-    $('overlay-wallet-switch').onclick = function (e) {
-      if (e.target === $('overlay-wallet-switch')) {
-        $('overlay-wallet-switch').hidden = true;
-      }
-    };
+    if ($('wallet-switch-btn')) {
+      $('wallet-switch-btn').onclick = function () {
+        openWalletSwitchSheet();
+      };
+    }
+    if ($('overlay-wallet-switch')) {
+      $('overlay-wallet-switch').onclick = function (e) {
+        if (e.target === $('overlay-wallet-switch')) {
+          $('overlay-wallet-switch').hidden = true;
+        }
+      };
+    }
     document.getElementById('v-filter-toggle').onclick = function () {
       var panel = $('v-filter-panel');
       panel.hidden = !panel.hidden;
