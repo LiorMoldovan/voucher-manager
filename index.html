@@ -589,7 +589,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.9.0';
+  const APP_VERSION = '2.9.1';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -666,7 +666,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.9.0',
+      aboutVersion: 'גרסה 2.9.1',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -902,7 +902,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.9.0',
+      aboutVersion: 'Version 2.9.1',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -4870,9 +4870,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     Va.toast(Va.t('joinWelcome'));
   }
 
+  var _authBusy = false;
   async function onAuth(user) {
+    if (_authBusy && user) return;
     state.authUser = user;
-    if (!user) { showOnly('screen-welcome'); return; }
+    if (!user) { _authBusy = false; showOnly('screen-welcome'); return; }
+    _authBusy = true;
 
     if (state.pendingJoin) {
       if (user.phoneNumber) {
