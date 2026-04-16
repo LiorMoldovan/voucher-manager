@@ -373,6 +373,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 .s-row:last-child { margin-bottom: 0; }
 .s-label { font-size: 0.72rem; color: var(--muted); white-space: nowrap; min-width: 80px; }
 .s-btns { display: flex; gap: 4px; flex: 1; }
+#tab-settings .card .btn { min-height: 28px; padding: 4px 10px; font-size: 0.72rem; }
+#tab-settings .card .input { min-height: 28px; padding: 4px 8px; font-size: 0.72rem; }
 
 .member-row { display: flex; justify-content: space-between; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
 .member-info { flex: 1; min-width: 0; }
@@ -580,7 +582,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.6.0';
+  const APP_VERSION = '2.7.0';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -657,7 +659,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.6.0',
+      aboutVersion: 'גרסה 2.7.0',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -678,7 +680,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       importConfirm: 'שוברים',
       lastBackup: 'עותק אחרון נשמר',
       calendarSection: 'יומן',
-      calRemind: 'ימי תזכורת לפני תפוגה',
+      calRemind: 'תזכורת לפני תפוגה',
       calCustom: 'מותאם',
       securitySection: 'אבטחה',
       changePass: 'שינוי משפט סיסמה',
@@ -820,7 +822,15 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       switchWalletLabel: 'החלפת ארנק',
       filtersLabel: 'סינון',
       decryptFailed: 'פענוח נכשל — ייתכן שמשפט הסיסמה שגוי',
-      cvv: 'CVV'
+      cvv: 'CVV',
+      permInvite: 'הזמנת חברים',
+      permRemove: 'הסרת חברים',
+      editPermissions: 'עריכת הרשאות',
+      permissionsUpdated: 'ההרשאות עודכנו',
+      permPickerTitle: 'בחירת הרשאות',
+      noPermissions: 'ללא הרשאות מיוחדות',
+      permSave: 'שמירה',
+      permCancel: 'ביטול'
     },
     en: {
       appName: 'Voucher Manager',
@@ -885,7 +895,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.6.0',
+      aboutVersion: 'Version 2.7.0',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -906,7 +916,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       importConfirm: 'vouchers',
       lastBackup: 'Last copy saved',
       calendarSection: 'Calendar',
-      calRemind: 'Reminder days before expiry',
+      calRemind: 'Reminder before expiry',
       calCustom: 'Custom',
       securitySection: 'Security',
       changePass: 'Change passphrase',
@@ -1048,7 +1058,15 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       switchWalletLabel: 'Switch wallet',
       filtersLabel: 'Filters',
       decryptFailed: 'Decryption failed — passphrase may be wrong',
-      cvv: 'CVV'
+      cvv: 'CVV',
+      permInvite: 'Invite members',
+      permRemove: 'Remove members',
+      editPermissions: 'Edit permissions',
+      permissionsUpdated: 'Permissions updated',
+      permPickerTitle: 'Choose permissions',
+      noPermissions: 'No special permissions',
+      permSave: 'Save',
+      permCancel: 'Cancel'
     }
   };
 
@@ -1439,13 +1457,32 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
   async function removeApprovedPhone(accountId, phone, ownerPhone) {
     const ref = accountRef(accountId);
-    await ref.update({
+    var upd = {
       approvedPhones: firebase.firestore.FieldValue.arrayRemove(phone),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    };
+    upd['memberPermissions.' + phone] = firebase.firestore.FieldValue.delete();
+    upd['memberNames.' + phone] = firebase.firestore.FieldValue.delete();
+    upd['memberKeyBackups.' + phone] = firebase.firestore.FieldValue.delete();
+    await ref.update(upd);
     if (phone !== ownerPhone) {
       await removeFromPhoneIndex(phone, accountId);
     }
+  }
+
+  async function updateMemberPermissions(accountId, phone, permsArray) {
+    var upd = { updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+    upd['memberPermissions.' + phone] = permsArray;
+    await accountRef(accountId).update(upd);
+  }
+
+  function hasPermission(phone, perm) {
+    if (Va.state.isOwner) return true;
+    var doc = Va.state.settingsDoc;
+    if (!doc || !doc.memberPermissions) return false;
+    var perms = doc.memberPermissions[phone];
+    if (!perms || !Array.isArray(perms)) return false;
+    return perms.indexOf(perm) >= 0;
   }
 
   async function wrapKeyWithPassphrase(aesKey, passphrase) {
@@ -1508,6 +1545,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   Va.saveSettingsPatch = saveSettingsPatch;
   Va.addApprovedPhone = addApprovedPhone;
   Va.removeApprovedPhone = removeApprovedPhone;
+  Va.updateMemberPermissions = updateMemberPermissions;
+  Va.hasPermission = hasPermission;
   Va.upsertPhoneIndex = upsertPhoneIndex;
   Va.removeFromPhoneIndex = removeFromPhoneIndex;
   Va.wrapKeyWithPassphrase = wrapKeyWithPassphrase;
@@ -3055,6 +3094,38 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     modal.onclick = function (e) { if (e.target === modal) closeModal(); };
   }
 
+  var ALL_PERMS = ['invite', 'remove'];
+  var PERM_LABELS = { invite: 'permInvite', remove: 'permRemove' };
+
+  function showPermissionPicker(availablePerms, preSelected, onConfirm) {
+    var modal = $('overlay-modal');
+    var mc = $('modal-content');
+    _modalOpener = document.activeElement;
+    var html = '<p style="margin:0 0 12px;font-size:0.9rem;font-weight:600">' + Va.t('permPickerTitle') + '</p>';
+    availablePerms.forEach(function (perm) {
+      var checked = preSelected.indexOf(perm) >= 0 ? ' checked' : '';
+      html += '<label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:0.85rem;cursor:pointer">' +
+        '<input type="checkbox" class="perm-cb" value="' + perm + '"' + checked + ' style="width:18px;height:18px;accent-color:var(--primary)">' +
+        Va.t(PERM_LABELS[perm]) + '</label>';
+    });
+    html += '<div style="display:flex;gap:8px;margin-top:14px">' +
+      '<button class="btn" id="spp-cancel" style="flex:1">' + Va.t('permCancel') + '</button>' +
+      '<button class="btn cta" id="spp-ok" style="flex:1">' + Va.t('permSave') + '</button>' +
+    '</div>';
+    mc.innerHTML = html;
+    modal.hidden = false;
+    history.pushState({ overlay: 'modal' }, '', '');
+    $('spp-ok').focus();
+    $('spp-cancel').onclick = function () { closeModal(); };
+    $('spp-ok').onclick = function () {
+      var selected = [];
+      mc.querySelectorAll('.perm-cb:checked').forEach(function (cb) { selected.push(cb.value); });
+      closeModal();
+      onConfirm(selected);
+    };
+    modal.onclick = function (e) { if (e.target === modal) closeModal(); };
+  }
+
   var _editingVoucher = null;
 
   function openEditForm(v) {
@@ -3356,7 +3427,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
             (displayName ? '<div style="font-weight:700;font-size:0.9rem;line-height:1.3">' + displayName + '</div>' : '') +
             '<div style="font-size:0.75rem;color:var(--muted);line-height:1.5">' + escapeHtml(state.normalizedPhone) + ' · ' + authMethod + '</div>' +
           '</div>' +
-          '<button type="button" class="btn danger" id="btn-so" style="flex-shrink:0">' + Va.t('signOut') + '</button>' +
+          '<button type="button" class="btn danger" id="btn-so" style="flex-shrink:0;min-height:26px;padding:3px 10px;font-size:0.7rem">' + Va.t('signOut') + '</button>' +
         '</div>';
       $('btn-so').onclick = function () { clearSession(state.authUser && state.authUser.uid); Va.auth().signOut(); location.reload(); };
     }
@@ -3400,6 +3471,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       };
       const lst = $('ap-list');
       var nameMap = (state.settingsDoc && state.settingsDoc.memberNames) || {};
+      var permMap = (state.settingsDoc && state.settingsDoc.memberPermissions) || {};
       var ownerPhone = state.normalizedPhone;
       phones.forEach(function (p) {
         var name = nameMap[p] || '';
@@ -3410,17 +3482,40 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           : 'background:var(--surface);color:var(--muted);';
         var roleBadge = '<span style="display:inline-block;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:999px;' + roleStyle + '">' + roleTag + '</span>';
         var youBadge = isMe ? '<span style="display:inline-block;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(76,175,80,0.15);color:#4CAF50;">' + Va.t('you') + '</span>' : '';
+        var memberPerms = permMap[p] || [];
+        var permBadges = '';
+        if (!isMe && memberPerms.length > 0) {
+          memberPerms.forEach(function (perm) {
+            var lbl = PERM_LABELS[perm] ? Va.t(PERM_LABELS[perm]) : perm;
+            permBadges += ' <span style="display:inline-block;font-size:0.6rem;font-weight:600;padding:1px 6px;border-radius:999px;background:rgba(124,107,240,0.12);color:var(--primary)">' + escapeHtml(lbl) + '</span>';
+          });
+        }
         var displayName = name || (isMe ? (u && u.displayName || u && u.email || '') : '');
         var nameText = displayName ? escapeHtml(displayName) : '';
         var phoneText = '<span class="member-phone">' + escapeHtml(p) + '</span>';
-        var infoHtml = '<span class="member-name">' + (nameText ? nameText + ' ' : '') + phoneText + ' ' + roleBadge + youBadge + '</span>';
+        var infoHtml = '<span class="member-name">' + (nameText ? nameText + ' ' : '') + phoneText + ' ' + roleBadge + youBadge + permBadges + '</span>';
         const row = document.createElement('div');
         row.className = 'member-row';
-        var removeBtn = isMe ? '' : '<button type="button" class="btn danger" data-rm="' + escapeHtml(p) + '" style="font-size:0.7rem">' + Va.t('remove') + '</button>';
-        row.innerHTML = '<div class="member-info">' + infoHtml + '</div>' + removeBtn;
+        var actionBtns = '';
         if (!isMe) {
-          row.querySelector('button').onclick = async function () {
+          actionBtns = '<div style="display:flex;gap:4px;flex-shrink:0">' +
+            '<button type="button" class="btn" data-perms="' + escapeHtml(p) + '" title="' + Va.t('editPermissions') + '" style="font-size:0.75rem;min-height:28px;padding:4px 8px">⚙</button>' +
+            '<button type="button" class="btn danger" data-rm="' + escapeHtml(p) + '" style="font-size:0.7rem">' + Va.t('remove') + '</button>' +
+          '</div>';
+        }
+        row.innerHTML = '<div class="member-info">' + infoHtml + '</div>' + actionBtns;
+        if (!isMe) {
+          row.querySelector('[data-rm]').onclick = async function () {
             await Va.removeApprovedPhone(state.activeAccountId, p, state.normalizedPhone || '');
+          };
+          row.querySelector('[data-perms]').onclick = function () {
+            var currentPerms = permMap[p] || [];
+            showPermissionPicker(ALL_PERMS, currentPerms, async function (selected) {
+              try {
+                await Va.updateMemberPermissions(state.activeAccountId, p, selected);
+                Va.toast(Va.t('permissionsUpdated'));
+              } catch (e) { Va.toast(Va.t('errorGeneric')); }
+            });
           };
         }
         lst.appendChild(row);
@@ -3437,14 +3532,17 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       copyBtn.style.cssText = 'flex:1';
       copyBtn.textContent = '\uD83D\uDD17 ' + Va.t('inviteCopyLink');
       var lastLink = null;
-      async function getOrCreateLink(btn) {
+      var lastPerms = null;
+      async function getOrCreateLink(btn, perms) {
+        if (lastLink && lastPerms && JSON.stringify(lastPerms) === JSON.stringify(perms)) return lastLink;
         var origText = btn.textContent;
         btn.disabled = true;
         btn.classList.add('loading');
         btn.textContent = Va.t('inviteGenerating');
         try {
-          var link = await generateInviteLink();
+          var link = await generateInviteLink(perms);
           lastLink = link;
+          lastPerms = perms;
           return link;
         } catch (e) {
           Va.toast(e.message || Va.t('errorGeneric'));
@@ -3455,19 +3553,29 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           btn.textContent = origText;
         }
       }
-      invBtn.onclick = async function () {
-        var link = await getOrCreateLink(invBtn);
-        if (link) {
-          var msg = Va.t('inviteMsg').replace('{link}', link);
-          window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
-        }
+      var myPerms = state.isOwner ? ALL_PERMS : ALL_PERMS.filter(function (p) { return Va.hasPermission(state.normalizedPhone, p); });
+      function inviteWithPicker(callback) {
+        showPermissionPicker(myPerms, [], function (selected) {
+          callback(selected);
+        });
+      }
+      invBtn.onclick = function () {
+        inviteWithPicker(async function (perms) {
+          var link = await getOrCreateLink(invBtn, perms);
+          if (link) {
+            var msg = Va.t('inviteMsg').replace('{link}', link);
+            window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+          }
+        });
       };
-      copyBtn.onclick = async function () {
-        var link = await getOrCreateLink(copyBtn);
-        if (link) {
-          Va.copyText(link);
-          Va.toast(Va.t('copied'));
-        }
+      copyBtn.onclick = function () {
+        inviteWithPicker(async function (perms) {
+          var link = await getOrCreateLink(copyBtn, perms);
+          if (link) {
+            Va.copyText(link);
+            Va.toast(Va.t('copied'));
+          }
+        });
       };
       invWrap.appendChild(invBtn);
       invWrap.appendChild(copyBtn);
@@ -3479,6 +3587,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       var lst = $('ap-list');
       var nameMap = (state.settingsDoc && state.settingsDoc.memberNames) || {};
       var myPhone = state.normalizedPhone;
+      var canRemove = Va.hasPermission(myPhone, 'remove');
+      var canInvite = Va.hasPermission(myPhone, 'invite');
       phones.forEach(function (p, idx) {
         var name = nameMap[p] || '';
         var isMe = p === myPhone;
@@ -3495,9 +3605,81 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         var infoHtml = '<span class="member-name">' + (nameText ? nameText + ' ' : '') + phoneText + ' ' + roleBadge + youBadge + '</span>';
         var row = document.createElement('div');
         row.className = 'member-row';
-        row.innerHTML = '<div class="member-info">' + infoHtml + '</div>';
+        var removeBtn = '';
+        if (canRemove && !isMe && !isAdmin) {
+          removeBtn = '<button type="button" class="btn danger" data-rm="' + escapeHtml(p) + '" style="font-size:0.7rem">' + Va.t('remove') + '</button>';
+        }
+        row.innerHTML = '<div class="member-info">' + infoHtml + '</div>' + removeBtn;
+        if (canRemove && !isMe && !isAdmin) {
+          row.querySelector('[data-rm]').onclick = async function () {
+            try {
+              await Va.removeApprovedPhone(state.activeAccountId, p, '');
+            } catch (e) { Va.toast(Va.t('errorGeneric')); }
+          };
+        }
         lst.appendChild(row);
       });
+      if (canInvite) {
+        var invWrap = document.createElement('div');
+        invWrap.style.cssText = 'display:flex;gap:6px;margin-top:8px';
+        var invBtn = document.createElement('button');
+        invBtn.className = 'btn whatsapp';
+        invBtn.style.cssText = 'flex:1';
+        invBtn.textContent = '\uD83D\uDCE9 ' + Va.t('inviteWhatsapp');
+        var copyBtn = document.createElement('button');
+        copyBtn.className = 'btn';
+        copyBtn.style.cssText = 'flex:1';
+        copyBtn.textContent = '\uD83D\uDD17 ' + Va.t('inviteCopyLink');
+        var memberLastLink = null;
+        var memberLastPerms = null;
+        async function memberGetOrCreateLink(btn, perms) {
+          if (memberLastLink && memberLastPerms && JSON.stringify(memberLastPerms) === JSON.stringify(perms)) return memberLastLink;
+          var origText = btn.textContent;
+          btn.disabled = true;
+          btn.classList.add('loading');
+          btn.textContent = Va.t('inviteGenerating');
+          try {
+            var link = await generateInviteLink(perms);
+            memberLastLink = link;
+            memberLastPerms = perms;
+            return link;
+          } catch (e) {
+            Va.toast(e.message || Va.t('errorGeneric'));
+            return null;
+          } finally {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.textContent = origText;
+          }
+        }
+        var memberAvailPerms = ALL_PERMS.filter(function (p) { return Va.hasPermission(myPhone, p); });
+        function memberInviteWithPicker(callback) {
+          showPermissionPicker(memberAvailPerms, [], function (selected) {
+            callback(selected);
+          });
+        }
+        invBtn.onclick = function () {
+          memberInviteWithPicker(async function (perms) {
+            var link = await memberGetOrCreateLink(invBtn, perms);
+            if (link) {
+              var msg = Va.t('inviteMsg').replace('{link}', link);
+              window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+            }
+          });
+        };
+        copyBtn.onclick = function () {
+          memberInviteWithPicker(async function (perms) {
+            var link = await memberGetOrCreateLink(copyBtn, perms);
+            if (link) {
+              Va.copyText(link);
+              Va.toast(Va.t('copied'));
+            }
+          });
+        };
+        invWrap.appendChild(invBtn);
+        invWrap.appendChild(copyBtn);
+        sh.appendChild(invWrap);
+      }
     }
     var disp = $('settings-display');
     if (disp) {
@@ -3702,10 +3884,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       var cur = (state.settingsDoc && state.settingsDoc.settings && state.settingsDoc.settings.calendarReminders) || [7, 3, 1];
       cal.innerHTML = '<h3>' + Va.t('calendarSection') + '</h3>' +
         '<div class="s-row" style="align-items:flex-start"><span class="s-label" style="padding-top:4px">' + Va.t('calRemind') + '</span>' +
-        '<div style="flex:1"><div id="cal-tags" style="margin-bottom:6px"></div>' +
-        '<div style="display:flex;gap:4px">' +
-          '<select class="input" id="cal-add-select" style="flex:1;border-radius:999px;padding:6px 10px;font-size:0.75rem;min-height:32px"></select>' +
-          '<button type="button" class="btn" id="cal-add-btn">+</button>' +
+        '<div style="flex:1"><div id="cal-tags" style="margin-bottom:6px;display:flex;flex-wrap:wrap;justify-content:flex-start;gap:4px"></div>' +
+        '<div style="display:flex;gap:4px;justify-content:flex-start">' +
+          '<select class="input" id="cal-add-select" style="width:auto;border-radius:999px;padding:3px 8px;font-size:0.7rem;min-height:26px"></select>' +
+          '<button type="button" class="btn" id="cal-add-btn" style="min-height:26px;min-width:26px;padding:0 7px;font-size:0.72rem;border-radius:999px">+</button>' +
         '</div></div></div>';
       var selected = cur.slice();
 
@@ -3719,13 +3901,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         }
         selected.forEach(function (d) {
           var tag = document.createElement('span');
-          tag.style.cssText = 'display:inline-flex;align-items:center;gap:4px;background:rgba(124,107,240,0.18);border:1px solid var(--primary);color:var(--text);padding:4px 8px 4px 10px;border-radius:999px;font-size:0.75rem;font-weight:700;margin:0 4px 6px 0;';
+          tag.style.cssText = 'display:inline-flex;align-items:center;gap:3px;background:rgba(124,107,240,0.18);border:1px solid var(--primary);color:var(--text);padding:2px 6px 2px 8px;border-radius:999px;font-size:0.7rem;font-weight:700;';
           var label = document.createElement('span');
           label.textContent = daysLabel(d);
           var rm = document.createElement('button');
           rm.type = 'button';
           rm.textContent = '✕';
-          rm.style.cssText = 'background:rgba(124,107,240,0.2);border:none;border-radius:50%;width:22px;height:22px;min-width:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-size:0.65rem;color:var(--muted);line-height:1;-webkit-tap-highlight-color:transparent;';
+          rm.style.cssText = 'background:rgba(124,107,240,0.2);border:none;border-radius:50%;width:18px;height:18px;min-width:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-size:0.6rem;color:var(--muted);line-height:1;-webkit-tap-highlight-color:transparent;';
           rm.onclick = async function (e) {
             e.stopPropagation();
             var idx = selected.indexOf(d);
@@ -4163,7 +4345,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           state.vouchers.push(Object.assign({ id: doc.id }, doc.data()));
         });
         await renderAll();
-      } catch (e) { console.error('Snapshot render error:', e); Va.toast(Va.t('errorGeneric')); }
+      } catch (e) { console.error('Snapshot render error:', e); }
     });
     unsubS = Va.accountRef(state.activeAccountId).onSnapshot(async function (doc) {
       try {
@@ -4177,7 +4359,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           Va.applyTheme();
         }
         renderSettings();
-      } catch (e) { console.error('Settings snapshot error:', e); Va.toast(Va.t('errorGeneric')); }
+      } catch (e) { console.error('Settings snapshot error:', e); }
     });
   }
 
@@ -4458,7 +4640,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     }
   }
 
-  async function generateInviteLink() {
+  async function generateInviteLink(grantPerms) {
+    grantPerms = grantPerms || [];
+    if (!state.isOwner) {
+      grantPerms = grantPerms.filter(function (p) {
+        return Va.hasPermission(state.normalizedPhone, p);
+      });
+    }
     var buf = new Uint8Array(24);
     crypto.getRandomValues(buf);
     var token = btoa(String.fromCharCode.apply(null, buf))
@@ -4469,7 +4657,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       expiresAt: firebase.firestore.Timestamp.fromDate(
         new Date(Date.now() + 24 * 60 * 60 * 1000)
       ),
-      used: false
+      used: false,
+      grantPermissions: grantPerms
     });
     var keyB64 = await Va.exportKeyB64(state.derivedKey);
     var base = location.origin + location.pathname;
@@ -4495,6 +4684,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     state.isOwner = false;
     var joinName = state.authUser.displayName || state.authUser.email || '';
     await Va.addApprovedPhone(inv.accountId, state.normalizedPhone, joinName);
+    var grantPerms = inv.grantPermissions || [];
+    if (grantPerms.length > 0) {
+      await Va.updateMemberPermissions(inv.accountId, state.normalizedPhone, grantPerms);
+    }
     await Va.db().collection('vm_invites').doc(join.token).update({ used: true });
     state.derivedKey = await Va.importKeyB64(join.keyB64);
 
@@ -4621,13 +4814,18 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   };
 
   window.addEventListener('unhandledrejection', function (ev) {
-    console.error('Unhandled rejection:', ev.reason);
-    Va.toast(Va.t('errorGeneric'));
-    var visible = ['screen-welcome', 'screen-rejected', 'screen-phone-collect', 'screen-passphrase', 'main-app'].some(function (id) {
-      var el = document.getElementById(id);
-      return el && !el.hidden;
-    });
-    if (!visible) showOnly('screen-welcome');
+    var reason = ev.reason;
+    var msg = (reason && (reason.message || reason.code || String(reason))) || '';
+    console.error('Unhandled rejection:', reason);
+    var isTransient = /Failed to fetch|network|unavailable|DEADLINE_EXCEEDED|Could not reach Cloud Firestore|webchannel|transport errored/i.test(msg);
+    if (!isTransient) {
+      Va.toast(Va.t('errorGeneric') + (msg ? ': ' + msg.slice(0, 80) : ''));
+      var visible = ['screen-welcome', 'screen-rejected', 'screen-phone-collect', 'screen-passphrase', 'screen-wallet-picker', 'main-app'].some(function (id) {
+        var el = document.getElementById(id);
+        return el && !el.hidden;
+      });
+      if (!visible) showOnly('screen-welcome');
+    }
   });
 
   window.addEventListener('DOMContentLoaded', Va.attachApp);
