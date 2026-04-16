@@ -81,33 +81,33 @@ a { color: var(--primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
 button, input, select, textarea { font: inherit; color: inherit; outline: none; }
 input:focus, select:focus, textarea:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--primary-glow); }
+button:focus-visible, .btn:focus-visible, .nav-item:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: 46px; padding: 11px 20px; border-radius: var(--radius-sm);
-  border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem;
+  min-height: 42px; padding: 10px 18px; border-radius: 999px;
+  border: 1px solid var(--border); cursor: pointer; font-weight: 600; font-size: 0.85rem;
   transition: all .2s cubic-bezier(.4,0,.2,1);
-  background: linear-gradient(135deg, var(--primary), #9B6BF0);
-  color: #fff; box-shadow: 0 4px 16px var(--primary-glow);
+  background: var(--surface); color: var(--text);
+  box-shadow: var(--shadow-sm); backdrop-filter: var(--glass);
   position: relative; overflow: hidden;
 }
-.btn::after {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
-  opacity: 0; transition: opacity .2s;
-}
-.btn:hover::after { opacity: 1; }
+.btn:hover { background: var(--card-hover); border-color: var(--border-focus); }
 .btn:active { transform: scale(0.97); }
-.btn.secondary {
-  background: var(--surface); color: var(--text); border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm); backdrop-filter: var(--glass);
+.btn.active, .btn.primary {
+  background: rgba(124,107,240,0.18); border-color: var(--primary);
+  color: var(--text); font-weight: 700;
 }
-.btn.secondary::after { display: none; }
-.btn.secondary:hover { background: var(--card-hover); border-color: var(--border-focus); }
-.btn.danger { background: linear-gradient(135deg, #EF4444, #DC2626); box-shadow: 0 4px 16px rgba(239,68,68,0.3); }
-.btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); box-shadow: none; }
-.btn.ghost:hover { color: var(--text); border-color: var(--muted); background: var(--surface); }
-.btn.ghost::after { display: none; }
+.btn.primary:hover, .btn.active:hover { background: rgba(124,107,240,0.28); }
+.btn.cta {
+  background: linear-gradient(135deg, var(--primary), #9B6BF0);
+  color: #fff; border: none; box-shadow: 0 4px 16px var(--primary-glow);
+}
+.btn.cta:hover { filter: brightness(1.1); }
+.btn.danger { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); color: var(--ex-red); }
+.btn.danger:hover { background: rgba(239,68,68,0.25); }
+.btn.ghost { background: transparent; color: var(--muted); box-shadow: none; }
+.btn.ghost:hover { color: var(--text); background: var(--surface); }
 .btn:disabled { opacity: 0.4; pointer-events: none; filter: grayscale(0.3); }
 
 .input {
@@ -162,7 +162,7 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
 .chip {
   padding: 9px 16px; border-radius: 999px; font-size: 0.82rem; font-weight: 600;
   background: var(--surface); border: 1px solid var(--border); cursor: pointer;
-  min-height: 40px; display: inline-flex; align-items: center;
+  min-height: 42px; display: inline-flex; align-items: center;
   white-space: nowrap; flex-shrink: 0;
   transition: all .2s cubic-bezier(.4,0,.2,1); backdrop-filter: var(--glass);
 }
@@ -318,13 +318,13 @@ label.lbl { display: block; font-size: 0.78rem; color: var(--muted); margin-bott
 
 .dl-links { display: flex; flex-wrap: wrap; gap: 8px; }
 .link-pill {
-  padding: 9px 14px; border-radius: 999px; background: var(--card);
-  border: 1px solid var(--border); font-size: 0.82rem; font-weight: 500;
+  padding: 8px 14px; border-radius: 999px; background: var(--surface);
+  border: 1px solid var(--border); font-size: 0.8rem; font-weight: 600;
   cursor: pointer; text-decoration: none; color: var(--primary);
-  min-height: 40px; display: inline-flex; align-items: center;
+  min-height: 36px; display: inline-flex; align-items: center;
   transition: all .2s; backdrop-filter: var(--glass);
 }
-.link-pill:hover { background: var(--card-hover); border-color: var(--primary); text-decoration: none; }
+.link-pill:hover { background: rgba(124,107,240,0.12); border-color: var(--primary); text-decoration: none; }
 
 #app-config-msg {
   padding: 16px; margin: 12px; border-radius: var(--radius-sm);
@@ -332,7 +332,7 @@ label.lbl { display: block; font-size: 0.78rem; color: var(--muted); margin-bott
 }
 
 .card b { word-break: break-word; }
-.card .row .btn { font-size: 0.82rem; padding: 9px 14px; min-height: 40px; flex: 1; min-width: 0; }
+.card .row .btn { font-size: 0.8rem; padding: 8px 12px; min-height: 36px; flex: 1; min-width: 0; }
 .card .row.mt8 { gap: 8px; }
 select.input { font-size: 0.82rem; min-height: 40px; padding: 8px 10px; cursor: pointer; color-scheme: dark; }
 [data-theme="light"] select.input { color-scheme: light; }
@@ -353,7 +353,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   .card { padding: 12px; }
   .screen { padding: 0 10px 16px; }
   .topbar { padding: 12px 10px 8px; }
-  .btn { padding: 9px 10px; font-size: 0.82rem; }
+  .btn { padding: 8px 10px; font-size: 0.78rem; min-height: 36px; }
   .logo-wrap { padding: 32px 16px 20px; }
   .welcome-title { font-size: 1.5rem; }
   .sheet { padding: 8px 14px calc(20px + var(--safe-bottom)); }
@@ -363,19 +363,23 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 }
 
 .btn.whatsapp {
-  background: linear-gradient(135deg, #25D366, #128C7E);
-  box-shadow: 0 4px 16px rgba(37,211,102,0.25);
+  background: rgba(37,211,102,0.15); border-color: rgba(37,211,102,0.4);
+  color: #25D366; font-weight: 700;
 }
-.btn.whatsapp:hover::after { opacity: 1; }
+.btn.whatsapp:hover { background: rgba(37,211,102,0.25); }
 
-.invite-wrap .btn { font-size: 0.85rem; padding: 10px 16px; min-height: 42px; }
+#tab-settings .card .btn { font-size: 0.75rem; padding: 8px 10px; min-height: 36px; }
+.s-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.s-row:last-child { margin-bottom: 0; }
+.s-label { font-size: 0.72rem; color: var(--muted); white-space: nowrap; min-width: 80px; }
+.s-btns { display: flex; gap: 4px; flex: 1; }
 
 .member-row { display: flex; justify-content: space-between; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
 .member-info { flex: 1; min-width: 0; }
-.member-name { font-weight: 500; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.member-name { font-weight: 500; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .member-phone { font-size: 0.78rem; color: var(--muted); direction: ltr; unicode-bidi: isolate; flex-shrink: 0; }
 .member-tag { font-size: 0.72rem; color: var(--primary); opacity: 0.8; margin-inline-start: 4px; }
-.member-row .btn { font-size: 0.7rem; padding: 4px 10px; min-height: 28px; white-space: nowrap; border-radius: 999px; }
+.member-row .btn { min-height: 34px; padding: 6px 10px; font-size: 0.7rem; white-space: nowrap; }
 
 .mf-section { padding-top: 4px; }
 .mf-section .lbl:first-child { margin-top: 8px; }
@@ -390,7 +394,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 </head>
 <body>
   <div id="app-config-msg" hidden></div>
-  <div id="toast-root" class="toast-wrap"></div>
+  <div id="toast-root" class="toast-wrap" aria-live="polite"></div>
 
   <section id="screen-welcome" class="screen">
     <div class="logo-wrap">
@@ -400,7 +404,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       <p class="small" style="margin-top:10px;opacity:0.7;font-size:0.7rem" id="welcome-ver"></p>
     </div>
     <div class="card" style="padding:20px">
-      <button type="button" class="btn" id="btn-google" style="width:100%" data-i18n="signGoogle">התחברות עם Google</button>
+      <button type="button" class="btn cta" id="btn-google" style="width:100%" data-i18n="signGoogle">התחברות עם Google</button>
     </div>
     <div id="dev-login-panel" class="card" hidden>
       <p class="small" style="color:var(--ex-yellow);margin-bottom:8px">🛠 Dev Login (localhost only)</p>
@@ -408,7 +412,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       <input class="input" id="dev-email" type="email" placeholder="dev@test.com" />
       <label class="lbl mt12">Password</label>
       <input class="input" id="dev-pass" type="password" placeholder="password" />
-      <button type="button" class="btn mt12" id="btn-dev-login" style="width:100%">Dev Sign In</button>
+      <button type="button" class="btn cta mt12" id="btn-dev-login" style="width:100%">Dev Sign In</button>
     </div>
   </section>
 
@@ -417,7 +421,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       <div style="font-size:3rem">🚫</div>
       <h2 class="screen-title" data-i18n="rejectedTitle">אין גישה</h2>
       <p data-i18n="rejectedBody">בקש מהבעלים להוסיף את מספר הטלפון שלך לרשימת המאושרים.</p>
-      <button type="button" class="btn mt12" id="btn-create-wallet" data-i18n="createWallet">יצירת ארנק חדש שלי</button>
+      <button type="button" class="btn cta mt12" id="btn-create-wallet" data-i18n="createWallet">יצירת ארנק חדש שלי</button>
       <button type="button" class="btn ghost mt8" id="btn-signout-rejected" data-i18n="signOut">התנתקות</button>
     </div>
   </section>
@@ -428,7 +432,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       <p class="small" id="phone-collect-hint" data-i18n="phoneCollectHint">נדרש לזיהוי משפחתי ושיתוף שוברים</p>
       <label class="lbl mt12" data-i18n="phoneLabel">מספר טלפון</label>
       <input class="input" id="google-phone-input" type="tel" />
-      <button type="button" class="btn mt12" id="btn-save-google-phone" data-i18n="continue">המשך</button>
+      <button type="button" class="btn cta mt12" id="btn-save-google-phone" data-i18n="continue">המשך</button>
     </div>
   </section>
 
@@ -440,12 +444,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       <input class="input" id="pass-1" type="password" autocomplete="new-password" />
       <label class="lbl mt12" data-i18n="passphraseConfirm">אימות משפט סיסמה</label>
       <input class="input" id="pass-2" type="password" autocomplete="new-password" />
-      <button type="button" class="btn mt12" id="btn-pass-submit" data-i18n="unlock">המשך</button>
+      <button type="button" class="btn cta mt12" id="btn-pass-submit" data-i18n="unlock">המשך</button>
       <div id="pass-bio-area" class="mt12" hidden>
-        <button type="button" class="btn secondary" id="btn-bio-unlock" style="width:100%"></button>
+        <button type="button" class="btn" id="btn-bio-unlock" style="width:100%"></button>
       </div>
       <div id="pass-recovery-area" class="mt12" hidden>
-        <button type="button" class="btn secondary" id="btn-recovery-unlock" style="width:100%"></button>
+        <button type="button" class="btn" id="btn-recovery-unlock" style="width:100%"></button>
       </div>
     </div>
   </section>
@@ -470,7 +474,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       <div class="topbar">
         <div style="display:flex;gap:8px;align-items:center">
           <input class="input" id="dash-search" data-i18n-placeholder="searchPlaceholder" placeholder="חיפוש..." style="border-radius:999px;padding-inline:18px;flex:1" />
-          <button type="button" class="btn ghost" id="wallet-switch-btn" hidden aria-label="Switch wallet" style="min-height:46px;min-width:46px;padding:0;border-radius:999px;flex-shrink:0;font-size:1.1rem">👛</button>
+          <button type="button" class="btn ghost" id="wallet-switch-btn" hidden aria-label="Switch wallet" style="min-height:42px;min-width:42px;padding:0;flex-shrink:0;font-size:1.1rem">👛</button>
         </div>
       </div>
       <div class="screen">
@@ -498,7 +502,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       <div class="topbar">
         <div style="display:flex;gap:8px;align-items:center">
           <input class="input" id="v-search" data-i18n-placeholder="searchPlaceholder" placeholder="חיפוש..." style="border-radius:999px;padding-inline:18px;flex:1" />
-          <button type="button" class="btn ghost" id="v-filter-toggle" aria-label="Filters" style="min-height:46px;min-width:46px;padding:0;border-radius:999px;flex-shrink:0;font-size:1.1rem">⚙</button>
+          <button type="button" class="btn ghost" id="v-filter-toggle" aria-label="Filters" style="min-height:42px;min-width:42px;padding:0;flex-shrink:0;font-size:1.1rem">⚙</button>
         </div>
       </div>
       <div class="screen">
@@ -528,7 +532,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         <div id="add-paste-panel">
           <label class="lbl" data-i18n="pasteLabel">הדבק כאן טקסט מהודעה / מייל</label>
           <textarea class="input" id="paste-area"></textarea>
-          <button type="button" class="btn mt12" id="btn-parse" data-i18n="parse">ניתוח</button>
+          <button type="button" class="btn cta mt12" id="btn-parse" data-i18n="parse">ניתוח</button>
         </div>
         <div id="add-manual-panel" hidden></div>
         <div id="add-review" hidden></div>
@@ -576,7 +580,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.5.1';
+  const APP_VERSION = '2.6.0';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -653,7 +657,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.5.1',
+      aboutVersion: 'גרסה 2.6.0',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -811,7 +815,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       walletMember: 'חבר/ה',
       walletNameSaved: 'שם הארנק עודכן',
       walletSwitched: 'הוחלף לארנק: {name}',
-      myWallet: 'הארנק שלי'
+      myWallet: 'הארנק שלי',
+      passphraseMismatch: 'הסיסמאות אינן תואמות',
+      switchWalletLabel: 'החלפת ארנק',
+      filtersLabel: 'סינון',
+      decryptFailed: 'פענוח נכשל — ייתכן שמשפט הסיסמה שגוי',
+      cvv: 'CVV'
     },
     en: {
       appName: 'Voucher Manager',
@@ -876,7 +885,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.5.1',
+      aboutVersion: 'Version 2.6.0',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -1034,7 +1043,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       walletMember: 'Member',
       walletNameSaved: 'Wallet name updated',
       walletSwitched: 'Switched to wallet: {name}',
-      myWallet: 'My wallet'
+      myWallet: 'My wallet',
+      passphraseMismatch: 'Passphrases do not match',
+      switchWalletLabel: 'Switch wallet',
+      filtersLabel: 'Filters',
+      decryptFailed: 'Decryption failed — passphrase may be wrong',
+      cvv: 'CVV'
     }
   };
 
@@ -1078,6 +1092,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       const k = el.getAttribute('data-i18n-placeholder');
       if (k) el.setAttribute('placeholder', t(k));
     });
+    var wsBtn = document.getElementById('wallet-switch-btn');
+    if (wsBtn) wsBtn.setAttribute('aria-label', t('switchWalletLabel'));
+    var fBtn = document.getElementById('v-filter-toggle');
+    if (fBtn) fBtn.setAttribute('aria-label', t('filtersLabel'));
   }
 
   function applyTheme() {
@@ -1118,6 +1136,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     }).finally(function () {
       btn.disabled = false;
       btn.style.opacity = '';
+      btn.textContent = origText;
     });
   }
 
@@ -1268,7 +1287,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       const dec = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, ct);
       return new TextDecoder().decode(dec);
     } catch (e) {
-      return '';
+      console.warn('Decryption failed for blob:', e.message);
+      return '\u26A0';
     }
   }
 
@@ -1379,13 +1399,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (snap.exists) {
       var d = snap.data();
       if (d.accounts && Array.isArray(d.accounts)) {
-        if (d.accounts.indexOf(accountId) === -1) {
-          await ref.update({ accounts: firebase.firestore.FieldValue.arrayUnion(accountId) });
-        }
+        await ref.update({ accounts: firebase.firestore.FieldValue.arrayUnion(accountId) });
       } else {
-        var arr = d.accountId ? [d.accountId] : [];
-        if (arr.indexOf(accountId) === -1) arr.push(accountId);
-        await ref.set({ accounts: arr });
+        var base = d.accountId ? [d.accountId] : [];
+        if (base.indexOf(accountId) === -1) base.push(accountId);
+        await ref.set({ accounts: base });
       }
     } else {
       await ref.set({ accounts: [accountId] });
@@ -1394,19 +1412,16 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
   async function removeFromPhoneIndex(phone, accountId) {
     var ref = phoneIndexRef(phone);
-    var snap = await ref.get();
-    if (!snap.exists) return;
-    var d = snap.data();
-    if (d.accounts && Array.isArray(d.accounts)) {
-      var next = d.accounts.filter(function (id) { return id !== accountId; });
-      if (next.length === 0) {
-        await ref.delete().catch(function () {});
-      } else {
-        await ref.set({ accounts: next });
+    try {
+      await ref.update({ accounts: firebase.firestore.FieldValue.arrayRemove(accountId) });
+      var snap = await ref.get();
+      if (snap.exists) {
+        var d = snap.data();
+        if (!d.accounts || d.accounts.length === 0) {
+          await ref.delete();
+        }
       }
-    } else if (d.accountId === accountId) {
-      await ref.delete().catch(function () {});
-    }
+    } catch (e) { console.warn('removeFromPhoneIndex:', e.message); }
   }
 
   async function addApprovedPhone(accountId, phone, displayName) {
@@ -1599,7 +1614,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   var TRAVEL_KEYWORDS = /טיסה|flight|אל על|Elal|מלון|hotel|Isrotel|ישרוטל|Fattal|פתאל|Dan Hotels|מלונות דן|נסיעה|travel|חופשה|vacation|booking/i;
 
   function preProcess(text) {
-    var s = String(text || '').replace(/[\u200f\u200e\u00a0]/g, ' ');
+    var s = String(text || '');
+    s = s.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(?:p|div|tr|li|h[1-6])>/gi, '\n');
+    s = s.replace(/<[^>]+>/g, ' ');
+    s = s.replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&#(\d+);/g, function (_, n) { return String.fromCharCode(n); });
+    s = s.replace(/[\u200f\u200e\u00a0]/g, ' ');
     s = s.replace(/\[\d{1,2}:\d{2},?\s*\d{1,2}[./]\d{1,2}[./]\d{2,4}\]\s*[^:\n]+:\s*/gm, '\n');
     s = s.replace(/^[-]+\s*(?:Forwarded|העברה|הועבר).*$/gim, '\n');
     s = s.replace(/^(From|Sent|To|Subject|Date|נשלח|אל|מאת|נושא|CC|Cc)\s*:\s*.+$/gim, '\n');
@@ -2571,7 +2590,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       b.type = 'button';
       var isActive = state.currentFilter === o.id;
       b.style.cssText = 'flex:1;padding:8px 0;border:none;border-radius:999px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all .2s;' +
-        (isActive ? 'background:var(--primary);color:#fff;box-shadow:0 2px 8px var(--primary-glow);' : 'background:transparent;color:var(--muted);');
+        (isActive ? 'background:rgba(124,107,240,0.18);color:var(--text);' : 'background:transparent;color:var(--muted);');
       b.textContent = o.label;
       b.onclick = function () {
         state.currentFilter = o.id;
@@ -2655,7 +2674,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       card.className = 'card' + (urgent ? ' urgent' : '');
       if (isExpired) card.style.opacity = '0.55';
       card.innerHTML =
-        '<button type="button" class="star-btn" data-id="' + v.id + '" style="position:absolute;top:6px;inset-inline-end:6px;width:28px;height:28px;font-size:0.8rem;z-index:1">' + (v.favorite ? '★' : '☆') + '</button>' +
+        '<button type="button" class="star-btn" aria-label="' + (v.favorite ? Va.t('removeFav') : Va.t('favorites')) + '" aria-pressed="' + (v.favorite ? 'true' : 'false') + '" data-id="' + v.id + '" style="position:absolute;top:4px;inset-inline-end:4px;width:36px;height:36px;font-size:0.85rem;z-index:1">' + (v.favorite ? '★' : '☆') + '</button>' +
         '<div style="padding-inline-end:30px">' +
           '<div style="font-size:0.9rem;font-weight:700;line-height:1.3">' + escapeHtml(v.name) + '</div>' +
           (storeStr ? '<div style="font-size:0.68rem;color:var(--muted);opacity:0.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(storeStr) + '</div>' : '') +
@@ -2671,8 +2690,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           '</div>' +
         '</div>' +
         '<div style="display:flex;gap:6px;margin-top:6px">' +
-            '<button type="button" class="btn secondary" data-copy="' + v.id + '" style="flex:1;min-height:36px;padding:6px 8px;font-size:0.75rem;border-radius:999px"></button>' +
-            '<button type="button" class="btn" data-use="' + v.id + '" style="flex:1;min-height:36px;padding:6px 8px;font-size:0.75rem;border-radius:999px">' + Va.t('use') + '</button>' +
+            '<button type="button" class="btn" data-copy="' + v.id + '" style="flex:1;font-size:0.75rem;min-height:38px;padding:8px 10px"></button>' +
+            '<button type="button" class="btn active" data-use="' + v.id + '" style="flex:1;font-size:0.75rem;min-height:38px;padding:8px 10px">' + Va.t('use') + '</button>' +
         '</div>';
       (function () {
         var p = plainMap[v.id] || {};
@@ -2707,7 +2726,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
 
   async function toggleFav(v) {
-    await Va.vouchersCol(state.activeAccountId).doc(v.id).update({ favorite: !v.favorite, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    try {
+      await Va.vouchersCol(state.activeAccountId).doc(v.id).update({ favorite: !v.favorite, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    } catch (e) { console.error(e); Va.toast(Va.t('errorGeneric')); }
   }
 
   function markQuickUse(v) {
@@ -2724,21 +2745,27 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     mc.innerHTML = '<h3 style="margin:0 0 16px">' + escapeHtml(Va.t('useVoucher')) + '</h3>' +
       '<p style="margin:0 0 20px;opacity:0.8">' + escapeHtml(Va.t('markUsedQuestion')) + '</p>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
-        '<button class="btn secondary" id="use-cancel" style="flex:1;min-width:100px">' + escapeHtml(Va.t('cancel')) + '</button>' +
-        '<button class="btn" id="use-confirm" style="flex:1;min-width:100px">' + escapeHtml(Va.t('confirmUse')) + '</button>' +
+        '<button class="btn" id="use-cancel" style="flex:1;min-width:100px">' + escapeHtml(Va.t('cancel')) + '</button>' +
+        '<button class="btn active" id="use-confirm" style="flex:1;min-width:100px">' + escapeHtml(Va.t('confirmUse')) + '</button>' +
       '</div>';
     modal.hidden = false;
     $('use-cancel').onclick = function () { modal.hidden = true; };
     $('use-confirm').onclick = async function () {
       $('use-confirm').disabled = true;
       $('use-confirm').style.opacity = '0.6';
-      await Va.vouchersCol(state.activeAccountId).doc(v.id).update({
-        status: 'archived',
-        usageHistory: (v.usageHistory || []).concat([{ date: new Date().toISOString().slice(0, 10), amount: 0, note: '' }]),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      modal.hidden = true;
-      Va.toast(Va.t('movedToArchive'));
+      try {
+        await Va.vouchersCol(state.activeAccountId).doc(v.id).update({
+          status: 'archived',
+          usageHistory: (v.usageHistory || []).concat([{ date: new Date().toISOString().slice(0, 10), amount: 0, note: '' }]),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        modal.hidden = true;
+        Va.toast(Va.t('movedToArchive'));
+      } catch (e) {
+        console.error(e); Va.toast(Va.t('errorGeneric'));
+        $('use-confirm').disabled = false;
+        $('use-confirm').style.opacity = '';
+      }
     };
   }
 
@@ -2755,13 +2782,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       '<label style="display:block;font-size:0.85rem;margin-bottom:6px;opacity:0.8">' + escapeHtml(Va.t('howMuchUsed')) + '</label>' +
       '<input class="input" id="use-amount" type="number" min="0.01" max="' + bal + '" step="0.01" value="" placeholder="0" ' +
         'style="width:100%;margin-bottom:8px;font-size:1.1rem;text-align:center;font-weight:600" inputmode="decimal" />' +
-      '<button class="btn secondary" id="use-all-btn" style="width:100%;margin-bottom:14px;font-size:0.82rem;padding:8px">' + escapeHtml(Va.t('useAll')) + ' (' + Va.money(bal) + ')</button>' +
+      '<button class="btn" id="use-all-btn" style="width:100%;margin-bottom:14px;font-size:0.82rem;padding:8px">' + escapeHtml(Va.t('useAll')) + ' (' + Va.money(bal) + ')</button>' +
       '<label style="display:block;font-size:0.85rem;margin-bottom:6px;opacity:0.8">' + escapeHtml(Va.t('addNote')) + '</label>' +
       '<input class="input" id="use-note" type="text" placeholder="" style="width:100%;margin-bottom:18px" />' +
       '<div id="use-error" style="color:var(--ex-red);font-size:0.82rem;margin-bottom:10px;min-height:1.2em"></div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
-        '<button class="btn secondary" id="use-cancel" style="flex:1;min-width:100px">' + escapeHtml(Va.t('cancel')) + '</button>' +
-        '<button class="btn" id="use-confirm" style="flex:1;min-width:100px">' + escapeHtml(Va.t('confirmUse')) + '</button>' +
+        '<button class="btn" id="use-cancel" style="flex:1;min-width:100px">' + escapeHtml(Va.t('cancel')) + '</button>' +
+        '<button class="btn active" id="use-confirm" style="flex:1;min-width:100px">' + escapeHtml(Va.t('confirmUse')) + '</button>' +
       '</div>';
     modal.hidden = false;
 
@@ -2780,35 +2807,42 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       var btn = $('use-confirm');
       btn.disabled = true;
       btn.style.opacity = '0.6';
-      var note = ($('use-note').value || '').trim();
-      var hist = (v.usageHistory || []).concat([{ date: new Date().toISOString().slice(0, 10), amount: numAmt, note: note }]);
-      var rem = Math.max(0, bal - numAmt);
-      var status = rem <= 0 ? 'archived' : v.status;
-      await Va.vouchersCol(state.activeAccountId).doc(v.id).update({
-        usageHistory: hist,
-        remainingBalance: rem,
-        status: status,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      var vid = v.id;
-      modal.hidden = true;
-      if (rem <= 0) {
-        Va.toast(Va.t('fullyUsedArchived'));
-      } else {
-        Va.toast(Va.t('currentBalance') + ': ' + Va.money(rem));
-        setTimeout(function () {
-          var fresh = state.vouchers.find(function (x) { return x.id === vid; });
-          if (fresh) openDetailModal(fresh);
-        }, 400);
+      try {
+        var note = ($('use-note').value || '').trim();
+        var hist = (v.usageHistory || []).concat([{ date: new Date().toISOString().slice(0, 10), amount: numAmt, note: note }]);
+        var rem = Math.max(0, bal - numAmt);
+        var status = rem <= 0 ? 'archived' : v.status;
+        await Va.vouchersCol(state.activeAccountId).doc(v.id).update({
+          usageHistory: hist,
+          remainingBalance: rem,
+          status: status,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        var vid = v.id;
+        modal.hidden = true;
+        if (rem <= 0) {
+          Va.toast(Va.t('fullyUsedArchived'));
+        } else {
+          Va.toast(Va.t('currentBalance') + ': ' + Va.money(rem));
+          setTimeout(function () {
+            var fresh = state.vouchers.find(function (x) { return x.id === vid; });
+            if (fresh) openDetailModal(fresh);
+          }, 400);
+        }
+      } catch (e) {
+        console.error(e); Va.toast(Va.t('errorGeneric'));
+        btn.disabled = false; btn.style.opacity = '';
       }
     };
   }
 
+  var _sheetOpener = null;
   function openSheet(v) {
     const p = plainMap[v.id] || {};
     const sh = $('overlay-sheet');
     const sc = $('sheet-content');
     if (!sh || !sc) return;
+    _sheetOpener = document.activeElement;
     const links = v.links || {};
     const linkRow = [];
     if (links.balanceCheck) linkRow.push('<a class="link-pill" target="_blank" rel="noopener" href="' + escapeHtml(links.balanceCheck) + '">' + Va.t('linkBalance') + '</a>');
@@ -2818,24 +2852,26 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     let codeBlock = '';
     if (v.codeType === 'card') {
       codeBlock = '<div class="mt12" style="background:var(--surface);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border)"><div class="small" style="font-weight:600">' + Va.t('cardNumber') + '</div><div style="font-size:1.15rem;font-weight:800;word-break:break-all;letter-spacing:0.05em;margin:4px 0 10px">' + escapeHtml(p.cardNumber || '') +
-        '</div><div class="row" style="gap:12px"><div><div class="small" style="font-weight:600">' + Va.t('cardExpiry') + '</div><button type="button" class="btn secondary" id="cp-exp" style="font-family:monospace">' + escapeHtml(p.cardExpiry || '') + '</button></div>' +
-        '<div><div class="small" style="font-weight:600">CVV</div><button type="button" class="btn secondary" id="cp-cvv" style="font-family:monospace">' + escapeHtml(p.cardCvv || '') + '</button></div></div></div>';
+        '</div><div class="row" style="gap:12px"><div><div class="small" style="font-weight:600">' + Va.t('cardExpiry') + '</div><button type="button" class="btn" id="cp-exp" style="font-family:monospace">' + escapeHtml(p.cardExpiry || '') + '</button></div>' +
+        '<div><div class="small" style="font-weight:600">' + Va.t('cvv') + '</div><button type="button" class="btn" id="cp-cvv" style="font-family:monospace">' + escapeHtml(p.cardCvv || '') + '</button></div></div></div>';
     } else if (p.code && /^https?:\/\//i.test(p.code)) {
       codeBlock = '<div class="mt12" style="background:var(--surface);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border);text-align:center">' +
-        '<a class="btn mt8" id="cp-code" href="' + escapeHtml(p.code) + '" target="_blank" rel="noopener" style="width:100%;display:inline-block;text-decoration:none">🔗 ' + Va.t('openLink') + '</a></div>';
+        '<a class="btn active mt8" id="cp-code" href="' + escapeHtml(p.code) + '" target="_blank" rel="noopener" style="width:100%;display:inline-block;text-decoration:none">🔗 ' + Va.t('openLink') + '</a></div>';
     } else if (p.code) {
       codeBlock = '<div class="mt12" style="background:var(--surface);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border);text-align:center"><div class="small" style="font-weight:600">' + Va.t('voucherCode') + '</div><div style="font-size:1.3rem;font-weight:800;word-break:break-all;letter-spacing:0.06em;font-family:monospace;margin:8px 0">' + escapeHtml(p.code) + '</div>' +
-        '<button type="button" class="btn mt8" id="cp-code" style="width:100%">' + Va.t('copyCode') + '</button></div>';
+        '<button type="button" class="btn active mt8" id="cp-code" style="width:100%">' + Va.t('copyCode') + '</button></div>';
     }
     sc.innerHTML = '<div class="row-between"><b>' + escapeHtml(v.name) + '</b><button type="button" class="btn ghost" id="sheet-close">' + Va.t('close') + '</button></div>' +
       codeBlock +
       '<p class="mt12 small">' + escapeHtml(v.howToUse || '') + '</p>' +
       '<div class="dl-links mt12">' + linkRow.join('') + '</div>' +
-      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px"><button type="button" class="btn" id="sheet-use" style="flex:1 1 100%;min-width:0">' + Va.t('sheetUse') + '</button>' +
-      '<button type="button" class="btn secondary" id="sheet-cal" style="flex:1 1 45%;min-width:0">' + Va.t('addToCalendar') + '</button>' +
-      '<button type="button" class="btn secondary" id="sheet-more" style="flex:1 1 45%;min-width:0">' + Va.t('moreDetails') + '</button></div>';
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px"><button type="button" class="btn active" id="sheet-use" style="flex:1 1 100%;min-width:0">' + Va.t('sheetUse') + '</button>' +
+      '<button type="button" class="btn" id="sheet-cal" style="flex:1 1 45%;min-width:0">' + Va.t('addToCalendar') + '</button>' +
+      '<button type="button" class="btn" id="sheet-more" style="flex:1 1 45%;min-width:0">' + Va.t('moreDetails') + '</button></div>';
     sh.hidden = false;
     history.pushState({ overlay: 'sheet' }, '', '');
+    var firstBtn = sc.querySelector('button, a');
+    if (firstBtn) firstBtn.focus();
     $('sheet-close').onclick = closeSheet;
     const cpc = $('cp-code');
     if (cpc && cpc.tagName === 'BUTTON') cpc.onclick = function () { Va.copyText(p.code || ''); };
@@ -2874,6 +2910,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var sh = $('overlay-sheet');
     if (sh && !sh.hidden) {
       sh.hidden = true;
+      if (_sheetOpener && _sheetOpener.focus) { try { _sheetOpener.focus(); } catch (e) {} }
+      _sheetOpener = null;
       if (!fromPop) history.back();
     }
   }
@@ -2904,11 +2942,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       '</div>' +
       (detHistory ? '<div class="mt12"><div class="small"><b>' + Va.t('usageHistory') + '</b></div>' + detHistory +
         '<button type="button" class="btn ghost" id="mod-undo" style="font-size:0.78rem;margin-top:6px;padding:4px 10px">' + Va.t('undoLastUse') + '</button></div>' : '') +
-      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px"><button type="button" class="btn secondary" id="mod-edit" style="flex:1 1 auto;min-width:0">' + Va.t('edit') + '</button>' +
-      '<button type="button" class="btn secondary" id="mod-arch" style="flex:1 1 auto;min-width:0">' + Va.t('archive') + '</button>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px"><button type="button" class="btn" id="mod-edit" style="flex:1 1 auto;min-width:0">' + Va.t('edit') + '</button>' +
+      '<button type="button" class="btn" id="mod-arch" style="flex:1 1 auto;min-width:0">' + Va.t('archive') + '</button>' +
       '<button type="button" class="btn danger" id="mod-del" style="flex:1 1 auto;min-width:0">' + Va.t('delete') + '</button></div>';
+    _modalOpener = document.activeElement;
     om.hidden = false;
     history.pushState({ overlay: 'modal' }, '', '');
+    $('mod-close').focus();
     $('mod-close').onclick = closeModal;
     var undoBtn = $('mod-undo');
     if (undoBtn) {
@@ -2917,36 +2957,46 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         if (!hist.length) return;
         undoBtn.disabled = true;
         undoBtn.style.opacity = '0.5';
-        var last = hist.pop();
-        var restoredBal = Number(v.remainingBalance || 0) + Number(last.amount || 0);
-        var newStatus = v.status === 'archived' ? 'active' : v.status;
-        var vid = v.id;
-        await Va.vouchersCol(state.activeAccountId).doc(vid).update({
-          usageHistory: hist,
-          remainingBalance: restoredBal,
-          status: newStatus,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        closeModal();
-        Va.toast(Va.t('balanceRestored') + ': ' + Va.money(restoredBal));
-        setTimeout(function () {
-          var fresh = state.vouchers.find(function (x) { return x.id === vid; });
-          if (fresh) openDetailModal(fresh);
-        }, 400);
+        try {
+          var last = hist.pop();
+          var restoredBal = Number(v.remainingBalance || 0) + Number(last.amount || 0);
+          var newStatus = v.status === 'archived' ? 'active' : v.status;
+          var vid = v.id;
+          await Va.vouchersCol(state.activeAccountId).doc(vid).update({
+            usageHistory: hist,
+            remainingBalance: restoredBal,
+            status: newStatus,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          closeModal();
+          Va.toast(Va.t('balanceRestored') + ': ' + Va.money(restoredBal));
+          setTimeout(function () {
+            var fresh = state.vouchers.find(function (x) { return x.id === vid; });
+            if (fresh) openDetailModal(fresh);
+          }, 400);
+        } catch (e) {
+          console.error(e); Va.toast(Va.t('errorGeneric'));
+          undoBtn.disabled = false; undoBtn.style.opacity = '';
+        }
       };
     }
     $('mod-arch').onclick = async function () {
-      await Va.vouchersCol(state.activeAccountId).doc(v.id).update({ status: 'archived', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-      _editingVoucher = null;
-      closeModal();
-      Va.toast(Va.t('movedToArchive'));
+      try {
+        await Va.vouchersCol(state.activeAccountId).doc(v.id).update({ status: 'archived', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        _editingVoucher = null;
+        closeModal();
+        Va.toast(Va.t('movedToArchive'));
+      } catch (e) { console.error(e); Va.toast(Va.t('errorGeneric')); }
     };
     $('mod-del').onclick = async function () {
-      if (!confirm(Va.t('confirmDelete'))) return;
-      await Va.vouchersCol(state.activeAccountId).doc(v.id).delete();
-      _editingVoucher = null;
-      closeModal();
-      Va.toast(Va.t('deleted'));
+      showConfirmModal(Va.t('confirmDelete'), async function () {
+        try {
+          await Va.vouchersCol(state.activeAccountId).doc(v.id).delete();
+          _editingVoucher = null;
+          closeModal();
+          Va.toast(Va.t('deleted'));
+        } catch (e) { console.error(e); Va.toast(Va.t('errorGeneric')); }
+      });
     };
     $('mod-edit').onclick = function () {
       var om2 = $('overlay-modal');
@@ -2960,8 +3010,49 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var om = $('overlay-modal');
     if (om && !om.hidden) {
       om.hidden = true;
+      if (_modalOpener && _modalOpener.focus) { try { _modalOpener.focus(); } catch (e) {} }
+      _modalOpener = null;
       if (!fromPop) history.back();
     }
+  }
+
+  var _modalOpener = null;
+
+  function showConfirmModal(message, onConfirm) {
+    var modal = $('overlay-modal');
+    var mc = $('modal-content');
+    _modalOpener = document.activeElement;
+    mc.innerHTML = '<p style="margin:0 0 18px;font-size:0.9rem">' + escapeHtml(message) + '</p>' +
+      '<div style="display:flex;gap:8px">' +
+        '<button class="btn" id="scm-cancel" style="flex:1">' + Va.t('cancel') + '</button>' +
+        '<button class="btn danger" id="scm-ok" style="flex:1">' + Va.t('yes') + '</button>' +
+      '</div>';
+    modal.hidden = false;
+    history.pushState({ overlay: 'modal' }, '', '');
+    $('scm-ok').focus();
+    $('scm-cancel').onclick = function () { closeModal(); };
+    $('scm-ok').onclick = function () { closeModal(); onConfirm(); };
+    modal.onclick = function (e) { if (e.target === modal) closeModal(); };
+  }
+
+  function showInputModal(label, defaultVal, onSubmit) {
+    var modal = $('overlay-modal');
+    var mc = $('modal-content');
+    _modalOpener = document.activeElement;
+    mc.innerHTML = '<label class="lbl" style="margin-bottom:8px">' + escapeHtml(label) + '</label>' +
+      '<input class="input" id="sim-input" type="password" value="' + escapeHtml(defaultVal || '') + '" autocomplete="off" />' +
+      '<div style="display:flex;gap:8px;margin-top:12px">' +
+        '<button class="btn" id="sim-cancel" style="flex:1">' + Va.t('cancel') + '</button>' +
+        '<button class="btn active" id="sim-ok" style="flex:1">' + Va.t('continue') + '</button>' +
+      '</div>';
+    modal.hidden = false;
+    history.pushState({ overlay: 'modal' }, '', '');
+    var inp = $('sim-input');
+    inp.focus();
+    $('sim-cancel').onclick = function () { closeModal(); };
+    $('sim-ok').onclick = function () { closeModal(); onSubmit(inp.value); };
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { closeModal(); onSubmit(inp.value); } });
+    modal.onclick = function (e) { if (e.target === modal) closeModal(); };
   }
 
   var _editingVoucher = null;
@@ -3014,8 +3105,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         field('offerDescription', Va.t('offerDesc'), 'textarea', v.offerDescription || '') +
       '</div>' +
       '<div id="mf-expiry-wrap"' + (isCard ? ' hidden' : '') + '>' + field('expiryDate', Va.t('expiryDate'), 'date', v.expiryDate || '') + '</div>' +
-      '<div class="row mt12" style="gap:8px"><button type="button" class="btn" id="mf-save" style="flex:1">' + Va.t('save') + '</button>' +
-      '<button type="button" class="btn ghost" id="mf-cancel" style="flex:1">' + Va.t('cancel') + '</button></div>' +
+      '<div class="row mt12" style="gap:8px"><button type="button" class="btn cta" id="mf-save" style="flex:1">' + Va.t('save') + '</button>' +
+      '<button type="button" class="btn" id="mf-cancel" style="flex:1">' + Va.t('cancel') + '</button></div>' +
       '<button type="button" class="btn ghost mt12" id="mf-toggle-more" style="width:100%;font-size:0.85rem">' +
         '<span id="mf-more-arrow">' + (hasAdvanced ? '▲' : '▼') + '</span> ' + Va.t('moreDetails') +
       '</button>' +
@@ -3034,7 +3125,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           field('cardNumber', Va.t('cardNumber'), 'text', p.cardNumber || '') +
           '<div style="display:flex;gap:8px">' +
             '<div style="flex:1">' + field('cardExpiry', Va.t('cardExpiry'), 'text', p.cardExpiry || '') + '</div>' +
-            '<div style="flex:0 0 100px">' + field('cardCvv', 'CVV', 'text', p.cardCvv || '') + '</div>' +
+            '<div style="flex:0 0 100px">' + field('cardCvv', Va.t('cvv'), 'text', p.cardCvv || '') + '</div>' +
           '</div>' +
         '</div>' +
         field('storeTags', Va.t('storeTags'), 'text', (v.storeTags || []).join(', ')) +
@@ -3052,7 +3143,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         field('notes', Va.t('notes'), 'textarea', v.notes || '') +
         '<label class="lbl">' + Va.t('photo') + '</label>' +
         '<input type="file" accept="image/*" capture="environment" id="mf-photo" style="display:none" />' +
-        '<button type="button" class="btn secondary" id="mf-photo-btn" style="width:100%;border-radius:999px;padding:10px 18px;font-size:0.85rem">' +
+        '<button type="button" class="btn" id="mf-photo-btn" style="width:100%">' +
           '<span id="mf-photo-label">📷 ' + Va.t('photo') + '</span>' +
         '</button>' +
       '</div>';
@@ -3231,18 +3322,23 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           '<div class="small" style="opacity:0.7">' + (v.type === 'value' ? Va.money(v.remainingBalance) : escapeHtml((v.offerDescription || '').slice(0, 50))) + '</div>' +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">' +
-          '<button type="button" class="btn ghost" data-rest="' + v.id + '" style="padding:4px 10px;font-size:0.72rem;border-radius:999px">' + Va.t('restore') + '</button>' +
-          '<button type="button" class="btn ghost" data-del="' + v.id + '" style="padding:4px 10px;font-size:0.72rem;border-radius:999px;color:var(--danger)">' + Va.t('deleteForever') + '</button>' +
+          '<button type="button" class="btn" data-rest="' + v.id + '" style="padding:4px 10px;font-size:0.72rem;min-height:28px">' + Va.t('restore') + '</button>' +
+          '<button type="button" class="btn danger" data-del="' + v.id + '" style="padding:4px 10px;font-size:0.72rem;min-height:28px">' + Va.t('deleteForever') + '</button>' +
         '</div>';
       row.querySelector('[data-rest]').onclick = async function (e) {
         e.stopPropagation();
-        await Va.vouchersCol(state.activeAccountId).doc(v.id).update({ status: 'active', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        try {
+          await Va.vouchersCol(state.activeAccountId).doc(v.id).update({ status: 'active', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        } catch (err) { console.error(err); Va.toast(Va.t('errorGeneric')); }
       };
-      row.querySelector('[data-del]').onclick = async function (e) {
+      row.querySelector('[data-del]').onclick = function (e) {
         e.stopPropagation();
-        if (!confirm(Va.t('confirmDelete'))) return;
-        await Va.vouchersCol(state.activeAccountId).doc(v.id).delete();
-        Va.toast(Va.t('deleted'));
+        showConfirmModal(Va.t('confirmDelete'), async function () {
+          try {
+            await Va.vouchersCol(state.activeAccountId).doc(v.id).delete();
+            Va.toast(Va.t('deleted'));
+          } catch (err) { console.error(err); Va.toast(Va.t('errorGeneric')); }
+        });
       };
       list.appendChild(row);
     });
@@ -3260,7 +3356,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
             (displayName ? '<div style="font-weight:700;font-size:0.9rem;line-height:1.3">' + displayName + '</div>' : '') +
             '<div style="font-size:0.75rem;color:var(--muted);line-height:1.5">' + escapeHtml(state.normalizedPhone) + ' · ' + authMethod + '</div>' +
           '</div>' +
-          '<button type="button" class="btn ghost" id="btn-so" style="flex-shrink:0;font-size:0.7rem;padding:4px 10px;border-radius:999px;color:var(--danger)">' + Va.t('signOut') + '</button>' +
+          '<button type="button" class="btn danger" id="btn-so" style="flex-shrink:0">' + Va.t('signOut') + '</button>' +
         '</div>';
       $('btn-so').onclick = function () { clearSession(state.authUser && state.authUser.uid); Va.auth().signOut(); location.reload(); };
     }
@@ -3274,7 +3370,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">' +
           '<label style="font-size:0.72rem;color:var(--muted);white-space:nowrap">' + Va.t('walletNameLabel') + '</label>' +
           '<input class="input" id="wallet-name-input" value="' + escapeHtml(currentWalletName) + '" placeholder="' + Va.t('walletNamePlaceholder') + '" style="flex:1;font-size:0.78rem;padding:4px 8px;border-radius:8px"' + (nameIsSet ? ' readonly' : '') + ' />' +
-          '<button type="button" class="btn ghost" id="btn-edit-wallet-name" style="font-size:0.7rem;padding:3px 8px;border-radius:999px">' + (nameIsSet ? '✏️' : '💾') + '</button>' +
+          '<button type="button" class="btn" id="btn-edit-wallet-name" style="min-width:34px;padding:6px;min-height:32px">' + (nameIsSet ? '✏️' : '💾') + '</button>' +
         '</div>' +
         '<div id="ap-list"></div>';
       var wnInput = $('wallet-name-input');
@@ -3320,7 +3416,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         var infoHtml = '<span class="member-name">' + (nameText ? nameText + ' ' : '') + phoneText + ' ' + roleBadge + youBadge + '</span>';
         const row = document.createElement('div');
         row.className = 'member-row';
-        var removeBtn = isMe ? '' : '<button type="button" class="btn ghost" data-rm="' + escapeHtml(p) + '" style="color:var(--danger);font-size:0.68rem;padding:3px 8px;min-height:auto;border-radius:999px;opacity:0.7">' + Va.t('remove') + '</button>';
+        var removeBtn = isMe ? '' : '<button type="button" class="btn danger" data-rm="' + escapeHtml(p) + '" style="font-size:0.7rem">' + Va.t('remove') + '</button>';
         row.innerHTML = '<div class="member-info">' + infoHtml + '</div>' + removeBtn;
         if (!isMe) {
           row.querySelector('button').onclick = async function () {
@@ -3334,11 +3430,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       invWrap.style.cssText = 'display:flex;gap:6px;margin-top:8px';
       var invBtn = document.createElement('button');
       invBtn.className = 'btn whatsapp';
-      invBtn.style.cssText = 'flex:1;font-size:0.72rem;padding:6px 10px;border-radius:999px';
+      invBtn.style.cssText = 'flex:1';
       invBtn.textContent = '\uD83D\uDCE9 ' + Va.t('inviteWhatsapp');
       var copyBtn = document.createElement('button');
-      copyBtn.className = 'btn secondary';
-      copyBtn.style.cssText = 'flex:1;font-size:0.72rem;padding:6px 10px;border-radius:999px';
+      copyBtn.className = 'btn';
+      copyBtn.style.cssText = 'flex:1';
       copyBtn.textContent = '\uD83D\uDD17 ' + Va.t('inviteCopyLink');
       var lastLink = null;
       async function getOrCreateLink(btn) {
@@ -3406,15 +3502,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var disp = $('settings-display');
     if (disp) {
       function settingBtn(id, label, isActive) {
-        return '<button type="button" class="' + (isActive ? 'btn' : 'btn secondary') + '" id="' + id + '" style="flex:1;min-width:0;font-size:0.75rem;padding:5px 6px;min-height:32px">' + label + '</button>';
+        return '<button type="button" class="btn' + (isActive ? ' active' : '') + '" id="' + id + '" style="flex:1;min-width:0">' + label + '</button>';
       }
       disp.innerHTML = '<h3>' + Va.t('displaySection') + '</h3>' +
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;min-width:80px">' + Va.t('langLabel') + '</span>' +
-        '<div style="display:flex;gap:4px;flex:1">' + settingBtn('lg-he', Va.t('langHe'), state.lang === 'he') + settingBtn('lg-en', Va.t('langEn'), state.lang === 'en') + '</div></div>' +
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;min-width:80px">' + Va.t('themeLabel') + '</span>' +
-        '<div style="display:flex;gap:4px;flex:1">' + settingBtn('th-a', Va.t('themeAuto'), state.themePref === 'auto') + settingBtn('th-l', Va.t('themeLight'), state.themePref === 'light') + settingBtn('th-d', Va.t('themeDark'), state.themePref === 'dark') + '</div></div>' +
-        '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;min-width:80px">' + Va.t('defaultView') + '</span>' +
-        '<div style="display:flex;gap:4px;flex:1">' + settingBtn('dv-c', Va.t('viewCard'), state.voucherView === 'card') + settingBtn('dv-l', Va.t('viewList'), state.voucherView === 'list') + '</div></div>';
+        '<div class="s-row"><span class="s-label">' + Va.t('langLabel') + '</span><div class="s-btns">' + settingBtn('lg-he', Va.t('langHe'), state.lang === 'he') + settingBtn('lg-en', Va.t('langEn'), state.lang === 'en') + '</div></div>' +
+        '<div class="s-row"><span class="s-label">' + Va.t('themeLabel') + '</span><div class="s-btns">' + settingBtn('th-a', Va.t('themeAuto'), state.themePref === 'auto') + settingBtn('th-l', Va.t('themeLight'), state.themePref === 'light') + settingBtn('th-d', Va.t('themeDark'), state.themePref === 'dark') + '</div></div>' +
+        '<div class="s-row"><span class="s-label">' + Va.t('defaultView') + '</span><div class="s-btns">' + settingBtn('dv-c', Va.t('viewCard'), state.voucherView === 'card') + settingBtn('dv-l', Va.t('viewList'), state.voucherView === 'list') + '</div></div>';
       $('lg-he').onclick = function () { persistLang('he'); };
       $('lg-en').onclick = function () { persistLang('en'); };
       $('th-a').onclick = function () { persistTheme('auto'); };
@@ -3427,42 +3520,53 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (sec) {
       var secHtml = '<h3>' + Va.t('securitySection') + '</h3>';
       if (state.isOwner) {
-        secHtml += '<button type="button" class="btn ghost" id="btn-chg-pass" style="font-size:0.75rem;padding:5px 12px;border-radius:999px">' + Va.t('changePass') + '</button>';
+        secHtml += '<div class="s-row"><span class="s-label">' + Va.t('passphrase') + '</span><div class="s-btns"><button type="button" class="btn" id="btn-chg-pass" style="flex:1">' + Va.t('changePass') + '</button></div></div>';
       } else {
-        secHtml += '<p class="small" style="margin-bottom:6px">' + Va.t('recoveryPassDesc') + '</p>';
-        secHtml += '<button type="button" class="btn secondary" id="btn-set-recovery" style="font-size:0.75rem;padding:5px 12px;border-radius:999px">' + Va.t('setRecoveryPass') + '</button>';
+        secHtml += '<div class="s-row" style="align-items:flex-start"><span class="s-label" style="padding-top:4px">' + Va.t('passphrase') + '</span><div style="flex:1"><p class="small" style="margin:0 0 6px">' + Va.t('recoveryPassDesc') + '</p><button type="button" class="btn" id="btn-set-recovery" style="width:100%">' + Va.t('setRecoveryPass') + '</button></div></div>';
         secHtml += '<div id="recovery-status" class="small mt8" hidden></div>';
       }
       secHtml += '<div id="bio-section" class="mt12" hidden></div>';
       sec.innerHTML = secHtml;
       if (state.isOwner && $('btn-chg-pass')) {
-        $('btn-chg-pass').onclick = async function () {
-          var oldp = prompt(Va.t('passphrase'));
-          var newp = prompt(Va.t('recoveryPassConfirm') || 'New passphrase');
-          if (!oldp || !newp) return;
-          const snap = await Va.accountRef(state.activeAccountId).get();
-          const salt = snap.data().settings.cryptoSalt;
-          const oldKey = await Va.deriveKeyFromPassphrase(oldp, salt);
-          const newSalt = Va.randomSalt();
-          const newKey = await Va.deriveKeyFromPassphrase(newp, newSalt);
-          for (let i = 0; i < state.vouchers.length; i++) {
-            const v = state.vouchers[i];
-            const plain = await Va.decryptVoucherFields(oldKey, v);
-            const enc = await Va.encryptVoucherFields(newKey, plain);
-            await Va.vouchersCol(state.activeAccountId).doc(v.id).set(enc, { merge: true });
-          }
-          var chgKv = Date.now();
-          var backups = snap.data().memberKeyBackups || {};
-          if (Object.keys(backups).length) {
-            await Va.accountRef(state.activeAccountId).update({
-              memberKeyBackups: firebase.firestore.FieldValue.delete()
+        $('btn-chg-pass').onclick = function () {
+          showInputModal(Va.t('passphrase'), '', function (oldp) {
+            if (!oldp) return;
+            showInputModal(Va.t('passphraseConfirm'), '', async function (newp) {
+              if (!newp) return;
+              try {
+                var chgBtn = $('btn-chg-pass');
+                if (chgBtn) { chgBtn.disabled = true; chgBtn.style.opacity = '0.6'; }
+                const snap = await Va.accountRef(state.activeAccountId).get();
+                const salt = snap.data().settings.cryptoSalt;
+                const oldKey = await Va.deriveKeyFromPassphrase(oldp, salt);
+                const newSalt = Va.randomSalt();
+                const newKey = await Va.deriveKeyFromPassphrase(newp, newSalt);
+                for (let i = 0; i < state.vouchers.length; i++) {
+                  const v = state.vouchers[i];
+                  const plain = await Va.decryptVoucherFields(oldKey, v);
+                  const enc = await Va.encryptVoucherFields(newKey, plain);
+                  await Va.vouchersCol(state.activeAccountId).doc(v.id).set(enc, { merge: true });
+                }
+                var chgKv = Date.now();
+                var backups = snap.data().memberKeyBackups || {};
+                if (Object.keys(backups).length) {
+                  await Va.accountRef(state.activeAccountId).update({
+                    memberKeyBackups: firebase.firestore.FieldValue.delete()
+                  });
+                }
+                await Va.saveSettingsPatch(state.activeAccountId, { cryptoSalt: newSalt, keyVersion: chgKv });
+                state.derivedKey = newKey;
+                var chgExported = await Va.exportKeyB64(newKey);
+                saveWalletToSession(state.authUser.uid, state.normalizedPhone, state.activeAccountId, state.isOwner, chgExported, chgKv, '');
+                Va.toast(Va.t('save'));
+              } catch (e) {
+                console.error(e); Va.toast(Va.t('errorGeneric'));
+              } finally {
+                var chgBtn2 = $('btn-chg-pass');
+                if (chgBtn2) { chgBtn2.disabled = false; chgBtn2.style.opacity = ''; }
+              }
             });
-          }
-          await Va.saveSettingsPatch(state.activeAccountId, { cryptoSalt: newSalt, keyVersion: chgKv });
-          state.derivedKey = newKey;
-          var chgExported = await Va.exportKeyB64(newKey);
-          saveWalletToSession(state.authUser.uid, state.normalizedPhone, state.activeAccountId, state.isOwner, chgExported, chgKv, '');
-          Va.toast(Va.t('save'));
+          });
         };
       }
       if (!state.isOwner && $('btn-set-recovery')) {
@@ -3472,20 +3576,22 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
             if (rs) { rs.textContent = Va.t('recoveryPassSet'); rs.hidden = false; }
           }
         });
-        $('btn-set-recovery').onclick = async function () {
-          var p1 = prompt(Va.t('setRecoveryPass'));
-          if (!p1) return;
-          var p2 = prompt(Va.t('recoveryPassConfirm'));
-          if (p1 !== p2) return Va.toast(Va.t('errorGeneric'));
-          try {
-            var blob = await Va.wrapKeyWithPassphrase(state.derivedKey, p1);
-            await Va.saveMemberKeyBackup(state.activeAccountId, state.normalizedPhone, blob);
-            var rs = $('recovery-status');
-            if (rs) { rs.textContent = Va.t('recoveryPassSet'); rs.hidden = false; }
-            Va.toast(Va.t('save'));
-          } catch (e) {
-            Va.toast(e.message || Va.t('errorGeneric'));
-          }
+        $('btn-set-recovery').onclick = function () {
+          showInputModal(Va.t('setRecoveryPass'), '', function (p1) {
+            if (!p1) return;
+            showInputModal(Va.t('recoveryPassConfirm'), '', async function (p2) {
+              if (p1 !== p2) return Va.toast(Va.t('passphraseMismatch'));
+              try {
+                var blob = await Va.wrapKeyWithPassphrase(state.derivedKey, p1);
+                await Va.saveMemberKeyBackup(state.activeAccountId, state.normalizedPhone, blob);
+                var rs = $('recovery-status');
+                if (rs) { rs.textContent = Va.t('recoveryPassSet'); rs.hidden = false; }
+                Va.toast(Va.t('save'));
+              } catch (e) {
+                console.error(e); Va.toast(e.message || Va.t('errorGeneric'));
+              }
+            });
+          });
         };
       }
       var bioSec = $('bio-section');
@@ -3496,7 +3602,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           if (!uid) return;
           var enrolled = !!localStorage.getItem('vm_bio_cred_' + uid);
           bioSec.hidden = false;
-          bioSec.innerHTML = '<button type="button" class="btn ' + (enrolled ? 'ghost' : 'secondary') + '" id="btn-bio-toggle" style="width:100%">' +
+          bioSec.innerHTML = '<button type="button" class="btn' + (enrolled ? ' active' : '') + '" id="btn-bio-toggle" style="width:100%">' +
             (enrolled ? Va.t('biometricEnrolled') : Va.t('biometricSetup')) + '</button>';
           $('btn-bio-toggle').onclick = async function () {
             if (enrolled) {
@@ -3536,9 +3642,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     const data = $('settings-data');
     if (data) {
       data.innerHTML = '<h3>' + Va.t('dataSection') + '</h3>' +
-        '<div style="display:flex;gap:6px"><button type="button" class="btn secondary" id="ex-json" style="flex:1;min-width:0;font-size:0.75rem;padding:5px 10px;border-radius:999px">' + Va.t('exportJson') + '</button>' +
-        '<button type="button" class="btn secondary" id="im-json" style="flex:1;min-width:0;font-size:0.75rem;padding:5px 10px;border-radius:999px">' + Va.t('importJson') + '</button></div>' +
-        '<div style="font-size:0.68rem;color:var(--muted);margin-top:4px" id="lb-bak">' + Va.t('lastBackup') + ': —</div>' +
+        '<div class="s-row"><span class="s-label">' + Va.t('lastBackup') + '</span><div class="s-btns"><button type="button" class="btn" id="ex-json" style="flex:1">' + Va.t('exportJson') + '</button>' +
+        '<button type="button" class="btn" id="im-json" style="flex:1">' + Va.t('importJson') + '</button></div></div>' +
+        '<div style="font-size:0.68rem;color:var(--muted);margin-top:2px;text-align:start" id="lb-bak"></div>' +
         '<input type="file" id="im-file" hidden accept=".json" />';
       const lb = (state.settingsDoc && state.settingsDoc.settings && state.settingsDoc.settings.lastBackup) || '';
       $('lb-bak').textContent = Va.t('lastBackup') + ': ' + formatDate(lb);
@@ -3566,24 +3672,27 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           const arr = JSON.parse(txt);
           if (!Array.isArray(arr)) throw new Error('Invalid format');
           if (!arr.length) return;
-          if (!confirm(Va.t('importJson') + ' — ' + arr.length + ' ' + Va.t('importConfirm') + '?')) return;
-          for (let i = 0; i < arr.length; i++) {
-            const row = arr[i];
-            const enc = await Va.encryptVoucherFields(state.derivedKey, row);
-            delete row.code;
-            delete row.cardNumber;
-            delete row.cardExpiry;
-            delete row.cardCvv;
-            Object.assign(row, enc);
-            await Va.vouchersCol(state.activeAccountId).add(Object.assign(row, {
-              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-              updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-              createdBy: state.authUser.uid
-            }));
-          }
-          Va.toast(Va.t('save'));
+          showConfirmModal(Va.t('importJson') + ' — ' + arr.length + ' ' + Va.t('importConfirm') + '?', async function () {
+            try {
+              for (let i = 0; i < arr.length; i++) {
+                const row = arr[i];
+                const enc = await Va.encryptVoucherFields(state.derivedKey, row);
+                delete row.code;
+                delete row.cardNumber;
+                delete row.cardExpiry;
+                delete row.cardCvv;
+                Object.assign(row, enc);
+                await Va.vouchersCol(state.activeAccountId).add(Object.assign(row, {
+                  createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                  updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                  createdBy: state.authUser.uid
+                }));
+              }
+              Va.toast(Va.t('save'));
+            } catch (ie) { console.error('Import failed:', ie); Va.toast(Va.t('errorGeneric')); }
+          });
         } catch (e) {
-          console.error('Import failed:', e);
+          console.error('Import parse failed:', e);
           Va.toast(Va.t('errorGeneric'));
         }
       };
@@ -3592,12 +3701,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (cal) {
       var cur = (state.settingsDoc && state.settingsDoc.settings && state.settingsDoc.settings.calendarReminders) || [7, 3, 1];
       cal.innerHTML = '<h3>' + Va.t('calendarSection') + '</h3>' +
-        '<p style="font-size:0.72rem;color:var(--muted);margin:0 0 6px">' + Va.t('calRemind') + '</p>' +
-        '<div id="cal-tags"></div>' +
-        '<div style="display:flex;gap:6px;align-items:center;margin-top:6px">' +
-          '<select class="input" id="cal-add-select" style="flex:1;border-radius:999px;padding:4px 10px;font-size:0.75rem"></select>' +
-          '<button type="button" class="btn" id="cal-add-btn" style="border-radius:999px;min-height:30px;padding:4px 14px;font-size:0.8rem">+</button>' +
-        '</div>';
+        '<div class="s-row" style="align-items:flex-start"><span class="s-label" style="padding-top:4px">' + Va.t('calRemind') + '</span>' +
+        '<div style="flex:1"><div id="cal-tags" style="margin-bottom:6px"></div>' +
+        '<div style="display:flex;gap:4px">' +
+          '<select class="input" id="cal-add-select" style="flex:1;border-radius:999px;padding:6px 10px;font-size:0.75rem;min-height:32px"></select>' +
+          '<button type="button" class="btn" id="cal-add-btn">+</button>' +
+        '</div></div></div>';
       var selected = cur.slice();
 
       function renderCalTags() {
@@ -3610,13 +3719,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         }
         selected.forEach(function (d) {
           var tag = document.createElement('span');
-          tag.style.cssText = 'display:inline-flex;align-items:center;gap:4px;background:var(--primary);color:#fff;padding:4px 8px 4px 10px;border-radius:999px;font-size:0.75rem;font-weight:600;margin:0 4px 6px 0;';
+          tag.style.cssText = 'display:inline-flex;align-items:center;gap:4px;background:rgba(124,107,240,0.18);border:1px solid var(--primary);color:var(--text);padding:4px 8px 4px 10px;border-radius:999px;font-size:0.75rem;font-weight:700;margin:0 4px 6px 0;';
           var label = document.createElement('span');
           label.textContent = daysLabel(d);
           var rm = document.createElement('button');
           rm.type = 'button';
           rm.textContent = '✕';
-          rm.style.cssText = 'background:rgba(255,255,255,0.25);border:none;border-radius:50%;width:18px;height:18px;min-width:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-size:0.6rem;color:#fff;line-height:1;-webkit-tap-highlight-color:transparent;';
+          rm.style.cssText = 'background:rgba(124,107,240,0.2);border:none;border-radius:50%;width:22px;height:22px;min-width:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-size:0.65rem;color:var(--muted);line-height:1;-webkit-tap-highlight-color:transparent;';
           rm.onclick = async function (e) {
             e.stopPropagation();
             var idx = selected.indexOf(d);
@@ -3725,18 +3834,22 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
-      var sh = $('overlay-sheet');
       var om = $('overlay-modal');
+      var sh = $('overlay-sheet');
+      var ws = $('overlay-wallet-switch');
       if (om && !om.hidden) { closeModal(); return; }
       if (sh && !sh.hidden) { closeSheet(); return; }
+      if (ws && !ws.hidden) { ws.hidden = true; return; }
     }
   });
 
   window.addEventListener('popstate', function (e) {
     var om = $('overlay-modal');
     var sh = $('overlay-sheet');
+    var ws = $('overlay-wallet-switch');
     if (om && !om.hidden) { closeModal(true); return; }
     if (sh && !sh.hidden) { closeSheet(true); return; }
+    if (ws && !ws.hidden) { ws.hidden = true; return; }
     var st = e.state;
     if (st && st.tab) {
       _navFromPop = true;
@@ -3956,7 +4069,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         (d._relativeExpiry ? '<div class="small" style="color:var(--warning, #f59e0b);opacity:0.85;margin-top:2px">⚠ ' + Va.t('relativeExpiryHint') + '</div>' : '') +
         '</div>';
     });
-    html += '<button type="button" class="btn mt12" id="rv-save">' + Va.t('saveAll') + '</button><button type="button" class="btn secondary mt8" id="rv-back">' + Va.t('cancel') + '</button>';
+    html += '<button type="button" class="btn cta mt12" id="rv-save">' + Va.t('saveAll') + '</button><button type="button" class="btn mt8" id="rv-back">' + Va.t('cancel') + '</button>';
     box.innerHTML = html;
     box.querySelectorAll('.rv-type').forEach(function (sel) {
       sel.onchange = function () {
@@ -4002,7 +4115,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         d.expiryDate = c.querySelector('.rv-exp').value;
         const dupChk = (d.code && codeExists(d.code)) || (d.cardNumber && codeExists(d.cardNumber));
         if (dupChk) {
-          if (!confirm(Va.t('duplicateWarn') + ' — ' + Va.t('continue'))) continue;
+          Va.toast(Va.t('duplicateWarn'));
         }
         delete d._manyStores;
         delete d._relativeExpiry;
@@ -4044,23 +4157,27 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (unsubV) unsubV();
     if (unsubS) unsubS();
     unsubV = Va.vouchersCol(state.activeAccountId).onSnapshot(async function (snap) {
-      state.vouchers = [];
-      snap.forEach(function (doc) {
-        state.vouchers.push(Object.assign({ id: doc.id }, doc.data()));
-      });
-      await renderAll();
+      try {
+        state.vouchers = [];
+        snap.forEach(function (doc) {
+          state.vouchers.push(Object.assign({ id: doc.id }, doc.data()));
+        });
+        await renderAll();
+      } catch (e) { console.error('Snapshot render error:', e); Va.toast(Va.t('errorGeneric')); }
     });
     unsubS = Va.accountRef(state.activeAccountId).onSnapshot(async function (doc) {
-      state.settingsDoc = doc.exists ? doc.data() : null;
-      if (state.settingsDoc && state.settingsDoc.settings) {
-        const s = state.settingsDoc.settings;
-        if (s.language) state.lang = s.language;
-        if (s.theme) state.themePref = s.theme;
-        if (s.defaultView) state.defaultView = state.voucherView = s.defaultView;
-        Va.applyDirLang();
-        Va.applyTheme();
-      }
-      renderSettings();
+      try {
+        state.settingsDoc = doc.exists ? doc.data() : null;
+        if (state.settingsDoc && state.settingsDoc.settings) {
+          const s = state.settingsDoc.settings;
+          if (s.language) state.lang = s.language;
+          if (s.theme) state.themePref = s.theme;
+          if (s.defaultView) state.defaultView = state.voucherView = s.defaultView;
+          Va.applyDirLang();
+          Va.applyTheme();
+        }
+        renderSettings();
+      } catch (e) { console.error('Settings snapshot error:', e); Va.toast(Va.t('errorGeneric')); }
     });
   }
 
@@ -4118,8 +4235,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       var role = w.isOwner ? Va.t('walletOwner') : Va.t('walletMember');
       var btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'btn' + (isCurrent ? '' : ' ghost');
-      btn.style.cssText = 'width:100%;text-align:start;padding:12px 16px;margin-bottom:8px;border-radius:12px;display:flex;justify-content:space-between;align-items:center';
+      btn.className = 'btn' + (isCurrent ? ' active' : '');
+      btn.style.cssText = 'width:100%;text-align:start;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center';
       btn.innerHTML =
         '<div><div style="font-weight:700">' + escapeHtml(label) + '</div>' +
         '<div class="small" style="color:var(--muted)">' + role + '</div></div>' +
@@ -4188,8 +4305,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       var members = (d.approvedPhones || []).length;
       var btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'btn ghost';
-      btn.style.cssText = 'width:100%;text-align:start;padding:12px 16px;margin-bottom:8px;border-radius:12px;display:flex;justify-content:space-between;align-items:center';
+      btn.className = 'btn';
+      btn.style.cssText = 'width:100%;text-align:start;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center';
       btn.innerHTML =
         '<div><div style="font-weight:700">' + escapeHtml(name) + '</div>' +
         '<div class="small" style="color:var(--muted)">' + role + ' · ' + members + ' ' + Va.t('members') + '</div></div>' +
@@ -4262,21 +4379,22 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         if (backup && recoveryArea) {
           recoveryArea.hidden = false;
           $('btn-recovery-unlock').textContent = Va.t('unlockRecovery');
-          $('btn-recovery-unlock').onclick = async function () {
-            var rp = prompt(Va.t('setRecoveryPass'));
-            if (!rp) return;
-            try {
-              var recoveredKey = await Va.unwrapKeyWithPassphrase(backup, rp);
-              state.derivedKey = recoveredKey;
-              var exported = await Va.exportKeyB64(recoveredKey);
-              var accSnap = await Va.accountRef(state.activeAccountId).get();
-              var kv = accSnap.exists && accSnap.data().settings ? accSnap.data().settings.keyVersion : null;
-              saveWalletToSession(uid, state.normalizedPhone, state.activeAccountId, state.isOwner, exported, kv, '');
-              showOnly('main-app');
-              startDataListeners();
-            } catch (e) {
-              Va.toast(Va.t('wrongPass'));
-            }
+          $('btn-recovery-unlock').onclick = function () {
+            showInputModal(Va.t('setRecoveryPass'), '', async function (rp) {
+              if (!rp) return;
+              try {
+                var recoveredKey = await Va.unwrapKeyWithPassphrase(backup, rp);
+                state.derivedKey = recoveredKey;
+                var exported = await Va.exportKeyB64(recoveredKey);
+                var accSnap = await Va.accountRef(state.activeAccountId).get();
+                var kv = accSnap.exists && accSnap.data().settings ? accSnap.data().settings.keyVersion : null;
+                saveWalletToSession(uid, state.normalizedPhone, state.activeAccountId, state.isOwner, exported, kv, '');
+                showOnly('main-app');
+                startDataListeners();
+              } catch (e) {
+                Va.toast(Va.t('wrongPass'));
+              }
+            });
           };
         }
       } catch (e) {
@@ -4468,13 +4586,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           });
         });
         setInterval(function () { reg.update(); }, 60 * 60 * 1000);
-      }).catch(function () {});
+      }).catch(function (err) { console.warn('SW registration failed:', err); });
     }
     const params = new URLSearchParams(location.search);
     if (params.get('share-target') != null) {
       const tit = params.get('shared_title') || params.get('title') || '';
       const st = params.get('shared_text') || params.get('text') || '';
       state.pendingShareText = (tit ? tit + '\n\n' : '') + st;
+      history.replaceState(null, '', location.pathname);
     }
     var joinToken = params.get('join');
     if (joinToken) {
@@ -4503,6 +4622,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
   window.addEventListener('unhandledrejection', function (ev) {
     console.error('Unhandled rejection:', ev.reason);
+    Va.toast(Va.t('errorGeneric'));
     var visible = ['screen-welcome', 'screen-rejected', 'screen-phone-collect', 'screen-passphrase', 'main-app'].some(function (id) {
       var el = document.getElementById(id);
       return el && !el.hidden;

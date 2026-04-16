@@ -1,4 +1,4 @@
-const CACHE_NAME = 'voucher-manager-v2.5.1';
+const CACHE_NAME = 'voucher-manager-v2.6.0';
 const ASSETS = [
   '/voucher-manager/',
   '/voucher-manager/index.html',
@@ -8,7 +8,9 @@ const ASSETS = [
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(c =>
+      Promise.allSettled(ASSETS.map(url => c.add(url)))
+    ).then(() => self.skipWaiting())
   );
 });
 
@@ -30,7 +32,7 @@ self.addEventListener('fetch', e => {
     fetch(e.request).then(resp => {
       if (resp.ok) {
         const clone = resp.clone();
-        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+        caches.open(CACHE_NAME).then(c => c.put(e.request, clone)).catch(() => {});
       }
       return resp;
     }).catch(() => caches.match(e.request))
