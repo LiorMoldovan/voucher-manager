@@ -1,4 +1,4 @@
-const CACHE_NAME = 'voucher-manager-v2.11.0';
+const CACHE_NAME = 'voucher-manager-v2.12.0';
 const ASSETS = [
   '/voucher-manager/',
   '/voucher-manager/index.html',
@@ -35,6 +35,12 @@ self.addEventListener('fetch', e => {
         caches.open(CACHE_NAME).then(c => c.put(e.request, clone)).catch(() => {});
       }
       return resp;
-    }).catch(() => caches.match(e.request))
+    }).catch(() =>
+      caches.match(e.request).then(cached => {
+        if (cached) return cached;
+        if (e.request.mode === 'navigate') return caches.match('/voucher-manager/index.html');
+        return cached;
+      })
+    )
   );
 });

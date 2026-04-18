@@ -233,6 +233,29 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
   animation: slideDown .3s cubic-bezier(.32,.72,0,1);
 }
 @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes tabEnter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.tab-enter { animation: tabEnter .15s ease-out both; }
+@keyframes cardEnter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.card-enter { opacity: 0; animation: cardEnter .25s ease-out both; }
+@keyframes checkPop {
+  0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+  50% { transform: scale(1.15) rotate(0deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.save-done-overlay {
+  position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.25); backdrop-filter: blur(4px);
+}
+.save-done-check {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, #34d399, #10b981);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 32px rgba(16,185,129,0.4);
+  animation: checkPop .4s cubic-bezier(.32,.72,0,1) both;
+}
+.save-done-check::after { content: '✓'; font-size: 2.2rem; font-weight: 900; color: #fff; }
+@keyframes copyFlash { 0% { box-shadow: 0 0 0 3px rgba(124,107,240,0.4); } 100% { box-shadow: 0 0 0 0 rgba(124,107,240,0); } }
+.copy-flash { animation: copyFlash .45s ease-out; }
 
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .row-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -274,7 +297,7 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
 .star-btn {
   position: absolute; top: 12px; inset-inline-end: 12px; z-index: 2;
   background: rgba(0,0,0,0.2); border: none; border-radius: 999px;
-  width: 36px; height: 36px; font-size: 1rem; cursor: pointer;
+  width: 44px; height: 44px; font-size: 1rem; cursor: pointer;
   backdrop-filter: var(--glass); transition: all .2s;
   display: flex; align-items: center; justify-content: center;
 }
@@ -631,7 +654,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.11.0';
+  const APP_VERSION = '2.12.0';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -716,7 +739,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.11.0',
+      aboutVersion: 'גרסה 2.12.0',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -960,7 +983,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.11.0',
+      aboutVersion: 'Version 2.12.0',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -1236,8 +1259,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     }, ms || 3500);
   }
 
-  function copyText(text) {
+  function copyText(text, triggerEl) {
     if (!text) return;
+    if (triggerEl) {
+      triggerEl.classList.remove('copy-flash');
+      void triggerEl.offsetWidth;
+      triggerEl.classList.add('copy-flash');
+    }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(function () {
         toast(t('copied'));
@@ -2421,7 +2449,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
 
   function saveSession(uid, session) {
-    localStorage.setItem(sessionKey(uid), JSON.stringify(session));
+    try {
+      localStorage.setItem(sessionKey(uid), JSON.stringify(session));
+    } catch (e) {
+      console.error('saveSession storage error:', e);
+    }
   }
 
   function saveWalletToSession(uid, phone, accountId, isOwner, keyB64, keyVersion, walletName) {
@@ -2446,9 +2478,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   var _currentTab = 'dashboard';
 
   function showTab(name, skipHistory) {
-    document.querySelectorAll('.tab-page').forEach(function (n) { n.hidden = true; });
+    document.querySelectorAll('.tab-page').forEach(function (n) { n.hidden = true; n.classList.remove('tab-enter'); });
     var page = $('tab-' + name);
-    if (page) page.hidden = false;
+    if (page) { page.hidden = false; page.classList.add('tab-enter'); }
     document.querySelectorAll('.nav-item').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-tab') === name);
     });
@@ -2839,11 +2871,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       const urgent = v.status === 'active' && daysUntilExpiry(v) >= 0 && daysUntilExpiry(v) <= 7;
       const miss = isCodeMissing(v);
       const low = v.type === 'value' && v.originalAmount && Number(v.remainingBalance) < Number(v.originalAmount) * 0.15;
+      var _cardIdx = listEl.children.length;
       if (view === 'list') {
         var isExpiredRow = daysUntilExpiry(v) < 0;
         var row = document.createElement('div');
-        row.className = 'list-row' + (urgent ? ' urgent' : '');
+        row.className = 'list-row card-enter' + (urgent ? ' urgent' : '');
         if (isExpiredRow) row.style.opacity = '0.55';
+        if (_cardIdx < 10) row.style.animationDelay = (_cardIdx * 30) + 'ms';
         row.innerHTML = '<div style="min-width:0;flex:1"><div style="font-weight:600;font-size:0.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(v.name) + '</div><div class="small">' + (v.type === 'value' ? Va.money(v.remainingBalance) : escapeHtml((v.offerDescription || '').slice(0, 50))) + '</div></div>' +
           '<span class="badge ' + eb.cls + '" style="flex-shrink:0">' + eb.text + '</span>';
         row.onclick = function () { openSheet(v); };
@@ -2853,12 +2887,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       var storeStr = truncStores(v.storeTags);
       var isExpired = daysUntilExpiry(v) < 0;
       var card = document.createElement('div');
-      card.className = 'card' + (urgent ? ' urgent' : '');
+      card.className = 'card card-enter' + (urgent ? ' urgent' : '');
       if (isExpired) card.style.opacity = '0.55';
+      if (_cardIdx < 10) card.style.animationDelay = (_cardIdx * 40) + 'ms';
       card.innerHTML =
-        '<button type="button" class="star-btn" aria-label="' + (v.favorite ? Va.t('removeFav') : Va.t('favorites')) + '" aria-pressed="' + (v.favorite ? 'true' : 'false') + '" data-id="' + v.id + '" style="position:absolute;top:4px;inset-inline-end:4px;width:36px;height:36px;font-size:0.85rem;z-index:1">' + (v.favorite ? '★' : '☆') + '</button>' +
-        '<div style="padding-inline-end:30px">' +
-          '<div style="font-size:0.9rem;font-weight:700;line-height:1.3">' + escapeHtml(v.name) + '</div>' +
+        '<button type="button" class="star-btn" aria-label="' + (v.favorite ? Va.t('removeFav') : Va.t('favorites')) + '" aria-pressed="' + (v.favorite ? 'true' : 'false') + '" data-id="' + v.id + '" style="position:absolute;top:4px;inset-inline-end:4px;width:44px;height:44px;font-size:0.95rem;z-index:1">' + (v.favorite ? '★' : '☆') + '</button>' +
+        '<div style="padding-inline-end:36px">' +
+          '<div style="font-size:0.9rem;font-weight:700;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(v.name) + '</div>' +
           (storeStr ? '<div style="font-size:0.68rem;color:var(--muted);opacity:0.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(storeStr) + '</div>' : '') +
         '</div>' +
         '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin:4px 0 2px">' +
@@ -2888,10 +2923,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           btn.onclick = function (e) { e.stopPropagation(); window.open(rawCode, '_blank', 'noopener'); };
         } else if (isCard) {
           btn.innerHTML = '📋 <span style="direction:ltr;unicode-bidi:isolate;font-family:monospace;letter-spacing:0.03em">•••• ' + rawCode.replace(/\D/g, '').slice(-4) + '</span>';
-          btn.onclick = function (e) { e.stopPropagation(); Va.copyText(rawCode); };
+          btn.onclick = function (e) { e.stopPropagation(); Va.copyText(rawCode, btn); };
         } else {
           btn.innerHTML = '📋 <span style="direction:ltr;unicode-bidi:isolate;font-family:monospace;letter-spacing:0.03em">' + escapeHtml(rawCode) + '</span>';
-          btn.onclick = function (e) { e.stopPropagation(); Va.copyText(rawCode); };
+          btn.onclick = function (e) { e.stopPropagation(); Va.copyText(rawCode, btn); };
         }
       })();
       card.querySelector('[data-use]').onclick = function (e) {
@@ -3085,11 +3120,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
     $('sheet-close').onclick = closeSheet;
     var cpc = $('cp-code');
-    if (cpc && cpc.tagName === 'BUTTON') cpc.onclick = function () { Va.copyText(p.code || ''); };
+    if (cpc && cpc.tagName === 'BUTTON') cpc.onclick = function () { Va.copyText(p.code || '', cpc); };
     var cpe = $('cp-exp');
-    if (cpe) cpe.onclick = function () { Va.copyText(p.cardExpiry || ''); };
+    if (cpe) cpe.onclick = function () { Va.copyText(p.cardExpiry || '', cpe); };
     var cpv = $('cp-cvv');
-    if (cpv) cpv.onclick = function () { Va.copyText(p.cardCvv || ''); };
+    if (cpv) cpv.onclick = function () { Va.copyText(p.cardCvv || '', cpv); };
 
     $('sheet-use').onclick = function () {
       sh.hidden = true;
@@ -4365,7 +4400,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         if (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request') {
           Va.auth().signInWithRedirect(prov);
         } else {
-          Va.toast(e.message);
+          Va.toast(Va.t('errorGeneric'));
         }
       });
     };
@@ -4383,7 +4418,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         if (!email || !pass) return Va.toast('Enter email and password');
         localStorage.setItem('vm_dev_creds', JSON.stringify({ email: email, pass: pass }));
         Va.auth().signInWithEmailAndPassword(email, pass).catch(function (e) {
-          Va.toast(e.message);
+          Va.toast(Va.t('errorGeneric'));
         });
       };
     }
@@ -4477,7 +4512,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     _el = document.getElementById('v-filter-toggle');
     if (_el) _el.onclick = function () {
       var panel = $('v-filter-panel');
-      panel.hidden = !panel.hidden;
+      if (panel) panel.hidden = !panel.hidden;
     };
     _el = document.getElementById('view-toggle');
     if (_el) _el.onclick = function (e) {
@@ -4704,7 +4739,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       if (d.codeType === 'card') {
         html += '<label class="lbl">' + Va.t('cardNumber') + '</label><input class="input rv-pan" value="' + escapeHtml(d.cardNumber || '') + '" />' +
           '<label class="lbl">' + Va.t('cardExpiry') + '</label><input class="input rv-cexp" value="' + escapeHtml(d.cardExpiry || '') + '" />' +
-          '<label class="lbl">CVV</label><input class="input rv-cvv" value="' + escapeHtml(d.cardCvv || '') + '" />';
+          '<label class="lbl">' + Va.t('cvv') + '</label><input class="input rv-cvv" value="' + escapeHtml(d.cardCvv || '') + '" />';
       } else {
         html += '<label class="lbl">' + Va.t('voucherCode') + '</label><input class="input rv-code" value="' + escapeHtml(d.code || '') + '" />';
       }
@@ -4785,7 +4820,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       $('paste-area').value = '';
       resetImagePanel();
       document.querySelectorAll('#add-mode-chips .chip').forEach(function (c) { c.classList.toggle('active', c.getAttribute('data-add') === 'paste'); });
-      Va.toast(Va.t('save'));
+      var _ov = document.createElement('div');
+      _ov.className = 'save-done-overlay';
+      _ov.innerHTML = '<div class="save-done-check"></div>';
+      document.body.appendChild(_ov);
+      await new Promise(function (r) { setTimeout(r, 650); });
+      _ov.remove();
       state.currentFilter = 'active';
       showTab('vouchers');
       });
@@ -4819,7 +4859,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     }
     if (unsubV) unsubV();
     if (unsubS) unsubS();
-    unsubV = Va.vouchersCol(state.activeAccountId).onSnapshot(async function (snap) {
+    var boundAccountId = state.activeAccountId;
+    unsubV = Va.vouchersCol(boundAccountId).onSnapshot(async function (snap) {
+      if (state.activeAccountId !== boundAccountId) return;
       try {
         state.vouchers = [];
         snap.forEach(function (doc) {
@@ -4828,7 +4870,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         await renderAll();
       } catch (e) { console.error('Snapshot render error:', e); }
     });
-    unsubS = Va.accountRef(state.activeAccountId).onSnapshot(async function (doc) {
+    unsubS = Va.accountRef(boundAccountId).onSnapshot(async function (doc) {
+      if (state.activeAccountId !== boundAccountId) return;
       try {
         state.settingsDoc = doc.exists ? doc.data() : null;
         if (state.settingsDoc && state.settingsDoc.settings) {
@@ -4850,30 +4893,37 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (!session || !session.wallets || !session.wallets[accountId]) return;
     var w = session.wallets[accountId];
 
-    if (unsubV) { unsubV(); unsubV = null; }
-    if (unsubS) { unsubS(); unsubS = null; }
-
-    state.activeAccountId = accountId;
-    state.isOwner = !!w.isOwner;
-    state.vouchers = [];
-    state.settingsDoc = null;
-    Object.keys(plainMap).forEach(function (k) { delete plainMap[k]; });
+    var prevAccountId = state.activeAccountId;
+    var prevIsOwner = state.isOwner;
+    var prevKey = state.derivedKey;
 
     try {
-      state.derivedKey = await Va.importKeyB64(w.keyB64);
+      var newKey = await Va.importKeyB64(w.keyB64);
+
+      if (unsubV) { unsubV(); unsubV = null; }
+      if (unsubS) { unsubS(); unsubS = null; }
+
+      state.activeAccountId = accountId;
+      state.isOwner = !!w.isOwner;
+      state.derivedKey = newKey;
+      state.vouchers = [];
+      state.settingsDoc = null;
+      Object.keys(plainMap).forEach(function (k) { delete plainMap[k]; });
+
+      session.activeAccountId = accountId;
+      saveSession(uid, session);
+
+      startDataListeners();
+      showTab('dashboard');
+
+      var walletLabel = w.walletName || accountId.slice(0, 8);
+      Va.toast(Va.t('walletSwitched').replace('{name}', walletLabel));
     } catch (e) {
+      state.activeAccountId = prevAccountId;
+      state.isOwner = prevIsOwner;
+      state.derivedKey = prevKey;
       Va.toast(Va.t('wrongPass'));
-      return;
     }
-
-    session.activeAccountId = accountId;
-    saveSession(uid, session);
-
-    startDataListeners();
-    showTab('dashboard');
-
-    var walletLabel = w.walletName || accountId.slice(0, 8);
-    Va.toast(Va.t('walletSwitched').replace('{name}', walletLabel));
   }
 
   function getWalletCount() {
@@ -5100,8 +5150,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       var liveKv = liveSettings.keyVersion;
       if (liveKv != null && w.keyVersion != null && w.keyVersion !== liveKv) {
         delete session.wallets[activeId];
+        if (Object.keys(session.wallets).length === 0) { clearSession(user.uid); return false; }
+        session.activeAccountId = Object.keys(session.wallets)[0];
         saveSession(user.uid, session);
-        return false;
+        return tryResumeSession(user);
       }
 
       state.normalizedPhone = session.phone;
@@ -5185,16 +5237,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (inv.used) { Va.toast(Va.t('inviteUsed')); showOnly('screen-welcome'); clearPendingJoin(); return; }
     if (!join.keyB64) { Va.toast(Va.t('inviteExpired')); showOnly('screen-welcome'); clearPendingJoin(); return; }
 
+    var importedKey = await Va.importKeyB64(join.keyB64);
     state.activeAccountId = inv.accountId;
     state.isOwner = false;
-    var joinName = state.authUser.displayName || state.authUser.email || '';
-    await Va.addApprovedPhone(inv.accountId, state.normalizedPhone, joinName);
-    var grantPerms = inv.grantPermissions || [];
-    if (grantPerms.length > 0) {
-      await Va.updateMemberPermissions(inv.accountId, state.normalizedPhone, grantPerms);
-    }
-    await Va.db().collection('vm_invites').doc(join.token).update({ used: true });
-    state.derivedKey = await Va.importKeyB64(join.keyB64);
+    state.derivedKey = importedKey;
 
     var joinAccSnap = await Va.accountRef(inv.accountId).get();
     var joinData = joinAccSnap.exists ? joinAccSnap.data() : {};
@@ -5202,6 +5248,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var joinKv = joinSettings.keyVersion || null;
     var exported = await Va.exportKeyB64(state.derivedKey);
     saveWalletToSession(state.authUser.uid, state.normalizedPhone, inv.accountId, false, exported, joinKv, joinData.walletName || '');
+
+    var joinName = state.authUser.displayName || state.authUser.email || '';
+    await Va.addApprovedPhone(inv.accountId, state.normalizedPhone, joinName);
+    var grantPerms = inv.grantPermissions || [];
+    if (grantPerms.length > 0) {
+      await Va.updateMemberPermissions(inv.accountId, state.normalizedPhone, grantPerms);
+    }
+    await Va.db().collection('vm_invites').doc(join.token).update({ used: true });
 
     clearPendingJoin();
     showOnly('main-app');
@@ -5314,7 +5368,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     }
     Va.auth().getRedirectResult().catch(function (e) {
       if (e.code && e.code !== 'auth/no-auth-event') {
-        Va.toast(e.message);
+        Va.toast(Va.t('errorGeneric'));
         showOnly('screen-welcome');
       }
     });
