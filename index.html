@@ -201,16 +201,16 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .sheet {
-  width: 100%; max-width: 480px; max-height: 88vh; overflow: auto;
+  width: 100%; max-width: 480px; max-height: 94vh; overflow: auto;
   background: var(--surface-solid); border-radius: 24px 24px 0 0;
-  padding: 8px 18px calc(24px + var(--safe-bottom));
+  padding: 6px 18px calc(14px + var(--safe-bottom));
   animation: slideUp .3s cubic-bezier(.32,.72,0,1);
   border: 1px solid var(--border); border-bottom: none;
   box-shadow: var(--shadow-lg);
 }
 .sheet::before {
   content: ''; display: block; width: 36px; height: 4px; border-radius: 4px;
-  background: var(--muted); opacity: 0.3; margin: 8px auto 16px;
+  background: var(--muted); opacity: 0.3; margin: 4px auto 10px;
 }
 .modal {
   width: 100%; max-width: 440px; max-height: 90vh; overflow: auto;
@@ -399,6 +399,31 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 .btn.loading::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%); animation: shimmer 1.5s infinite; }
 @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 
+.image-upload-area {
+  border: 2px dashed var(--border); border-radius: 14px; padding: 24px;
+  text-align: center; cursor: pointer; transition: border-color .2s, background .2s;
+  margin-top: 8px;
+}
+.image-upload-area:hover, .image-upload-area.dragover {
+  border-color: var(--primary); background: rgba(124,107,240,0.06);
+}
+.image-upload-area .upload-icon { font-size: 2.5rem; opacity: 0.5; margin-bottom: 8px; }
+.image-upload-area .upload-hint { color: var(--muted); font-size: 0.85rem; }
+#image-preview {
+  max-width: 100%; max-height: 260px; border-radius: 10px; margin-top: 12px;
+  object-fit: contain; display: block; margin-inline: auto;
+}
+.ocr-progress-wrap { margin-top: 14px; }
+.ocr-progress-bar {
+  height: 6px; border-radius: 3px; background: var(--surface); overflow: hidden;
+}
+.ocr-progress-fill {
+  height: 100%; border-radius: 3px; width: 0%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  transition: width .3s ease;
+}
+.ocr-status { color: var(--muted); font-size: 0.8rem; margin-top: 6px; display: block; }
+
   </style>
 </head>
 <body>
@@ -536,12 +561,29 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         <h2 class="screen-title" data-i18n="navAdd">הוספה</h2>
         <div class="chips" id="add-mode-chips">
           <button type="button" class="chip active" data-add="paste" data-i18n="addPaste">הדבקת טקסט</button>
+          <button type="button" class="chip" data-add="image" data-i18n="addImage">סריקת תמונה</button>
           <button type="button" class="chip" data-add="manual" data-i18n="addManual">הזנה ידנית</button>
         </div>
         <div id="add-paste-panel">
           <label class="lbl" data-i18n="pasteLabel">הדבק כאן טקסט מהודעה / מייל</label>
           <textarea class="input" id="paste-area"></textarea>
           <button type="button" class="btn cta mt12" id="btn-parse" data-i18n="parse">ניתוח</button>
+        </div>
+        <div id="add-image-panel" hidden>
+          <label class="lbl" data-i18n="imageLabel">צלם או בחר תמונה של שובר</label>
+          <div id="image-upload-area" class="image-upload-area">
+            <input type="file" id="image-input" accept="image/*" hidden />
+            <div id="image-placeholder">
+              <div class="upload-icon">📷</div>
+              <div class="upload-hint" data-i18n="imageUploadHint">לחץ לבחירת תמונה</div>
+            </div>
+            <img id="image-preview" hidden alt="" />
+          </div>
+          <div id="ocr-progress" class="ocr-progress-wrap" hidden>
+            <div class="ocr-progress-bar"><div id="ocr-progress-fill" class="ocr-progress-fill"></div></div>
+            <span id="ocr-status" class="ocr-status"></span>
+          </div>
+          <button type="button" class="btn cta mt12" id="btn-image-parse" data-i18n="parse" disabled>ניתוח</button>
         </div>
         <div id="add-manual-panel" hidden></div>
         <div id="add-review" hidden></div>
@@ -589,7 +631,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.9.1';
+  const APP_VERSION = '2.11.0';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -654,8 +696,16 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       navArchive: 'ארכיון',
       navSettings: 'הגדרות',
       addPaste: 'הדבקת טקסט',
+      addImage: 'סריקת תמונה',
       addManual: 'הזנה ידנית',
       pasteLabel: 'הדבק כאן טקסט מהודעה / מייל',
+      imageLabel: 'צלם או בחר תמונה של שובר',
+      imageUploadHint: 'לחץ לבחירת תמונה',
+      ocrLoading: 'טוען מנוע זיהוי טקסט…',
+      ocrScanning: 'סורק טקסט מהתמונה…',
+      ocrDone: 'הסריקה הושלמה',
+      ocrFailed: 'לא הצלחנו לזהות טקסט בתמונה',
+      ocrNoText: 'לא נמצא טקסט בתמונה — נסה תמונה ברורה יותר',
       parse: 'ניתוח',
       saveAll: 'שמור הכל',
       save: 'שמור',
@@ -666,7 +716,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.9.1',
+      aboutVersion: 'גרסה 2.11.0',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -890,8 +940,16 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       navArchive: 'Archive',
       navSettings: 'Settings',
       addPaste: 'Paste text',
+      addImage: 'Scan image',
       addManual: 'Manual entry',
       pasteLabel: 'Paste message or email text',
+      imageLabel: 'Take a photo or select a voucher image',
+      imageUploadHint: 'Tap to select image',
+      ocrLoading: 'Loading text recognition…',
+      ocrScanning: 'Scanning text from image…',
+      ocrDone: 'Scan complete',
+      ocrFailed: 'Could not recognize text in image',
+      ocrNoText: 'No text found in image — try a clearer photo',
       parse: 'Parse',
       saveAll: 'Save all',
       save: 'Save',
@@ -902,7 +960,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.9.1',
+      aboutVersion: 'Version 2.11.0',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -1659,6 +1717,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   var ENTERTAINMENT_KEYWORDS = /סרט|movie|cinema|סינמה|קולנוע|ספא|spa|נופש(?!ונית)|כרטיס הופעה|show|concert|הופעה|פארק|park|Yes Planet|יס פלאנט|Bug|באג/i;
   var TRAVEL_KEYWORDS = /טיסה|flight|אל על|Elal|מלון|hotel|Isrotel|ישרוטל|Fattal|פתאל|Dan Hotels|מלונות דן|נסיעה|travel|חופשה|vacation|booking/i;
 
+  var CODE_CONTEXT_RE = /(?:(?:ה)?קוד(?:\/ים)?|coupon\s*code|voucher\s*code|gift\s*code|promo\s*code|redemption\s*code|הינו|הינם)/im;
+  var CVV_EVIDENCE_RE = /CVV|CVC|cvc|cvv|קוד\s*(?:אבטחה|אימות)/i;
+  var CARD_EVIDENCE_RE = /CVV|CVC|cvc|cvv|קוד\s*אבטחה|כרטיס\s*(?:אשראי|מתנה|נטען)|card\s*number|credit\s*card|gift\s*card/i;
+  var CARD_EXP_PAT_RE = /(?:תוקף|exp(?:iry)?|valid)[^\d]{0,12}\d{1,2}\s*\/\s*\d{2,4}/i;
+
   function preProcess(text) {
     var s = String(text || '');
     s = s.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(?:p|div|tr|li|h[1-6])>/gi, '\n');
@@ -1764,7 +1827,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
 
   function extractAmounts(text) {
-    var out = [], seen = {};
+    var out = [];
     var AMT = '(\\d{1,6}(?:,\\d{3})*(?:\\.\\d+)?)';
     var CUR_HE = '(?:ש"ח|ש״ח|שח|₪|שקל(?:ים)?|NIS|nis)';
     var CUR_ALL = '(?:ש"ח|ש״ח|שח|₪|שקל(?:ים)?|NIS|nis|\\$|USD|EUR|€|£|GBP)';
@@ -1775,12 +1838,13 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       new RegExp('(?:שווי|בשווי|סכום|יתרה|בסך|gift\\s*card|value|worth|מחיר|price)\\s*(?:של\\s*|:?\\s*)' + AMT, 'gi'),
       new RegExp('(?:ב[-–]?)' + AMT + '\\s*' + CUR_HE + END, 'g')
     ];
+    var seenOffsets = {};
     patterns.forEach(function (re) {
       var m, r = new RegExp(re.source, re.flags);
       while ((m = r.exec(text)) !== null) {
         var num = parseFloat(String(m[1] || m[0]).replace(/,/g, ''));
-        if (!isNaN(num) && num > 0 && num < 100000 && !seen[num]) {
-          seen[num] = true;
+        if (!isNaN(num) && num > 0 && num < 100000 && !seenOffsets[m.index]) {
+          seenOffsets[m.index] = true;
           out.push(num);
         }
       }
@@ -1804,13 +1868,15 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     }
 
     var reIso = /(\d{4})-(\d{2})-(\d{2})/g;
-    var stripped = text;
+    var isoRanges = [];
     while ((m = reIso.exec(text)) !== null) {
       results.push({ date: m[1] + '-' + m[2] + '-' + m[3], score: scoreDate(m.index) });
-      stripped = stripped.replace(m[0], ' __ISO__ ');
+      isoRanges.push({ start: m.index, end: m.index + m[0].length });
     }
     var reDateTime = /(\d{1,2})[./\-](\d{1,2})[./\-](\d{2,4})(?:\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM)?)?/gi;
-    while ((m = reDateTime.exec(stripped)) !== null) {
+    while ((m = reDateTime.exec(text)) !== null) {
+      var overlaps = isoRanges.some(function (r) { return m.index < r.end && m.index + m[0].length > r.start; });
+      if (overlaps) continue;
       var a = m[1], b = m[2], y = m[3];
       if (y.length === 2) y = '20' + y;
       var nA = Number(a), nB = Number(b), day, mo;
@@ -1857,21 +1923,19 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
 
   function extractCardBlocks(text) {
-    var CARD_EVIDENCE = /CVV|CVC|cvc|cvv|קוד\s*אבטחה|כרטיס\s*(?:אשראי|מתנה|נטען)|card\s*number|credit\s*card|gift\s*card/i;
-    var CARD_EXP_PAT = /(?:תוקף|exp(?:iry)?|valid)[^\d]{0,12}\d{1,2}\s*\/\s*\d{2,4}/i;
-    var CODE_NEARBY = /(?:(?:ה)?קוד(?:\/ים)?|coupon\s*code|voucher\s*code|gift\s*code|promo\s*code|redemption\s*code|הינו|הינם)/im;
     var blocks = [], re = /\b(\d{4})[-\s]?(\d{4})[-\s]?(\d{4})[-\s]?(\d{4})\b/g, m;
     while ((m = re.exec(text)) !== null) {
       var num = m[1] + m[2] + m[3] + m[4];
       var before80 = text.slice(Math.max(0, m.index - 80), m.index);
-      if (CODE_NEARBY.test(before80)) continue;
       var slice = text.slice(Math.max(0, m.index - 200), Math.min(text.length, m.index + 200));
-      var hasEvidence = CARD_EVIDENCE.test(slice) || CARD_EXP_PAT.test(slice);
+      var hasEvidence = CARD_EVIDENCE_RE.test(slice) || CARD_EXP_PAT_RE.test(slice);
+      if (CODE_CONTEXT_RE.test(before80) && !CVV_EVIDENCE_RE.test(slice)) continue;
       if (!hasEvidence) continue;
       var exp = '', cvv = '';
-      var em = slice.match(/(?:תוקף|exp(?:iry)?|valid)[^\d]{0,12}(\d{1,2})\s*\/\s*(\d{2,4})/i);
+      var afterCard = text.slice(m.index, Math.min(text.length, m.index + 200));
+      var em = afterCard.match(/(?:תוקף|exp(?:iry)?|valid)[^\d]{0,12}(\d{1,2})\s*\/\s*(\d{2,4})/i);
       if (em) exp = em[1].padStart(2, '0') + '/' + (em[2].length === 2 ? em[2] : em[2].slice(-2));
-      var cv = slice.match(/(?:CVV|cvv|CVC|cvc|קוד\s*אבטחה)[^\d]{0,8}(\d{3})\b/i);
+      var cv = afterCard.match(/(?:CVV|cvv|CVC|cvc|קוד\s*(?:אבטחה|אימות))[^\d]{0,8}(\d{3})\b/i);
       if (cv) cvv = cv[1];
       blocks.push({ cardNumber: num.replace(/(\d{4})(?=\d)/g, '$1-'), cardExpiry: exp, cardCvv: cvv, index: m.index });
     }
@@ -1883,15 +1947,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var amountSet = {};
     (amounts || []).forEach(function (a) { amountSet[String(a).replace('.', '')] = true; amountSet[String(Math.round(a))] = true; });
 
-    var CARD_EVIDENCE = /CVV|CVC|cvc|cvv|קוד\s*אבטחה|כרטיס\s*(?:אשראי|מתנה|נטען)|card\s*number|credit\s*card|gift\s*card/i;
-    var CARD_EXP_PAT = /(?:תוקף|exp(?:iry)?|valid)[^\d]{0,12}\d{1,2}\s*\/\s*\d{2,4}/i;
-    var CODE_NEAR_RE = /(?:(?:ה)?קוד(?:\/ים)?|coupon\s*code|voucher\s*code|gift\s*code|promo\s*code|redemption\s*code|הינו|הינם)/im;
     var cardRe = /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g;
     var cleaned = text.replace(cardRe, function (match, offset) {
       var before80 = text.slice(Math.max(0, offset - 80), offset);
-      if (CODE_NEAR_RE.test(before80)) return match;
       var slice = text.slice(Math.max(0, offset - 200), Math.min(text.length, offset + 200));
-      if (CARD_EVIDENCE.test(slice) || CARD_EXP_PAT.test(slice)) return ' __CARD__ ';
+      if (CODE_CONTEXT_RE.test(before80) && !CVV_EVIDENCE_RE.test(slice)) return match;
+      if (CARD_EVIDENCE_RE.test(slice) || CARD_EXP_PAT_RE.test(slice)) return ' __CARD__ ';
       return match;
     });
     cleaned = cleaned.replace(/https?:\/\/[^\s]+/gi, ' __URL__ ');
@@ -1900,7 +1961,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
     var CODE_PAT = /\d[\d-]{5,}\d/;
     var ALPHA_CODE_PAT = /[A-Za-z0-9][-A-Za-z0-9]{4,}[A-Za-z0-9]/;
-    var CODE_KW_RE = /(?:(?:ה)?קוד(?:\/ים)?(?:\s*(?:קופון|הטבה|שובר|מימוש|הזמנה|המתנה|מולטיפאס|מולטיפס))?|coupon\s*code|voucher\s*code|gift\s*code|promo\s*code|redemption\s*code|הינו|הינם)\s*[-–:.]?\s*/gi;
+    var CODE_KW_RE = /(?:(?:ה)?קוד(?:\/ים)?(?:\s*(?:קופון|הטבה|שובר|מימוש|הזמנה|המתנה|מולטיפאס|מולטיפס))?|שובר\s*מספר|מספר\s*(?:שובר|כרטיס|קופון)|voucher\s*(?:no|number|#)|card\s*(?:no|number|#)|coupon\s*code|voucher\s*code|gift\s*code|promo\s*code|redemption\s*code|הינו|הינם)\s*[-–:.]?\s*/gi;
 
     var km;
     while ((km = CODE_KW_RE.exec(cleaned)) !== null) {
@@ -1954,9 +2015,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       }
     }
 
-    var unique = [], seen = {};
+    var unique = [], seen = {}, seenDigits = {};
     codes.forEach(function (c) {
-      if (!seen[c.code]) { seen[c.code] = true; unique.push(c); }
+      if (seen[c.code]) return;
+      var digits = c.code.replace(/\D/g, '');
+      if (digits.length >= 8 && seenDigits[digits]) return;
+      seen[c.code] = true;
+      if (digits.length >= 8) seenDigits[digits] = true;
+      unique.push(c);
     });
     return unique;
   }
@@ -1969,6 +2035,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       /(?:redemption\s*(?:instructions?)?\s*:?\s*)(.*?)(?:\n\n|$)/is,
       /(יש\s*ל(?:לחוץ|הקליד|הזין|הציג|סרוק|הראות|הזמין).*?)(?:\n|$)/i,
       /(?:למימוש\s*(?:,?\s*)?(?:יש|צריך|ניתן)\s+)(.*?)(?:\n|$)/i,
+      /(למימוש\s+(?:סרוק|הציג|הקלד|הראה|הזן|הכנס).*?)(?:\n\n|\n(?=[^\s])|$)/is,
       /((?:redeem|use)\s*(?:at|in|on)\s+.*?)(?:\n|$)/i,
       /(?:בסניפים\s+)(.*?)(?:\n|$)/i
     ];
@@ -2040,6 +2107,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         var b = brandMatch[1].trim().replace(/[-–—:.\s]+$/, '');
         if (b.length >= 2 && !/^\d+$/.test(b) && !/בשווי|שווי|₪|ש"ח/i.test(b)) { brandName = b; break; }
       }
+    }
+    if (!brandName && !storeTags.length && !sourceId) {
+      var tavMatch = text.match(/(?:^|\n)\s*(תו\s+(?:מזון|קנייה?|שי|הזהב|נופש|לבוש|חינוך|העובד|תרבות|הנחה))\b/im);
+      if (tavMatch) brandName = tavMatch[1].trim();
     }
 
     if (isMultiStore && (brandName || sourceId)) {
@@ -2160,8 +2231,6 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
     var drafts = [];
     var mainAmount = amounts.length ? amounts[0] : null;
-    var totalItems = (cards.length || 0) + (simples.length || 0);
-    var shouldDistribute = amounts.length === 1 && totalItems > 1;
 
     function baseDraft() {
       return {
@@ -2185,11 +2254,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         d.cardExpiry = c.cardExpiry; d.cardCvv = c.cardCvv;
         d.name = buildSmartName(text, allStores, mainAmount, sourceId, lang) + (cards.length > 1 ? ' #' + (idx + 1) : '');
         if (network) d.storeTags = Array.from(new Set(d.storeTags.concat(networkStores(network))));
-        var cd = dates.find(function (r) { return String(r.date).startsWith('card:'); });
-        if (cd) d.cardExpiry = cd.date.replace('card:', '');
-        if (shouldDistribute) {
-          var per = Math.round(mainAmount / totalItems * 100) / 100;
-          d.originalAmount = per; d.remainingBalance = per;
+        if (!d.cardExpiry) {
+          var cd = dates.find(function (r) { return String(r.date).startsWith('card:'); });
+          if (cd) d.cardExpiry = cd.date.replace('card:', '');
         }
         drafts.push(d);
       });
@@ -2201,10 +2268,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         d.code = s.code;
         d.name = buildSmartName(text, allStores, mainAmount, sourceId, lang) + (simples.length > 1 ? ' #' + (idx + 1) : '');
         if (network) d.storeTags = Array.from(new Set(d.storeTags.concat(networkStores(network))));
-        if (shouldDistribute) {
-          var per = Math.round(mainAmount / totalItems * 100) / 100;
-          d.originalAmount = per; d.remainingBalance = per;
-        } else if (amounts[idx]) {
+        if (amounts[idx] != null) {
           d.originalAmount = amounts[idx]; d.remainingBalance = amounts[idx];
         }
         drafts.push(d);
@@ -2229,7 +2293,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
     drafts.forEach(function (d) {
       if (!d.expiryDate) d.expiryDate = expiryDate;
-      if (d.type === 'value' && isOfferType(text, d.originalAmount)) {
+      if (d.type === 'value' && d.codeType !== 'card' && isOfferType(text, d.originalAmount)) {
         d.type = 'offer';
         if (!d.offerDescription) d.offerDescription = extractOfferDescription(text);
       }
@@ -2242,6 +2306,78 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   Va.KNOWN_STORES = KNOWN_STORES;
   Va.KNOWN_SOURCES = KNOWN_SOURCES;
   Va.storeAliases = storeAliases;
+
+  Va.runParserTests = function () {
+    var pass = 0, fail = 0, errors = [];
+    function assert(label, cond) {
+      if (cond) { pass++; }
+      else { fail++; errors.push(label); }
+    }
+
+    // --- Fixture 1: Pais Plus dual cards with CVV ---
+    var paisText = 'תודה על רכישתך באתר ההטבות פיס פלוס.\nהקודים למימוש ההטבה תו קנייה בשווי 50 ₪ לרשת גוד פארם הינם:\n9376-7600-4647-2243\nתוקף: 12/30 קוד אימות (CVV): 673\n9376-7600-7677-2272\nתוקף: 12/30 קוד אימות (CVV): 509\nיש להקליד במסופון האשראי בבית העסק את הקוד, לאחר מכן את התוקף ולבסוף את ה-CVV.';
+    var r1 = parsePastedText(paisText, 'he');
+    assert('Pais: 2 drafts', r1.drafts.length === 2);
+    assert('Pais: card type', r1.drafts[0].codeType === 'card');
+    assert('Pais: card1 CVV', r1.drafts[0].cardCvv === '673');
+    assert('Pais: card2 CVV', r1.drafts[1].cardCvv === '509');
+    assert('Pais: card1 expiry', r1.drafts[0].cardExpiry === '12/30');
+    assert('Pais: card2 expiry', r1.drafts[1].cardExpiry === '12/30');
+    assert('Pais: amount 50', r1.drafts[0].originalAmount === 50);
+    assert('Pais: not offer', r1.drafts[0].type === 'value');
+
+    // --- Fixture 2: Simple single code ---
+    var simpleText = 'קוד קופון: ABC12345\nבשווי 100 ש"ח\nתוקף עד 31/12/2026';
+    var r2 = parsePastedText(simpleText, 'he');
+    assert('Simple: 1 draft', r2.drafts.length === 1);
+    assert('Simple: code found', r2.drafts[0].code === 'ABC12345');
+    assert('Simple: amount 100', r2.drafts[0].originalAmount === 100);
+    assert('Simple: type value', r2.drafts[0].type === 'value');
+
+    // --- Fixture 3: Offer / coupon ---
+    var offerText = 'הטבה - 20% הנחה על כל הפריטים\nקוד קופון: SAVE20\nבתוקף עד 01/06/2026';
+    var r3 = parsePastedText(offerText, 'he');
+    assert('Offer: 1 draft', r3.drafts.length === 1);
+    assert('Offer: code found', r3.drafts[0].code === 'SAVE20');
+    assert('Offer: type offer', r3.drafts[0].type === 'offer');
+
+    // --- Fixture 4: Multi-code same amount ---
+    var multiText = 'שובר מספר: 1234567890\nבשווי 100 ש"ח\nשובר מספר: 9876543210\nבשווי 100 ש"ח';
+    var r4 = parsePastedText(multiText, 'he');
+    assert('Multi: 2 drafts', r4.drafts.length === 2);
+    assert('Multi: code1', r4.drafts[0].code === '1234567890');
+    assert('Multi: code2', r4.drafts[1].code === '9876543210');
+    assert('Multi: amount1 = 100', r4.drafts[0].originalAmount === 100);
+    assert('Multi: amount2 = 100', r4.drafts[1].originalAmount === 100);
+
+    // --- Fixture 5: DreamsCard style ---
+    var dcText = 'DreamsCard\nכרטיס מתנה בשווי 200 ₪\nמספר כרטיס: 5555-1234-5678-9012\nתוקף: 06/27\nCVV: 321\nhttps://www.dcgift.co.il/balance';
+    var r5 = parsePastedText(dcText, 'he');
+    assert('DC: 1 draft', r5.drafts.length === 1);
+    assert('DC: card type', r5.drafts[0].codeType === 'card');
+    assert('DC: amount 200', r5.drafts[0].originalAmount === 200);
+    assert('DC: CVV 321', r5.drafts[0].cardCvv === '321');
+    assert('DC: source dreamscard', r5.drafts[0].source === 'dreamscard');
+
+    // --- Fixture 6: OCR-style food voucher ---
+    var ocrText = 'תו מזון\nשובר מספר: 140883383-8885\nשווי 75 ש"ח\nלמימוש סרוק את הברקוד בקופה';
+    var r6 = parsePastedText(ocrText, 'he');
+    assert('OCR: 1 draft', r6.drafts.length === 1);
+    assert('OCR: has code', r6.drafts[0].code.replace(/\D/g, '').length >= 8);
+    assert('OCR: amount 75', r6.drafts[0].originalAmount === 75);
+
+    // --- Fixture 7: Card should not become offer ---
+    var cardOfferText = 'כרטיס מתנה בשווי 15 ₪\nהנחה מיוחדת!\n1234-5678-9012-3456\nתוקף: 03/27\nCVV: 999';
+    var r7 = parsePastedText(cardOfferText, 'he');
+    assert('CardOffer: card type', r7.drafts[0].codeType === 'card');
+    assert('CardOffer: NOT offer', r7.drafts[0].type === 'value');
+
+    var summary = 'Parser tests: ' + pass + ' passed, ' + fail + ' failed';
+    if (errors.length) summary += '\nFailed: ' + errors.join(', ');
+    console.log(summary);
+    return { pass: pass, fail: fail, errors: errors };
+  };
+
 })();
 (function () {
   'use strict';
@@ -2899,15 +3035,15 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
     var codeBlock = '';
     if (v.codeType === 'card') {
-      codeBlock = '<div class="mt12" style="background:var(--surface);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border)"><div class="small" style="font-weight:600">' + Va.t('cardNumber') + '</div><div style="font-size:1.15rem;font-weight:800;word-break:break-all;letter-spacing:0.05em;margin:4px 0 10px">' + escapeHtml(p.cardNumber || '') +
+      codeBlock = '<div style="margin-top:8px;background:var(--surface);border-radius:var(--radius-sm);padding:10px 12px;border:1px solid var(--border)"><div class="small" style="font-weight:600">' + Va.t('cardNumber') + '</div><div style="font-size:1.1rem;font-weight:800;word-break:break-all;letter-spacing:0.05em;margin:2px 0 8px">' + escapeHtml(p.cardNumber || '') +
         '</div><div class="row" style="gap:12px"><div><div class="small" style="font-weight:600">' + Va.t('cardExpiry') + '</div><button type="button" class="btn" id="cp-exp" style="font-family:monospace">' + escapeHtml(p.cardExpiry || '') + '</button></div>' +
         '<div><div class="small" style="font-weight:600">' + Va.t('cvv') + '</div><button type="button" class="btn" id="cp-cvv" style="font-family:monospace">' + escapeHtml(p.cardCvv || '') + '</button></div></div></div>';
     } else if (p.code && /^https?:\/\//i.test(p.code)) {
-      codeBlock = '<div class="mt12" style="background:var(--surface);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border);text-align:center">' +
-        '<a class="btn active mt8" id="cp-code" href="' + escapeHtml(p.code) + '" target="_blank" rel="noopener" style="width:100%;display:inline-block;text-decoration:none">🔗 ' + Va.t('openLink') + '</a></div>';
+      codeBlock = '<div style="margin-top:8px;background:var(--surface);border-radius:var(--radius-sm);padding:10px 12px;border:1px solid var(--border);text-align:center">' +
+        '<a class="btn active" id="cp-code" href="' + escapeHtml(p.code) + '" target="_blank" rel="noopener" style="width:100%;display:inline-block;text-decoration:none">🔗 ' + Va.t('openLink') + '</a></div>';
     } else if (p.code) {
-      codeBlock = '<div class="mt12" style="background:var(--surface);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border);text-align:center"><div class="small" style="font-weight:600">' + Va.t('voucherCode') + '</div><div style="font-size:1.3rem;font-weight:800;word-break:break-all;letter-spacing:0.06em;font-family:monospace;margin:8px 0">' + escapeHtml(p.code) + '</div>' +
-        '<button type="button" class="btn active mt8" id="cp-code" style="width:100%">' + Va.t('copyCode') + '</button></div>';
+      codeBlock = '<div style="margin-top:8px;background:var(--surface);border-radius:var(--radius-sm);padding:10px 12px;border:1px solid var(--border);text-align:center"><div class="small" style="font-weight:600">' + Va.t('voucherCode') + '</div><div style="font-size:1.2rem;font-weight:800;word-break:break-all;letter-spacing:0.06em;font-family:monospace;margin:4px 0">' + escapeHtml(p.code) + '</div>' +
+        '<button type="button" class="btn active" id="cp-code" style="width:100%;margin-top:4px">' + Va.t('copyCode') + '</button></div>';
     }
 
     var eb = expiryBadge(v);
@@ -2916,20 +3052,23 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       return '<div class="small">' + escapeHtml(fmtD) + ' — ' + Va.money(h.amount) + (h.note ? ' (' + escapeHtml(h.note) + ')' : '') + '</div>';
     }).join('');
 
+    var storeStr = escapeHtml((v.storeTags || []).join(', ') || '—');
+    var catStr = escapeHtml(state.lang === 'he' ? categoryMeta(v.category).he : categoryMeta(v.category).en);
+
     sc.innerHTML =
       '<div class="row-between"><b>' + escapeHtml(v.name) + '</b><button type="button" class="btn ghost" id="sheet-close">' + Va.t('close') + '</button></div>' +
-      '<div class="mt8"><span class="badge ' + eb.cls + '">' + eb.text + '</span></div>' +
-      (v.type === 'value' ? '<div class="mt8"><div class="small">' + Va.t('remainingBalance') + '</div><div class="balance-big">' + Va.money(v.remainingBalance) + '</div></div>' : '') +
-      (v.type === 'offer' && v.offerDescription ? '<div class="mt8"><div class="small">' + Va.t('offerDesc') + '</div><div>' + escapeHtml(v.offerDescription) + '</div></div>' : '') +
+      '<div style="margin-top:4px"><span class="badge ' + eb.cls + '">' + eb.text + '</span></div>' +
+      (v.type === 'value' ? '<div style="margin-top:4px"><div class="small">' + Va.t('remainingBalance') + '</div><div style="font-size:1.5rem;font-weight:900;letter-spacing:-0.04em;line-height:1.1">' + Va.money(v.remainingBalance) + '</div></div>' : '') +
+      (v.type === 'offer' && v.offerDescription ? '<div style="margin-top:4px"><div class="small">' + Va.t('offerDesc') + '</div><div>' + escapeHtml(v.offerDescription) + '</div></div>' : '') +
       codeBlock +
-      '<div class="mt8"><div class="small">' + Va.t('storeTags') + '</div><div>' + escapeHtml((v.storeTags || []).join(', ') || '—') + '</div></div>' +
-      '<div class="mt8"><div class="small">' + Va.t('category') + '</div><div>' + escapeHtml(state.lang === 'he' ? categoryMeta(v.category).he : categoryMeta(v.category).en) + '</div></div>' +
-      (v.howToUse ? '<div class="mt8"><div class="small">' + Va.t('howToUse') + '</div><div>' + escapeHtml(v.howToUse) + '</div></div>' : '') +
-      (v.notes ? '<div class="mt8"><div class="small">' + Va.t('notes') + '</div><div>' + escapeHtml(v.notes) + '</div></div>' : '') +
-      (linkRow.length ? '<div class="dl-links mt8">' + linkRow.join('') + '</div>' : '') +
-      (histHtml ? '<div class="mt12"><div class="small"><b>' + Va.t('usageHistory') + '</b></div>' + histHtml +
-        '<button type="button" class="btn ghost" id="sheet-undo" style="font-size:0.78rem;margin-top:6px;padding:4px 10px">' + Va.t('undoLastUse') + '</button></div>' : '') +
-      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px">' +
+      '<div style="display:flex;gap:12px;margin-top:6px"><div style="flex:1;min-width:0"><div class="small">' + Va.t('storeTags') + '</div><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + storeStr + '</div></div>' +
+        '<div style="flex-shrink:0"><div class="small">' + Va.t('category') + '</div><div>' + catStr + '</div></div></div>' +
+      (v.howToUse ? '<div style="margin-top:4px"><div class="small">' + Va.t('howToUse') + '</div><div>' + escapeHtml(v.howToUse) + '</div></div>' : '') +
+      (v.notes ? '<div style="margin-top:4px"><div class="small">' + Va.t('notes') + '</div><div>' + escapeHtml(v.notes) + '</div></div>' : '') +
+      (linkRow.length ? '<div class="dl-links" style="margin-top:6px">' + linkRow.join('') + '</div>' : '') +
+      (histHtml ? '<div style="margin-top:8px"><div class="small"><b>' + Va.t('usageHistory') + '</b></div>' + histHtml +
+        '<button type="button" class="btn ghost" id="sheet-undo" style="font-size:0.78rem;margin-top:4px;padding:3px 8px">' + Va.t('undoLastUse') + '</button></div>' : '') +
+      '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px">' +
         '<button type="button" class="btn active" id="sheet-use" style="flex:1 1 100%;min-width:0">' + Va.t('sheetUse') + '</button>' +
         '<button type="button" class="btn" id="sheet-edit" style="flex:1 1 auto;min-width:0">' + Va.t('edit') + '</button>' +
         '<button type="button" class="btn" id="sheet-cal" style="flex:1 1 auto;min-width:0">' + Va.t('addToCalendar') + '</button>' +
@@ -3251,9 +3390,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
 
   var _editingVoucher = null;
+  var _editingHistory = null;
 
   function openEditForm(v) {
     _editingVoucher = v;
+    _editingHistory = (v.usageHistory || []).slice();
     window._mfPhotoB64 = null;
     showTab('add');
     buildManualPanel();
@@ -3290,6 +3431,20 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       return '<label class="lbl">' + label + '</label><input class="input" id="mf-' + id + '" type="' + type + '" value="' + escapeHtml(val != null ? String(val) : '') + '"' + ph + ' />';
     }
 
+    var histSection = '';
+    if (v.id && (v.usageHistory || []).length) {
+      var histRows = (v.usageHistory || []).map(function (h, i) {
+        var dd = (h.date || '').split('-'); var fmtD = dd.length === 3 ? dd[2] + '/' + dd[1] + '/' + dd[0] : h.date || '';
+        return '<div class="member-row" style="padding:5px 0" data-hist-idx="' + i + '">' +
+          '<div style="flex:1;min-width:0"><span class="small">' + escapeHtml(fmtD) + '</span> — <b>' + Va.money(h.amount) + '</b>' +
+          (h.note ? ' <span class="small" style="color:var(--muted)">(' + escapeHtml(h.note) + ')</span>' : '') + '</div>' +
+          '<button type="button" class="btn danger" data-hist-rm="' + i + '" style="padding:2px 8px;min-height:24px;font-size:0.7rem">' + Va.t('remove') + '</button></div>';
+      }).join('');
+      histSection = '<div id="mf-history-section" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">' +
+        '<div class="small" style="font-weight:600;margin-bottom:4px">' + Va.t('usageHistory') + '</div>' +
+        '<div id="mf-hist-list">' + histRows + '</div></div>';
+    }
+
     return '<h3 class="screen-title" style="font-size:1.1rem">' + Va.t('manualTitle') + '</h3>' +
       field('name', Va.t('name'), 'text', v.name || '') +
       '<div id="mf-code-wrap"' + (isCard ? ' hidden' : '') + '>' + field('code', Va.t('voucherCode'), 'text', p.code || '') + '</div>' +
@@ -3300,8 +3455,6 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         field('offerDescription', Va.t('offerDesc'), 'textarea', v.offerDescription || '') +
       '</div>' +
       '<div id="mf-expiry-wrap"' + (isCard ? ' hidden' : '') + '>' + field('expiryDate', Va.t('expiryDate'), 'date', v.expiryDate || '') + '</div>' +
-      '<div class="row mt12" style="gap:8px"><button type="button" class="btn cta" id="mf-save" style="flex:1">' + Va.t('save') + '</button>' +
-      '<button type="button" class="btn" id="mf-cancel" style="flex:1">' + Va.t('cancel') + '</button></div>' +
       '<button type="button" class="btn ghost mt12" id="mf-toggle-more" style="width:100%;font-size:0.85rem">' +
         '<span id="mf-more-arrow">' + (hasAdvanced ? '▲' : '▼') + '</span> ' + Va.t('moreDetails') +
       '</button>' +
@@ -3341,7 +3494,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         '<button type="button" class="btn" id="mf-photo-btn" style="width:100%">' +
           '<span id="mf-photo-label">📷 ' + Va.t('photo') + '</span>' +
         '</button>' +
-      '</div>';
+      '</div>' +
+      histSection +
+      '<div class="row mt12" style="gap:8px"><button type="button" class="btn cta" id="mf-save" style="flex:1">' + Va.t('save') + '</button>' +
+      '<button type="button" class="btn" id="mf-cancel" style="flex:1">' + Va.t('cancel') + '</button></div>';
   }
 
   function buildManualPanel() {
@@ -3356,6 +3512,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (cancelBtn) {
       cancelBtn.onclick = function () {
         _editingVoucher = null;
+        _editingHistory = null;
         window._mfPhotoB64 = null;
         $('add-manual-panel').hidden = true;
         $('add-paste-panel').hidden = false;
@@ -3397,6 +3554,33 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         if (arrow) arrow.textContent = show ? '▲' : '▼';
       };
     }
+    var histList = $('mf-hist-list');
+    if (histList) {
+      histList.onclick = function (e) {
+        var rmBtn = e.target.closest('[data-hist-rm]');
+        if (!rmBtn || !_editingHistory) return;
+        var idx = Number(rmBtn.getAttribute('data-hist-rm'));
+        var removed = _editingHistory.splice(idx, 1)[0];
+        if (removed && _editingVoucher && _editingVoucher.type === 'value') {
+          var restoredBal = Number(_editingVoucher.remainingBalance || 0) + Number(removed.amount || 0);
+          _editingVoucher.remainingBalance = restoredBal;
+          var amtInput = $('mf-originalAmount');
+          if (amtInput && !_editingHistory.length) amtInput.value = restoredBal;
+        }
+        var row = rmBtn.closest('[data-hist-idx]');
+        if (row) row.remove();
+        if (!_editingHistory.length) {
+          var sec = $('mf-history-section');
+          if (sec) sec.remove();
+        } else {
+          histList.querySelectorAll('[data-hist-idx]').forEach(function (r, i) {
+            r.setAttribute('data-hist-idx', i);
+            var btn = r.querySelector('[data-hist-rm]');
+            if (btn) btn.setAttribute('data-hist-rm', i);
+          });
+        }
+      };
+    }
     $('mf-save').onclick = function () {
       var v = readManualForm();
       if (!v.name || !v.name.trim()) return Va.toast(Va.t('errorGeneric'));
@@ -3423,6 +3607,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         }));
       }
       _editingVoucher = null;
+      _editingHistory = null;
       window._mfPhotoB64 = null;
       $('add-manual-panel').hidden = true;
       $('add-paste-panel').hidden = false;
@@ -3469,8 +3654,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       cardExpiry: $('mf-cardExpiry').value,
       cardCvv: $('mf-cardCvv').value,
       originalAmount: Number($('mf-originalAmount').value) || '',
-      remainingBalance: (existing.usageHistory && existing.usageHistory.length)
-        ? (existing.remainingBalance != null ? existing.remainingBalance : Number($('mf-originalAmount').value) || '')
+      remainingBalance: (_editingHistory && _editingHistory.length)
+        ? (_editingVoucher ? _editingVoucher.remainingBalance : Number($('mf-originalAmount').value) || '')
         : Number($('mf-originalAmount').value) || '',
       offerDescription: $('mf-offerDescription').value,
       expiryDate: $('mf-expiryDate').value || existing.expiryDate || '',
@@ -3486,7 +3671,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       notes: $('mf-notes').value,
       favorite: existing.favorite || false,
       photo: window._mfPhotoB64 || existing.photo || null,
-      usageHistory: existing.usageHistory || []
+      usageHistory: _editingHistory || existing.usageHistory || []
     };
   }
 
@@ -4311,6 +4496,133 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       if (!res.drafts || !res.drafts.length) return Va.toast(Va.t('noResults'));
       showReview(res.drafts, res.raw);
     };
+
+    // --- Image OCR wiring ---
+    var _ocrTesseract = null;
+    function loadTesseract() {
+      if (_ocrTesseract) return Promise.resolve(_ocrTesseract);
+      if (window.Tesseract) { _ocrTesseract = window.Tesseract; return Promise.resolve(_ocrTesseract); }
+      return new Promise(function (resolve, reject) {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+        s.onload = function () { _ocrTesseract = window.Tesseract; resolve(_ocrTesseract); };
+        s.onerror = function () { reject(new Error('Failed to load OCR library')); };
+        document.head.appendChild(s);
+      });
+    }
+
+    if ($('image-upload-area')) {
+      $('image-upload-area').onclick = function (e) {
+        if (e.target === $('image-input')) return;
+        if ($('image-input')) $('image-input').click();
+      };
+
+      $('image-upload-area').ondragover = function (e) {
+        e.preventDefault(); e.stopPropagation();
+        $('image-upload-area').classList.add('dragover');
+      };
+      $('image-upload-area').ondragleave = function (e) {
+        e.preventDefault(); e.stopPropagation();
+        $('image-upload-area').classList.remove('dragover');
+      };
+      $('image-upload-area').ondrop = function (e) {
+        e.preventDefault(); e.stopPropagation();
+        $('image-upload-area').classList.remove('dragover');
+        var files = e.dataTransfer && e.dataTransfer.files;
+        if (files && files[0] && files[0].type.startsWith('image/')) {
+          handleImageFile(files[0]);
+        }
+      };
+    }
+
+    if ($('image-input')) {
+      $('image-input').onchange = function () {
+        var file = $('image-input').files && $('image-input').files[0];
+        if (file) handleImageFile(file);
+      };
+    }
+
+    function handleImageFile(file) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        var preview = $('image-preview');
+        if (preview) {
+          preview.src = e.target.result;
+          preview.hidden = false;
+        }
+        if ($('image-placeholder')) $('image-placeholder').hidden = true;
+        if ($('btn-image-parse')) $('btn-image-parse').disabled = false;
+        window._ocrImageData = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function cleanOcrText(text) {
+      var s = text;
+      s = s.replace(/\f/g, '\n');
+      s = s.replace(/[|]/g, ' ');
+      var prev;
+      do { prev = s; s = s.replace(/(\d)\s+(\d)/g, '$1$2'); } while (s !== prev);
+      s = s.replace(/(\d)\s*([./\-])\s*(\d)/g, '$1$2$3');
+      s = s.replace(/^.*לכבוד\s+[\u0590-\u05FF\s]{2,30}$/gm, '');
+      s = s.replace(/^.*להיסטוריי?ת\s+עסקאות.*$/gm, '');
+      s = s.replace(/^\s*[=_\-]{3,}\s*$/gm, '');
+      s = s.replace(/\n{3,}/g, '\n\n');
+      return s.trim();
+    }
+
+    if ($('btn-image-parse')) {
+      $('btn-image-parse').onclick = async function () {
+        if (!window._ocrImageData) return;
+        var btn = $('btn-image-parse');
+        var progressWrap = $('ocr-progress');
+        var progressFill = $('ocr-progress-fill');
+        var statusEl = $('ocr-status');
+        btn.disabled = true;
+        if (progressWrap) progressWrap.hidden = false;
+        if (progressFill) progressFill.style.width = '0%';
+        if (statusEl) statusEl.textContent = Va.t('ocrLoading');
+
+        try {
+          var Tess = await loadTesseract();
+          if (statusEl) statusEl.textContent = Va.t('ocrScanning');
+          if (progressFill) progressFill.style.width = '30%';
+
+          var result = await Tess.recognize(window._ocrImageData, 'heb+eng', {
+            logger: function (m) {
+              if (m.status === 'recognizing text' && progressFill) {
+                progressFill.style.width = Math.round(30 + m.progress * 65) + '%';
+              }
+            }
+          });
+
+          if (progressFill) progressFill.style.width = '100%';
+          if (statusEl) statusEl.textContent = Va.t('ocrDone');
+
+          var ocrText = (result && result.data && result.data.text || '').trim();
+          if (!ocrText) {
+            Va.toast(Va.t('ocrNoText'));
+            btn.disabled = false;
+            return;
+          }
+
+          ocrText = cleanOcrText(ocrText);
+          var res = Va.parsePastedText(ocrText, state.lang, state.learnTagsByNetwork);
+          if (!res.drafts || !res.drafts.length) {
+            Va.toast(Va.t('noResults'));
+            btn.disabled = false;
+            return;
+          }
+          showReview(res.drafts, res.raw);
+        } catch (err) {
+          console.error('OCR failed:', err);
+          Va.toast(Va.t('ocrFailed'));
+          btn.disabled = false;
+          if (progressWrap) progressWrap.hidden = true;
+        }
+      };
+    }
+
     _el = document.getElementById('add-mode-chips');
     if (_el) _el.onclick = function (e) {
       const b = e.target.closest('.chip');
@@ -4319,10 +4631,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       document.querySelectorAll('#add-mode-chips .chip').forEach(function (c) { c.classList.remove('active'); });
       b.classList.add('active');
       $('add-paste-panel').hidden = mode !== 'paste';
+      if ($('add-image-panel')) $('add-image-panel').hidden = mode !== 'image';
       $('add-manual-panel').hidden = mode !== 'manual';
       $('add-review').hidden = true;
       if (mode === 'manual') {
         _editingVoucher = null;
+        _editingHistory = null;
         window._mfPhotoB64 = null;
         $('add-manual-panel').hidden = false;
         $('add-manual-panel').innerHTML = manualFormHtml(null, {});
@@ -4356,20 +4670,27 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (state.pendingShareText) {
       pa.value = state.pendingShareText;
       state.pendingShareText = '';
+    } else {
+      pa.value = '';
     }
     var reviewBox = $('add-review');
-    if (reviewBox && !reviewBox.hidden) return;
     var manualPanel = $('add-manual-panel');
-    if (manualPanel && !manualPanel.hidden) return;
+    var imagePanel = $('add-image-panel');
     $('add-paste-panel').hidden = false;
     if (manualPanel) manualPanel.hidden = true;
-    if (reviewBox) reviewBox.hidden = true;
+    if (imagePanel) imagePanel.hidden = true;
+    if (reviewBox) { reviewBox.hidden = true; reviewBox.innerHTML = ''; }
+    resetImagePanel();
+    document.querySelectorAll('#add-mode-chips .chip').forEach(function (c) {
+      c.classList.toggle('active', c.getAttribute('data-add') === 'paste');
+    });
   }
 
   function showReview(drafts, raw) {
     const box = $('add-review');
     box.hidden = false;
     $('add-paste-panel').hidden = true;
+    if ($('add-image-panel')) $('add-image-panel').hidden = true;
     let html = '<h3>' + Va.t('reviewTitle') + '</h3>';
     if (drafts.length > 1) html += '<p class="small">' + Va.t('multiVoucherBody') + '</p>';
     drafts.forEach(function (d, idx) {
@@ -4407,8 +4728,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     });
     $('rv-back').onclick = function () {
       box.hidden = true;
-      $('paste-area').value = '';
-      $('add-paste-panel').hidden = false;
+      var activeChip = document.querySelector('#add-mode-chips .chip.active');
+      var mode = activeChip ? activeChip.getAttribute('data-add') : 'paste';
+      if (mode === 'image' && $('add-image-panel')) {
+        $('add-image-panel').hidden = false;
+      } else {
+        $('paste-area').value = '';
+        $('add-paste-panel').hidden = false;
+      }
     };
     $('rv-save').onclick = function () {
       var saveBtn = $('rv-save');
@@ -4456,11 +4783,23 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       box.hidden = true;
       $('add-paste-panel').hidden = false;
       $('paste-area').value = '';
+      resetImagePanel();
+      document.querySelectorAll('#add-mode-chips .chip').forEach(function (c) { c.classList.toggle('active', c.getAttribute('data-add') === 'paste'); });
       Va.toast(Va.t('save'));
       state.currentFilter = 'active';
       showTab('vouchers');
       });
     };
+  }
+
+  function resetImagePanel() {
+    if ($('add-image-panel')) $('add-image-panel').hidden = true;
+    if ($('image-preview')) { $('image-preview').src = ''; $('image-preview').hidden = true; }
+    if ($('image-placeholder')) $('image-placeholder').hidden = false;
+    if ($('ocr-progress')) $('ocr-progress').hidden = true;
+    if ($('btn-image-parse')) $('btn-image-parse').disabled = true;
+    if ($('image-input')) $('image-input').value = '';
+    window._ocrImageData = null;
   }
 
   function startDataListeners() {
