@@ -221,8 +221,9 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
 }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes modalPop { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-@keyframes pulseSoft { 0%,100% { box-shadow: 0 0 0 0 rgba(249,115,22,0.35); } 50% { box-shadow: 0 0 0 10px rgba(249,115,22,0); } }
-.urgent { animation: pulseSoft 2.5s ease-in-out infinite; border-color: var(--ex-orange) !important; }
+@keyframes pulseUrgent { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.35); } 50% { box-shadow: 0 0 0 10px rgba(239,68,68,0); } }
+.urgent { animation: pulseUrgent 2.5s ease-in-out infinite; border-color: var(--ex-red) !important; }
+.expiring-soon { border-color: var(--ex-orange) !important; }
 
 .toast-wrap { position: fixed; top: 16px; inset-inline: 16px; z-index: 100; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
 .toast {
@@ -654,7 +655,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.12.0';
+  const APP_VERSION = '2.13.0';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -698,12 +699,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       dashEmptyHint: 'עבור ללשונית הוספה למטה',
       statActive: 'פעילים',
       statExpiring: 'פגים בקרוב',
+      statUrgent: 'דחופים',
       statPending: 'ממתינים',
-      expiringBanner: 'שוברים שפגים תוך 7 ימים — לחץ לצפייה',
+      expiringBanner: '',
       viewCard: 'כרטיסים',
       viewList: 'רשימה',
       filterActive: 'פעיל',
       filterExpiring: 'פג בקרוב',
+      filterUrgent: 'דחוף',
       filterPending: 'ממתין',
       filterAll: 'הכל',
       sortExpiry: 'תאריך תפוגה',
@@ -739,7 +742,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.12.0',
+      aboutVersion: 'גרסה 2.13.0',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -759,9 +762,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       importJson: 'שחזר מקובץ',
       importConfirm: 'שוברים',
       lastBackup: 'עותק אחרון נשמר',
-      calendarSection: 'יומן',
-      calRemind: 'תזכורת לפני תפוגה',
-      calCustom: 'מותאם',
+      remindersSection: 'תזכורות',
+      remindExpiring: 'פגים בקרוב',
+      remindUrgent: 'דחוף',
+      remindDays: 'ימים',
       securitySection: 'אבטחה',
       changePass: 'שינוי משפט סיסמה',
       setRecoveryPass: 'הגדרת סיסמת שחזור',
@@ -942,12 +946,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       dashEmptyHint: 'Go to the Add tab below',
       statActive: 'Active',
       statExpiring: 'Expiring soon',
+      statUrgent: 'Urgent',
       statPending: 'Pending',
-      expiringBanner: 'Vouchers expiring within 7 days — tap to view',
+      expiringBanner: '',
       viewCard: 'Cards',
       viewList: 'List',
       filterActive: 'Active',
       filterExpiring: 'Expiring',
+      filterUrgent: 'Urgent',
       filterPending: 'Pending',
       filterAll: 'All',
       sortExpiry: 'Expiry date',
@@ -983,7 +989,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.12.0',
+      aboutVersion: 'Version 2.13.0',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -1003,9 +1009,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       importJson: 'Restore from file',
       importConfirm: 'vouchers',
       lastBackup: 'Last copy saved',
-      calendarSection: 'Calendar',
-      calRemind: 'Reminder before expiry',
-      calCustom: 'Custom',
+      remindersSection: 'Reminders',
+      remindExpiring: 'Expiring soon',
+      remindUrgent: 'Urgent',
+      remindDays: 'days',
       securitySection: 'Security',
       changePass: 'Change passphrase',
       setRecoveryPass: 'Set recovery passphrase',
@@ -1477,7 +1484,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           theme: state.themePref,
           defaultView: state.defaultView,
           lastBackup: null,
-          calendarReminders: [7, 3, 1],
+          expiringDays: 30,
+          urgentDays: 14,
           cryptoSalt: saltB64 || randomSalt()
         }
       }), { merge: true });
@@ -2514,6 +2522,18 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     return Math.ceil((d - new Date()) / 86400000);
   }
 
+  function getExpiringDays() {
+    var s = state.settingsDoc && state.settingsDoc.settings;
+    if (s && s.expiringDays != null) return s.expiringDays;
+    return 30;
+  }
+
+  function getUrgentDays() {
+    var s = state.settingsDoc && state.settingsDoc.settings;
+    if (s && s.urgentDays != null) return s.urgentDays;
+    return 14;
+  }
+
   function expiryBadge(v) {
     var d = daysUntilExpiry(v);
     if (v.noExpiry || !v.expiryDate) return { cls: 'blue', text: Va.t('noExpiry') };
@@ -2525,8 +2545,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       return { cls: 'red', text: Va.t('expired') + ' (' + expText + ')' };
     }
     if (d === 0) return { cls: 'red', text: Va.t('expiresToday') };
-    if (d <= 7) return { cls: 'orange', text: daysLabel(d) };
-    if (d <= 30) return { cls: 'yellow', text: daysLabel(d) };
+    if (d <= getUrgentDays()) return { cls: 'red', text: daysLabel(d) };
+    if (d <= getExpiringDays()) return { cls: 'orange', text: daysLabel(d) };
     if (d <= 90) return { cls: 'green', text: daysLabel(d) };
     if (d <= 365) {
       var mo = Math.floor(d / 30);
@@ -2574,8 +2594,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       const hay = (v.name + ' ' + expandTags(v.storeTags) + ' ' + (p.code || '') + ' ' + (v.source || '')).toLowerCase();
       if (q && hay.indexOf(q) < 0) return false;
       const d = daysUntilExpiry(v);
-      if (state.currentFilter === 'active') return v.status === 'active' && d >= 0;
-      if (state.currentFilter === 'expiring') return v.status === 'active' && d >= 0 && d <= 7;
+      if (state.currentFilter === 'active') return v.status === 'active' && d >= 0 && d > getExpiringDays();
+      if (state.currentFilter === 'expiring') return v.status === 'active' && d >= 0 && d > getUrgentDays() && d <= getExpiringDays();
+      if (state.currentFilter === 'urgent') return v.status === 'active' && d >= 0 && d <= getUrgentDays();
       return true;
     });
   }
@@ -2599,15 +2620,18 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
   function pinOrder(list) {
     const urgent = [];
+    const expiring = [];
     const fav = [];
     const rest = [];
     list.forEach(function (v) {
-      const u = v.status === 'active' && daysUntilExpiry(v) >= 0 && daysUntilExpiry(v) <= 7;
-      if (u) urgent.push(v);
+      var d = daysUntilExpiry(v);
+      var isActive = v.status === 'active' && d >= 0;
+      if (isActive && d <= getUrgentDays()) urgent.push(v);
+      else if (isActive && d <= getExpiringDays()) expiring.push(v);
       else if (v.favorite) fav.push(v);
       else rest.push(v);
     });
-    return urgent.concat(fav, rest);
+    return urgent.concat(expiring, fav, rest);
   }
 
   async function rebuildPlain() {
@@ -2636,14 +2660,18 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   function renderDashStats() {
     var box = $('dash-stats');
     if (!box) return;
-    var active = state.vouchers.filter(function (v) { return v.status === 'active' && daysUntilExpiry(v) >= 0; });
-    var exp = active.filter(function (v) { return daysUntilExpiry(v) <= 7; });
-    box.innerHTML = '<div class="stat-card" data-jump="active" style="border-color:rgba(52,211,153,0.2)"><b style="color:var(--ex-green)">' + active.length + '</b><span class="small">' + Va.t('statActive') + '</span></div>' +
-      '<div class="stat-card" data-jump="expiring" style="border-color:rgba(249,115,22,0.2)"><b style="color:var(--ex-orange)">' + exp.length + '</b><span class="small">' + Va.t('statExpiring') + '</span></div>';
+    var allActive = state.vouchers.filter(function (v) { return v.status === 'active' && daysUntilExpiry(v) >= 0; });
+    var urg = allActive.filter(function (v) { return daysUntilExpiry(v) <= getUrgentDays(); });
+    var exp = allActive.filter(function (v) { var d = daysUntilExpiry(v); return d > getUrgentDays() && d <= getExpiringDays(); });
+    var safe = allActive.filter(function (v) { return daysUntilExpiry(v) > getExpiringDays(); });
+    box.style.gridTemplateColumns = '1fr 1fr 1fr';
+    box.innerHTML = '<div class="stat-card" data-jump="active" style="border-color:rgba(52,211,153,0.2)"><b style="color:var(--ex-green)">' + safe.length + '</b><span class="small">' + Va.t('statActive') + '</span></div>' +
+      '<div class="stat-card" data-jump="expiring" style="border-color:rgba(249,115,22,0.2)"><b style="color:var(--ex-orange)">' + exp.length + '</b><span class="small">' + Va.t('statExpiring') + '</span></div>' +
+      '<div class="stat-card" data-jump="urgent" style="border-color:rgba(239,68,68,0.2)"><b style="color:var(--ex-red)">' + urg.length + '</b><span class="small">' + Va.t('statUrgent') + '</span></div>';
     box.querySelectorAll('.stat-card').forEach(function (c) {
       c.onclick = function () {
         var j = c.getAttribute('data-jump');
-        state.currentFilter = j === 'expiring' ? 'expiring' : 'active';
+        state.currentFilter = j === 'urgent' ? 'urgent' : j === 'expiring' ? 'expiring' : 'active';
         showTab('vouchers');
       };
     });
@@ -2672,26 +2700,19 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var bal = $('dash-total-balance');
     if (bal) bal.textContent = Va.money(sum);
     renderDashStats();
-    var expiring = matched.filter(function (v) { return daysUntilExpiry(v) <= 7; });
     var ban = $('dash-expiry-banner');
-    if (ban) {
-      if (expiring.length) {
-        ban.hidden = false;
-        ban.textContent = Va.t('expiringBanner') + ' (' + expiring.length + ')';
-        ban.onclick = function () {
-          state.currentFilter = 'expiring';
-          showTab('vouchers');
-        };
-      } else ban.hidden = true;
-    }
+    if (ban) ban.hidden = true;
     var favs = $('dash-favorites');
     if (favs) {
       favs.innerHTML = '';
       var favList = matched.filter(function (v) { return v.favorite; }).slice(0, 12);
       if (favList.length) {
         favList.forEach(function (v) {
+          var df = daysUntilExpiry(v);
+          var fUrg = v.status === 'active' && df >= 0 && df <= getUrgentDays();
+          var fExp = !fUrg && v.status === 'active' && df >= 0 && df <= getExpiringDays();
           var card = document.createElement('div');
-          card.className = 'card';
+          card.className = 'card' + (fUrg ? ' urgent' : fExp ? ' expiring-soon' : '');
           card.style.position = 'relative';
           card.innerHTML = '<button type="button" class="fav-remove" title="' + escapeHtml(Va.t('removeFav')) + '">★</button>' +
             '<b style="padding-inline-end:28px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:0.85rem;line-height:1.3">' + escapeHtml(v.name) + '</b>' +
@@ -2717,8 +2738,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       vBox.innerHTML = '';
       valueList.slice(0, DASH_MAX).forEach(function (v) {
         var eb = expiryBadge(v);
+        var dv = daysUntilExpiry(v);
+        var isUrg = v.status === 'active' && dv >= 0 && dv <= getUrgentDays();
+        var isExp = !isUrg && v.status === 'active' && dv >= 0 && dv <= getExpiringDays();
         var row = document.createElement('div');
-        row.className = 'list-row';
+        row.className = 'list-row' + (isUrg ? ' urgent' : isExp ? ' expiring-soon' : '');
         row.innerHTML = '<div style="min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:0.9rem">' + escapeHtml(v.name) + '</div>' +
           '<div style="flex-shrink:0;font-weight:700;font-size:0.9rem;margin:0 8px">' + Va.money(v.remainingBalance) + '</div>' +
           '<span class="badge ' + eb.cls + '" style="flex-shrink:0;font-size:0.7rem">' + eb.text + '</span>';
@@ -2743,8 +2767,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       off.innerHTML = '';
       offerList.slice(0, DASH_MAX).forEach(function (v) {
         var eb = expiryBadge(v);
+        var dv = daysUntilExpiry(v);
+        var isUrg = v.status === 'active' && dv >= 0 && dv <= getUrgentDays();
+        var isExp = !isUrg && v.status === 'active' && dv >= 0 && dv <= getExpiringDays();
         var row = document.createElement('div');
-        row.className = 'list-row';
+        row.className = 'list-row' + (isUrg ? ' urgent' : isExp ? ' expiring-soon' : '');
         row.innerHTML = '<div style="min-width:0;flex:1"><div style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(v.name) + '</div>' +
           '<div class="small" style="opacity:0.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml((v.offerDescription || '').slice(0, 60)) + '</div></div>' +
           '<span class="badge ' + eb.cls + '" style="flex-shrink:0;font-size:0.7rem;margin-inline-start:8px">' + eb.text + '</span>';
@@ -2790,12 +2817,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var box = $('filter-chips');
     if (!box) return;
     var nonArchived = state.vouchers.filter(function (v) { return v.status !== 'archived'; });
-    var activeCount = nonArchived.filter(function (v) { return v.status === 'active' && daysUntilExpiry(v) >= 0; }).length;
-    var expiringCount = nonArchived.filter(function (v) { return v.status === 'active' && daysUntilExpiry(v) >= 0 && daysUntilExpiry(v) <= 7; }).length;
+    var urgentCount = nonArchived.filter(function (v) { return v.status === 'active' && daysUntilExpiry(v) >= 0 && daysUntilExpiry(v) <= getUrgentDays(); }).length;
+    var expiringCount = nonArchived.filter(function (v) { var d = daysUntilExpiry(v); return v.status === 'active' && d >= 0 && d > getUrgentDays() && d <= getExpiringDays(); }).length;
+    var activeCount = nonArchived.filter(function (v) { return v.status === 'active' && daysUntilExpiry(v) > getExpiringDays(); }).length;
     var opts = [
       { id: 'all', label: Va.t('filterAll') + ' (' + nonArchived.length + ')' },
       { id: 'active', label: Va.t('filterActive') + ' (' + activeCount + ')' },
-      { id: 'expiring', label: Va.t('filterExpiring') + (expiringCount ? ' (' + expiringCount + ')' : '') }
+      { id: 'expiring', label: Va.t('filterExpiring') + (expiringCount ? ' (' + expiringCount + ')' : '') },
+      { id: 'urgent', label: Va.t('filterUrgent') + (urgentCount ? ' (' + urgentCount + ')' : '') }
     ];
     box.innerHTML = '';
     box.style.cssText = 'display:flex;gap:0;margin:6px 0 12px;background:var(--surface);border-radius:999px;padding:3px;border:1px solid var(--border)';
@@ -2868,14 +2897,16 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     }
     list.forEach(function (v) {
       const eb = expiryBadge(v);
-      const urgent = v.status === 'active' && daysUntilExpiry(v) >= 0 && daysUntilExpiry(v) <= 7;
+      var d_ = daysUntilExpiry(v);
+      const urgent = v.status === 'active' && d_ >= 0 && d_ <= getUrgentDays();
+      const expSoon = !urgent && v.status === 'active' && d_ >= 0 && d_ <= getExpiringDays();
       const miss = isCodeMissing(v);
       const low = v.type === 'value' && v.originalAmount && Number(v.remainingBalance) < Number(v.originalAmount) * 0.15;
       var _cardIdx = listEl.children.length;
       if (view === 'list') {
         var isExpiredRow = daysUntilExpiry(v) < 0;
         var row = document.createElement('div');
-        row.className = 'list-row card-enter' + (urgent ? ' urgent' : '');
+        row.className = 'list-row card-enter' + (urgent ? ' urgent' : expSoon ? ' expiring-soon' : '');
         if (isExpiredRow) row.style.opacity = '0.55';
         if (_cardIdx < 10) row.style.animationDelay = (_cardIdx * 30) + 'ms';
         row.innerHTML = '<div style="min-width:0;flex:1"><div style="font-weight:600;font-size:0.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(v.name) + '</div><div class="small">' + (v.type === 'value' ? Va.money(v.remainingBalance) : escapeHtml((v.offerDescription || '').slice(0, 50))) + '</div></div>' +
@@ -2887,7 +2918,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       var storeStr = truncStores(v.storeTags);
       var isExpired = daysUntilExpiry(v) < 0;
       var card = document.createElement('div');
-      card.className = 'card card-enter' + (urgent ? ' urgent' : '');
+      card.className = 'card card-enter' + (urgent ? ' urgent' : expSoon ? ' expiring-soon' : '');
       if (isExpired) card.style.opacity = '0.55';
       if (_cardIdx < 10) card.style.animationDelay = (_cardIdx * 40) + 'ms';
       card.innerHTML =
@@ -4228,77 +4259,68 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     }
     var cal = $('settings-calendar');
     if (cal) {
-      var cur = (state.settingsDoc && state.settingsDoc.settings && state.settingsDoc.settings.calendarReminders) || [7, 3, 1];
-      cal.innerHTML = '<h3>' + Va.t('calendarSection') + '</h3>' +
-        '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">' + Va.t('calRemind') + '</div>' +
-        '<div id="cal-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px"></div>' +
-        '<div style="display:flex;gap:4px;align-items:center">' +
-          '<select class="input" id="cal-add-select" style="width:auto;min-width:80px;border-radius:999px;padding:3px 8px;font-size:0.7rem;min-height:26px"></select>' +
-          '<button type="button" class="btn" id="cal-add-btn" style="min-height:26px;min-width:26px;padding:0 7px;font-size:0.72rem;border-radius:999px">+</button>' +
+      var curExpiring = getExpiringDays();
+      var curUrgent = getUrgentDays();
+      var expiringOpts = [7, 14, 21, 30, 45, 60, 90];
+      var urgentOpts = [1, 3, 5, 7, 10, 14, 21, 30];
+
+      cal.innerHTML = '<h3>' + Va.t('remindersSection') + '</h3>' +
+        '<div style="display:flex;flex-direction:column;gap:10px">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
+            '<span style="font-size:0.82rem;font-weight:600;color:var(--ex-orange)">' + Va.t('remindExpiring') + '</span>' +
+            '<select class="input" id="sel-expiring" style="width:auto;min-width:100px;border-radius:999px;padding:4px 10px;font-size:0.78rem;min-height:32px"></select>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
+            '<span style="font-size:0.82rem;font-weight:600;color:var(--ex-red)">' + Va.t('remindUrgent') + '</span>' +
+            '<select class="input" id="sel-urgent" style="width:auto;min-width:100px;border-radius:999px;padding:4px 10px;font-size:0.78rem;min-height:32px"></select>' +
+          '</div>' +
         '</div>';
-      var selected = cur.slice();
 
-      function renderCalTags() {
-        var tagsEl = $('cal-tags');
-        tagsEl.innerHTML = '';
-        selected.sort(function (a, b) { return a - b; });
-        if (!selected.length) {
-          tagsEl.innerHTML = '<p class="small" style="color:var(--muted)">—</p>';
-          return;
-        }
-        selected.forEach(function (d) {
-          var tag = document.createElement('span');
-          tag.style.cssText = 'display:inline-flex;align-items:center;gap:3px;background:rgba(124,107,240,0.18);border:1px solid var(--primary);color:var(--text);padding:2px 6px 2px 8px;border-radius:999px;font-size:0.7rem;font-weight:700;';
-          var label = document.createElement('span');
-          label.textContent = daysLabel(d);
-          var rm = document.createElement('button');
-          rm.type = 'button';
-          rm.textContent = '✕';
-          rm.style.cssText = 'background:rgba(124,107,240,0.2);border:none;border-radius:50%;width:18px;height:18px;min-width:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-size:0.6rem;color:var(--muted);line-height:1;-webkit-tap-highlight-color:transparent;';
-          rm.onclick = async function (e) {
-            e.stopPropagation();
-            var idx = selected.indexOf(d);
-            if (idx >= 0) selected.splice(idx, 1);
-            renderCalTags();
-            updateCalSelect();
-            await Va.saveSettingsPatch(state.activeAccountId, { calendarReminders: selected });
-          };
-          tag.appendChild(label);
-          tag.appendChild(rm);
-          tagsEl.appendChild(tag);
-        });
-      }
-
-      function updateCalSelect() {
-        var sel = $('cal-add-select');
-        var opts = [1, 2, 3, 5, 7, 10, 14, 21, 30, 60, 90];
-        sel.innerHTML = '';
-        var available = opts.filter(function (o) { return selected.indexOf(o) < 0; });
-        if (!available.length) {
-          var o = document.createElement('option');
-          o.textContent = '—';
-          o.disabled = true;
-          sel.appendChild(o);
-          return;
-        }
-        available.forEach(function (d) {
+      function populateSelects() {
+        var selExp = $('sel-expiring');
+        var selUrg = $('sel-urgent');
+        selExp.innerHTML = '';
+        selUrg.innerHTML = '';
+        expiringOpts.forEach(function (d) {
           var o = document.createElement('option');
           o.value = d;
           o.textContent = daysLabel(d);
-          sel.appendChild(o);
+          if (d === curExpiring) o.selected = true;
+          selExp.appendChild(o);
+        });
+        urgentOpts.filter(function (d) { return d < curExpiring; }).forEach(function (d) {
+          var o = document.createElement('option');
+          o.value = d;
+          o.textContent = daysLabel(d);
+          if (d === curUrgent) o.selected = true;
+          selUrg.appendChild(o);
         });
       }
 
-      renderCalTags();
-      updateCalSelect();
+      populateSelects();
 
-      $('cal-add-btn').onclick = async function () {
-        var val = parseInt($('cal-add-select').value, 10);
-        if (!val || selected.indexOf(val) >= 0) return;
-        selected.push(val);
-        renderCalTags();
-        updateCalSelect();
-        await Va.saveSettingsPatch(state.activeAccountId, { calendarReminders: selected });
+      $('sel-expiring').onchange = async function () {
+        curExpiring = parseInt(this.value, 10);
+        if (curUrgent >= curExpiring) {
+          var valid = urgentOpts.filter(function (d) { return d < curExpiring; });
+          curUrgent = valid.length ? valid[valid.length - 1] : Math.floor(curExpiring / 2);
+        }
+        populateSelects();
+        if (state.settingsDoc && state.settingsDoc.settings) {
+          state.settingsDoc.settings.expiringDays = curExpiring;
+          state.settingsDoc.settings.urgentDays = curUrgent;
+        }
+        renderDashboard();
+        await Va.saveSettingsPatch(state.activeAccountId, { expiringDays: curExpiring, urgentDays: curUrgent });
+      };
+
+      $('sel-urgent').onchange = async function () {
+        curUrgent = parseInt(this.value, 10);
+        if (state.settingsDoc && state.settingsDoc.settings) {
+          state.settingsDoc.settings.urgentDays = curUrgent;
+        }
+        renderDashboard();
+        await Va.saveSettingsPatch(state.activeAccountId, { urgentDays: curUrgent });
       };
     }
     var verEl = $('settings-version');
