@@ -1052,7 +1052,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.15.0';
+  const APP_VERSION = '2.15.1';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -1141,7 +1141,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.15.0',
+      aboutVersion: 'גרסה 2.15.1',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -1418,7 +1418,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.15.0',
+      aboutVersion: 'Version 2.15.1',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -2126,6 +2126,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
   function trackEvent(type, meta) {
     if (!db) return;
+    if (Va.isGlobalAdmin()) return;
     try {
       var u = state.authUser;
       var doc = {
@@ -4400,7 +4401,6 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var events = data.events;
     var accounts = data.accounts || [];
     var voucherTimestamps = data.voucherTimestamps || [];
-    var accountCount = accounts.length;
     var grid = $('monitor-stats-grid');
     var loginBars = $('monitor-login-bars');
     var voucherBars = $('monitor-voucher-bars');
@@ -4409,17 +4409,42 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var regList = $('monitor-registered-list');
     if (!grid) return;
 
-    var analyticsLogins = events.filter(function (e) { return e.type === 'login'; });
+    var adminUids = {};
+    var adminAccountIds = {};
+    var adminEmails = Va.ADMIN_EMAILS || [];
+    var adminNameParts = adminEmails.map(function (ae) { return ae.split('@')[0].replace(/\./g, ' ').toLowerCase(); });
+    var u = state.authUser;
+    if (u && u.email && adminEmails.indexOf(u.email.toLowerCase()) !== -1) {
+      adminUids[u.uid] = true;
+    }
+    accounts.forEach(function (acc) {
+      var uid = acc.ownerUid || acc.id;
+      if (adminUids[uid]) { adminAccountIds[acc.id] = true; return; }
+      var names = acc.memberNames || {};
+      var phones = acc.approvedPhones || [];
+      if (phones.length && names[phones[0]]) {
+        var ownerName = names[phones[0]].toLowerCase();
+        for (var i = 0; i < adminNameParts.length; i++) {
+          if (ownerName === adminNameParts[i]) { adminUids[uid] = true; adminAccountIds[acc.id] = true; break; }
+        }
+      }
+    });
+
+    var nonAdminAccounts = accounts.filter(function (a) { return !adminAccountIds[a.id]; });
+    var accountCount = nonAdminAccounts.length;
+    var nonAdminVoucherTs = voucherTimestamps.filter(function (vt) { return !adminAccountIds[vt.accountId]; });
+
+    var analyticsLogins = events.filter(function (e) { return e.type === 'login' && !adminUids[e.uid]; });
     var today = new Date().toISOString().slice(0, 10);
     var totalVouchers = accounts.reduce(function (s, a) { return s + (a.voucherCount || 0); }, 0);
 
-    var historicalVoucherEvents = voucherTimestamps.map(function (vt) {
+    var historicalVoucherEvents = nonAdminVoucherTs.map(function (vt) {
       var d = vt.timestamp.toDate();
       return { type: 'voucher_add', day: d.toISOString().slice(0, 10), timestamp: vt.timestamp, accountId: vt.accountId };
     });
 
     var historicalLoginEvents = [];
-    accounts.forEach(function (acc) {
+    nonAdminAccounts.forEach(function (acc) {
       if (acc.createdAt && acc.createdAt.toDate) {
         var d = acc.createdAt.toDate();
         historicalLoginEvents.push({ type: 'login', day: d.toISOString().slice(0, 10), uid: acc.ownerUid || acc.id });
@@ -4441,7 +4466,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     grid.innerHTML =
       '<div class="monitor-stat purple">' +
         '<div class="monitor-stat-icon">👛</div>' +
-        '<div class="monitor-stat-value purple">' + accountCount + '</div>' +
+        '<div class="monitor-stat-value purple">' + accounts.length + '</div>' +
         '<div class="monitor-stat-label">' + Va.t('monitorTotalAccounts') + '</div>' +
       '</div>' +
       '<div class="monitor-stat green">' +
@@ -4477,7 +4502,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     renderBarChart(voucherBars, historicalVoucherEvents, chartDays, 'accent');
 
     if (usersList) {
-      var byWallet = accounts
+      var byWallet = nonAdminAccounts
         .filter(function (a) { return a.voucherCount > 0; })
         .map(function (a) {
           var names = a.memberNames || {};
@@ -4506,11 +4531,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (actList) {
       var allActivity = [];
       events.forEach(function (ev) {
-        if (ev.timestamp && ev.timestamp.toDate) {
+        if (ev.timestamp && ev.timestamp.toDate && !adminUids[ev.uid]) {
           allActivity.push({ type: ev.type, name: ev.displayName || '', ts: ev.timestamp.toDate() });
         }
       });
-      accounts.forEach(function (acc) {
+      nonAdminAccounts.forEach(function (acc) {
         if (acc.createdAt && acc.createdAt.toDate) {
           var ownerName = '';
           if (acc.approvedPhones && acc.approvedPhones[0] && acc.memberNames) {
@@ -4519,7 +4544,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           allActivity.push({ type: 'wallet_create', name: ownerName || acc.walletName || '', ts: acc.createdAt.toDate() });
         }
       });
-      voucherTimestamps.forEach(function (vt) {
+      nonAdminVoucherTs.forEach(function (vt) {
         var acc = accounts.find(function (a) { return a.id === vt.accountId; });
         var name = '';
         if (acc && acc.approvedPhones && acc.approvedPhones[0] && acc.memberNames) {
@@ -4587,12 +4612,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           if (!lastSeenMap[e.uid] || t > lastSeenMap[e.uid]) lastSeenMap[e.uid] = t;
         }
       });
-      if (!accounts.length) {
+      if (!nonAdminAccounts.length) {
         regList.innerHTML = '<div class="monitor-empty">' + Va.t('monitorNoData') + '</div>';
       } else {
         var locale = state.lang === 'he' ? 'he-IL' : 'en-US';
         var allUsers = [];
-        accounts.forEach(function (acc) {
+        nonAdminAccounts.forEach(function (acc) {
           var members = acc.approvedPhones || [];
           var names = acc.memberNames || {};
           var wName = acc.walletName || '';
@@ -6277,7 +6302,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
             }
           });
         });
-        setInterval(function () { reg.update(); }, 60 * 60 * 1000);
+        reg.update().catch(function () {});
+        setInterval(function () { reg.update(); }, 10 * 60 * 1000);
       }).catch(function (err) { console.warn('SW registration failed:', err); });
     }
     const params = new URLSearchParams(location.search);

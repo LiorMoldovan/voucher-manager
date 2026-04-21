@@ -1,4 +1,4 @@
-const CACHE_NAME = 'voucher-manager-v2.15.0';
+const CACHE_NAME = 'voucher-manager-v2.15.1';
 const ASSETS = [
   '/voucher-manager/',
   '/voucher-manager/index.html',
@@ -28,8 +28,9 @@ self.addEventListener('fetch', e => {
       e.request.url.includes('gstatic.com')) {
     return;
   }
+  const fetchOpts = e.request.mode === 'navigate' ? { cache: 'no-store' } : undefined;
   e.respondWith(
-    fetch(e.request).then(resp => {
+    fetch(e.request, fetchOpts).then(resp => {
       if (resp.ok) {
         const clone = resp.clone();
         caches.open(CACHE_NAME).then(c => c.put(e.request, clone)).catch(() => {});
