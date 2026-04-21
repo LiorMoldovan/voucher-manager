@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#131320" />
+  <meta name="theme-color" content="#0F0F1A" />
   <title>מנהל שוברים</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,16 +17,21 @@
 :root {
   --primary: #7C6BF0;
   --primary-glow: rgba(124,107,240,0.35);
+  --primary-subtle: rgba(124,107,240,0.08);
   --accent: #00D2A0;
-  --bg: #131320;
-  --surface: rgba(255,255,255,0.05);
-  --surface-solid: #1A1A2A;
-  --card: rgba(255,255,255,0.07);
-  --card-hover: rgba(255,255,255,0.11);
-  --text: #EDEDF4;
-  --muted: #9898B0;
-  --border: rgba(255,255,255,0.09);
+  --accent-glow: rgba(0,210,160,0.2);
+  --bg: #0F0F1A;
+  --bg-elevated: #161625;
+  --surface: rgba(255,255,255,0.04);
+  --surface-solid: #1A1A2E;
+  --card: rgba(255,255,255,0.055);
+  --card-hover: rgba(255,255,255,0.09);
+  --text: #EEEEF6;
+  --text-secondary: #C4C4D4;
+  --muted: #8888A8;
+  --border: rgba(255,255,255,0.07);
   --border-focus: rgba(124,107,240,0.5);
+  --border-subtle: rgba(255,255,255,0.04);
   --food: #FF6B7A;
   --shopping: #7C6BF0;
   --entertainment: #00D2A0;
@@ -41,27 +46,38 @@
   --radius: 18px;
   --radius-sm: 12px;
   --radius-xs: 8px;
-  --nav-h: 64px;
+  --nav-h: 68px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Hebrew", sans-serif;
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
-  --shadow-md: 0 8px 32px rgba(0,0,0,0.3);
-  --shadow-lg: 0 16px 48px rgba(0,0,0,0.4);
-  --glass: blur(20px) saturate(1.4);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.15), 0 12px 28px rgba(0,0,0,0.2);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.2), 0 24px 48px rgba(0,0,0,0.3);
+  --shadow-glow: 0 0 40px rgba(124,107,240,0.12);
+  --glass: blur(24px) saturate(1.5);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --duration-fast: 0.15s;
+  --duration-normal: 0.25s;
+  --duration-slow: 0.4s;
 }
 html[data-theme="light"] {
-  --bg: #F5F5FA;
-  --surface: rgba(0,0,0,0.03);
+  --bg: #F4F4FA;
+  --bg-elevated: #FFFFFF;
+  --surface: rgba(0,0,0,0.025);
   --surface-solid: #FFFFFF;
-  --card: rgba(255,255,255,0.85);
-  --card-hover: rgba(255,255,255,0.95);
+  --card: rgba(255,255,255,0.9);
+  --card-hover: rgba(255,255,255,1);
   --text: #111118;
+  --text-secondary: #3A3A50;
   --muted: #6B6B80;
-  --border: rgba(0,0,0,0.06);
+  --border: rgba(0,0,0,0.05);
   --border-focus: rgba(124,107,240,0.4);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
-  --shadow-md: 0 8px 32px rgba(0,0,0,0.08);
-  --shadow-lg: 0 16px 48px rgba(0,0,0,0.1);
+  --border-subtle: rgba(0,0,0,0.03);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 4px 8px rgba(0,0,0,0.03);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.05), 0 12px 28px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.06), 0 24px 48px rgba(0,0,0,0.08);
+  --shadow-glow: 0 0 40px rgba(124,107,240,0.06);
 }
 *, *::before, *::after { box-sizing: border-box; }
 html, body {
@@ -287,7 +303,6 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.6; }
   from { transform: translateY(-24px) scale(0.95); opacity: 0; }
   to { transform: translateY(0) scale(1); opacity: 1; }
 }
-@keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes tabEnter {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -700,6 +715,18 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 .monitor-activity-name { font-weight: 600; font-size: 0.78rem; }
 .monitor-activity-type { color: var(--muted); font-size: 0.68rem; }
 .monitor-activity-time { font-size: 0.65rem; color: var(--muted); flex-shrink: 0; }
+.monitor-activity-collapsed { display: none; }
+.monitor-activity-collapsed.expanded { display: contents; }
+.monitor-activity-toggle {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 10px; margin-top: 4px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--primary); font-size: 0.78rem; font-weight: 600; font-family: var(--font);
+  cursor: pointer; transition: background var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+.monitor-activity-toggle:hover { background: var(--primary-subtle); border-color: var(--border-focus); }
+.monitor-activity-toggle .toggle-arrow { transition: transform var(--duration-normal) var(--ease-out); font-size: 0.7rem; }
+.monitor-activity-toggle.expanded .toggle-arrow { transform: rotate(180deg); }
 .monitor-user-row {
   display: flex; align-items: center; gap: 10px; padding: 10px 12px;
   background: var(--card); border-radius: var(--radius-xs); border: 1px solid var(--border);
@@ -1025,7 +1052,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.14.0';
+  const APP_VERSION = '2.15.0';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -1114,7 +1141,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.14.0',
+      aboutVersion: 'גרסה 2.15.0',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -1300,6 +1327,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       monitorVoucherChart: 'שוברים שנוספו לפי יום',
       monitorNoData: 'אין נתונים עדיין',
       monitorLoading: 'טוען נתונים...',
+      monitorShowMore: 'הצג עוד ({count})',
+      monitorShowLess: 'הצג פחות',
       monitorEventLogin: 'כניסה',
       monitorEventVoucherAdd: 'הוספת שובר',
       monitorEventWalletCreate: 'יצירת ארנק',
@@ -1389,7 +1418,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.14.0',
+      aboutVersion: 'Version 2.15.0',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -1575,6 +1604,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       monitorVoucherChart: 'Vouchers added by day',
       monitorNoData: 'No data yet',
       monitorLoading: 'Loading data...',
+      monitorShowMore: 'Show more ({count})',
+      monitorShowLess: 'Show less',
       monitorEventLogin: 'Login',
       monitorEventVoucherAdd: 'Voucher added',
       monitorEventWalletCreate: 'Wallet created',
@@ -1649,7 +1680,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var isLight = eff === 'light';
     document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
     var mc = document.querySelector('meta[name="theme-color"]');
-    if (mc) mc.setAttribute('content', isLight ? '#F5F5FA' : '#131320');
+    if (mc) mc.setAttribute('content', isLight ? '#F4F4FA' : '#0F0F1A');
   }
 
   function normalizeIsraeliPhone(raw) {
@@ -4502,7 +4533,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       if (!recent.length) {
         actList.innerHTML = '<div class="monitor-empty">' + Va.t('monitorNoData') + '</div>';
       } else {
-        actList.innerHTML = recent.map(function (ev) {
+        var VISIBLE_COUNT = 5;
+        var rows = recent.map(function (ev) {
           var icon = ev.type === 'login' ? 'login' : ev.type === 'voucher_add' ? 'voucher' : 'wallet';
           var emoji = ev.type === 'login' ? '🔑' : ev.type === 'voucher_add' ? '🎫' : '👛';
           var typeLabel = ev.type === 'login' ? Va.t('monitorEventLogin') :
@@ -4519,7 +4551,31 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
             '</div>' +
             '<div class="monitor-activity-time">' + time + '</div>' +
           '</div>';
-        }).join('');
+        });
+        var visibleHtml = rows.slice(0, VISIBLE_COUNT).join('');
+        var hiddenCount = rows.length - VISIBLE_COUNT;
+        if (hiddenCount > 0) {
+          var collapsedHtml = '<div class="monitor-activity-collapsed" id="monitor-activity-collapsed">' +
+            rows.slice(VISIBLE_COUNT).join('') + '</div>' +
+            '<button type="button" class="monitor-activity-toggle" id="monitor-activity-toggle">' +
+              '<span class="toggle-label">' + Va.t('monitorShowMore').replace('{count}', hiddenCount) + '</span>' +
+              '<span class="toggle-arrow">▼</span>' +
+            '</button>';
+          actList.innerHTML = visibleHtml + collapsedHtml;
+          var toggleBtn = $('monitor-activity-toggle');
+          var collapsedEl = $('monitor-activity-collapsed');
+          if (toggleBtn && collapsedEl) {
+            toggleBtn.onclick = function () {
+              var isExpanded = collapsedEl.classList.toggle('expanded');
+              toggleBtn.classList.toggle('expanded', isExpanded);
+              toggleBtn.querySelector('.toggle-label').textContent = isExpanded
+                ? Va.t('monitorShowLess')
+                : Va.t('monitorShowMore').replace('{count}', hiddenCount);
+            };
+          }
+        } else {
+          actList.innerHTML = visibleHtml;
+        }
       }
     }
 
