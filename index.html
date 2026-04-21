@@ -233,7 +233,10 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.6; }
   width: 20px; height: 3px; border-radius: 0 0 3px 3px;
   background: var(--primary);
   box-shadow: 0 2px 8px var(--primary-glow);
-  animation: navIndicator var(--duration-normal) var(--ease-out) both;
+  animation-name: navIndicator;
+  animation-duration: 0.25s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
 }
 @keyframes navIndicator { from { width: 0; opacity: 0; } to { width: 20px; opacity: 1; } }
 
@@ -241,7 +244,7 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.6; }
   position: fixed; inset: 0; z-index: 50;
   background: rgba(0,0,0,0.55); backdrop-filter: blur(12px) saturate(1.2);
   display: flex; align-items: flex-end; justify-content: center;
-  animation: overlayIn var(--duration-normal) var(--ease-out);
+  animation: overlayIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .overlay.centered { align-items: center; padding: 16px; }
 @keyframes overlayIn { from { opacity: 0; backdrop-filter: blur(0) saturate(1); } to { opacity: 1; backdrop-filter: blur(12px) saturate(1.2); } }
@@ -251,7 +254,7 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.6; }
   width: 100%; max-width: 480px; max-height: 94vh; overflow: auto;
   background: var(--surface-solid); border-radius: 28px 28px 0 0;
   padding: 6px 18px calc(14px + var(--safe-bottom));
-  animation: sheetSlideUp var(--duration-slow) var(--ease-out);
+  animation: sheetSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   border: 1px solid var(--border); border-bottom: none;
   box-shadow: var(--shadow-lg), 0 -8px 40px rgba(0,0,0,0.15);
 }
@@ -264,7 +267,7 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.6; }
   background: var(--surface-solid);
   border-radius: 20px; padding: 24px; border: 1px solid var(--border);
   box-shadow: var(--shadow-lg), var(--shadow-glow);
-  animation: modalEnter var(--duration-slow) var(--ease-out);
+  animation: modalEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes sheetSlideUp {
   from { transform: translateY(100%); opacity: 0.5; }
@@ -284,7 +287,7 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.6; }
   padding: 14px 18px; border-radius: var(--radius);
   box-shadow: var(--shadow-lg), var(--shadow-glow); font-size: 0.88rem; font-weight: 500;
   backdrop-filter: blur(28px) saturate(1.4);
-  animation: toastIn var(--duration-slow) var(--ease-out);
+  animation: toastIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes toastIn {
   from { transform: translateY(-24px) scale(0.95); opacity: 0; }
@@ -295,12 +298,23 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.6; }
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.tab-enter { animation: tabEnter var(--duration-normal) var(--ease-out) both; }
+.tab-enter {
+  animation-name: tabEnter;
+  animation-duration: 0.25s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
 @keyframes cardEnter {
   from { opacity: 0; transform: translateY(16px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
-.card-enter { opacity: 0; animation: cardEnter var(--duration-slow) var(--ease-out) both; }
+.card-enter {
+  opacity: 0;
+  animation-name: cardEnter;
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
 @keyframes checkPop {
   0% { transform: scale(0) rotate(-45deg); opacity: 0; }
   60% { transform: scale(1.08) rotate(0deg); opacity: 1; }
@@ -309,14 +323,17 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.6; }
 .save-done-overlay {
   position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center;
   background: rgba(0,0,0,0.3); backdrop-filter: blur(8px);
-  animation: fadeIn var(--duration-normal) var(--ease-out);
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .save-done-check {
   width: 76px; height: 76px; border-radius: 50%;
   background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 8px 32px rgba(16,185,129,0.4), 0 0 60px rgba(16,185,129,0.2);
-  animation: checkPop var(--duration-slow) var(--ease-spring) both;
+  animation-name: checkPop;
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation-fill-mode: both;
 }
 .save-done-check::after { content: '✓'; font-size: 2.2rem; font-weight: 900; color: #fff; }
 @keyframes copyFlash { 0% { box-shadow: 0 0 0 3px rgba(124,107,240,0.4); } 100% { box-shadow: 0 0 0 0 rgba(124,107,240,0); } }
@@ -329,7 +346,7 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.6; }
 
 .logo-wrap {
   text-align: center; padding: 56px 16px 28px;
-  animation: welcomeFadeIn 0.8s var(--ease-out) both;
+  animation: welcomeFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 @keyframes welcomeFadeIn {
   from { opacity: 0; transform: translateY(20px); }
@@ -351,7 +368,7 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.6; }
   background-clip: text; letter-spacing: -0.03em;
 }
 #screen-welcome .card {
-  animation: welcomeCardIn 0.6s var(--ease-out) 0.2s both;
+  animation: welcomeCardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
 }
 @keyframes welcomeCardIn {
   from { opacity: 0; transform: translateY(24px) scale(0.97); }
@@ -628,21 +645,41 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   background: linear-gradient(180deg, var(--primary), var(--accent));
 }
 .monitor-chart {
-  background: var(--card); border-radius: var(--radius-sm); padding: 16px;
+  background: var(--card); border-radius: var(--radius-sm);
+  padding: 16px 14px 24px;
   border: 1px solid var(--border); backdrop-filter: var(--glass);
+  overflow: hidden;
 }
-.monitor-bars { display: flex; align-items: flex-end; gap: 4px; height: 100px; padding-top: 8px; direction: ltr; }
-.monitor-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.monitor-bars {
+  display: flex; align-items: flex-end; gap: 2px; direction: ltr;
+  height: 90px;
+}
+.monitor-bar-col {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: flex-end; gap: 3px; min-width: 0;
+}
 .monitor-bar {
-  width: 100%; border-radius: 4px 4px 0 0; min-height: 2px;
+  width: 100%; max-width: 16px; margin-inline: auto;
+  border-radius: 3px 3px 0 0;
   background: linear-gradient(180deg, var(--primary), rgba(124,107,240,0.4));
   transition: height var(--duration-slow) var(--ease-out);
 }
 .monitor-bar.accent {
   background: linear-gradient(180deg, var(--accent), rgba(0,210,160,0.4));
 }
-.monitor-bar-label { font-size: 0.55rem; color: var(--muted); white-space: nowrap; }
-.monitor-bar-value { font-size: 0.6rem; font-weight: 700; color: var(--text); }
+.monitor-bar-labels {
+  display: flex; gap: 2px; direction: ltr;
+  padding-top: 8px; border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+.monitor-bar-labels span {
+  flex: 1; text-align: center;
+  font-size: 0.48rem; color: var(--muted); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.monitor-bar-value {
+  font-size: 0.52rem; font-weight: 700; color: var(--text); line-height: 1;
+}
 .monitor-activity-list { display: flex; flex-direction: column; gap: 6px; }
 .monitor-activity-row {
   display: flex; align-items: center; gap: 10px; padding: 10px 12px;
@@ -687,6 +724,22 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 .monitor-empty {
   text-align: center; padding: 40px 20px; color: var(--muted); font-size: 0.85rem;
 }
+.monitor-member-list { display: flex; flex-direction: column; gap: 3px; }
+.monitor-member {
+  display: flex; align-items: center; gap: 6px; padding: 7px 10px;
+  border-radius: var(--radius-xs); background: var(--surface); font-size: 0.78rem;
+}
+.monitor-member-name { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.monitor-member-role {
+  font-size: 0.58rem; font-weight: 700; padding: 2px 6px; border-radius: 999px;
+  flex-shrink: 0;
+}
+.monitor-member-role.owner { background: rgba(251,191,36,0.15); color: #f59e0b; }
+.monitor-member-role.member { background: rgba(148,163,184,0.12); color: var(--muted); }
+.monitor-member-status {
+  font-size: 0.58rem; color: var(--muted); flex-shrink: 0;
+}
+.monitor-member-status.active { color: var(--ex-green); font-weight: 600; }
 .monitor-loading {
   text-align: center; padding: 60px 20px; color: var(--muted); font-size: 0.85rem;
 }
@@ -700,7 +753,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   .monitor-stats-grid { gap: 6px; }
   .monitor-stat { padding: 10px; }
   .monitor-stat-value { font-size: 1.4rem; }
-  .monitor-bars { height: 70px; }
+  .monitor-bars { height: 65px; }
 }
 
 @keyframes screenFadeIn {
@@ -711,7 +764,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: none; }
 }
-.screen-enter { animation: screenSlideIn 0.3s var(--ease-out) both; }
+.screen-enter { animation: screenSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
 #main-app.screen-enter { animation-name: screenFadeIn; }
 
 .monitor-stat { transition: all var(--duration-normal) var(--ease-out); }
@@ -932,6 +985,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         <div class="monitor-section" id="monitor-voucher-chart-section">
           <div class="monitor-section-title" data-i18n="monitorVoucherChart">שוברים שנוספו לפי יום</div>
           <div class="monitor-chart"><div class="monitor-bars" id="monitor-voucher-bars"></div></div>
+        </div>
+        <div class="monitor-section" id="monitor-registered-section">
+          <div class="monitor-section-title" data-i18n="monitorRegisteredUsers">משתמשים רשומים</div>
+          <div id="monitor-registered-list"></div>
         </div>
         <div class="monitor-section" id="monitor-users-section">
           <div class="monitor-section-title" data-i18n="monitorTopUsers">שוברים לפי משתמש</div>
@@ -1246,7 +1303,15 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       monitorAnonymousUser: 'משתמש',
       monitorLast7Days: '7 ימים אחרונים',
       monitorLast30Days: '30 ימים אחרונים',
-      monitorAllTime: 'כל הזמן'
+      monitorAllTime: 'כל הזמן',
+      monitorRegisteredUsers: 'משתמשים רשומים',
+      monitorWalletOwner: 'בעלים',
+      monitorWalletMember: 'חבר/ה',
+      monitorLastSeen: 'נראה לאחרונה',
+      monitorNeverSeen: 'לא נכנס עדיין',
+      monitorActiveNow: 'פעיל היום',
+      monitorMembersCount: 'חברים',
+      monitorVouchersInWallet: 'שוברים'
     },
     en: {
       appName: 'Voucher Manager',
@@ -1513,7 +1578,15 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       monitorAnonymousUser: 'User',
       monitorLast7Days: 'Last 7 days',
       monitorLast30Days: 'Last 30 days',
-      monitorAllTime: 'All time'
+      monitorAllTime: 'All time',
+      monitorRegisteredUsers: 'Registered users',
+      monitorWalletOwner: 'Owner',
+      monitorWalletMember: 'Member',
+      monitorLastSeen: 'Last seen',
+      monitorNeverSeen: 'Never logged in',
+      monitorActiveNow: 'Active today',
+      monitorMembersCount: 'Members',
+      monitorVouchersInWallet: 'Vouchers'
     }
   };
 
@@ -1665,7 +1738,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   window.VoucherApp.ADMIN_EMAILS = ADMIN_EMAILS;
   window.VoucherApp.isGlobalAdmin = function () {
     var u = state.authUser;
-    return u && u.email && ADMIN_EMAILS.indexOf(u.email.toLowerCase()) !== -1;
+    if (!u) return false;
+    var isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    if (isLocal) return true;
+    return u.email && ADMIN_EMAILS.indexOf(u.email.toLowerCase()) !== -1;
   };
 })();
 (function () {
@@ -2049,13 +2125,22 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   }
   Va.fetchAnalytics = fetchAnalytics;
 
-  function fetchGlobalAccountCount() {
-    if (!db) return Promise.resolve(0);
+  function fetchGlobalAccounts() {
+    if (!db) return Promise.resolve([]);
     return db.collection(Va.COL_ACC).get()
-      .then(function (snap) { return snap.size; })
-      .catch(function () { return 0; });
+      .then(function (snap) {
+        var arr = [];
+        snap.forEach(function (d) { arr.push(Object.assign({ id: d.id }, d.data())); });
+        var countPromises = arr.map(function (acc) {
+          return db.collection(Va.COL_ACC).doc(acc.id).collection(Va.COL_VOU).get()
+            .then(function (vs) { acc.voucherCount = vs.size; })
+            .catch(function () { acc.voucherCount = 0; });
+        });
+        return Promise.all(countPromises).then(function () { return arr; });
+      })
+      .catch(function () { return []; });
   }
-  Va.fetchGlobalAccountCount = fetchGlobalAccountCount;
+  Va.fetchGlobalAccounts = fetchGlobalAccounts;
 })();
 (function () {
   'use strict';
@@ -4254,10 +4339,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
     Promise.all([
       Va.fetchAnalytics(_monitorRange === 9999 ? 3650 : _monitorRange),
-      Va.fetchGlobalAccountCount()
+      Va.fetchGlobalAccounts()
     ]).then(function (res) {
       _monitorLoading = false;
-      _monitorCache = { events: res[0], accountCount: res[1] };
+      _monitorCache = { events: res[0], accounts: res[1] };
       drawMonitorData(_monitorCache);
     }).catch(function () {
       _monitorLoading = false;
@@ -4267,12 +4352,14 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
   function drawMonitorData(data) {
     var events = data.events;
-    var accountCount = data.accountCount;
+    var accounts = data.accounts || [];
+    var accountCount = accounts.length;
     var grid = $('monitor-stats-grid');
     var loginBars = $('monitor-login-bars');
     var voucherBars = $('monitor-voucher-bars');
     var usersList = $('monitor-users-list');
     var actList = $('monitor-activity-list');
+    var regList = $('monitor-registered-list');
     if (!grid) return;
 
     var logins = events.filter(function (e) { return e.type === 'login'; });
@@ -4281,6 +4368,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var todayLogins = logins.filter(function (e) { return e.day === today; });
     var uniqueToday = {};
     todayLogins.forEach(function (e) { if (e.uid) uniqueToday[e.uid] = true; });
+    var totalVouchers = accounts.reduce(function (s, a) { return s + (a.voucherCount || 0); }, 0);
 
     grid.innerHTML =
       '<div class="monitor-stat purple">' +
@@ -4290,7 +4378,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       '</div>' +
       '<div class="monitor-stat green">' +
         '<div class="monitor-stat-icon">🎫</div>' +
-        '<div class="monitor-stat-value green">' + vAdds.length + '</div>' +
+        '<div class="monitor-stat-value green">' + totalVouchers + '</div>' +
         '<div class="monitor-stat-label">' + Va.t('monitorTotalVouchers') + '</div>' +
       '</div>' +
       '<div class="monitor-stat blue">' +
@@ -4364,10 +4452,69 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         }).join('');
       }
     }
+
+    if (regList) {
+      var lastSeenMap = {};
+      logins.forEach(function (e) {
+        if (e.uid && e.timestamp && e.timestamp.toDate) {
+          var t = e.timestamp.toDate();
+          if (!lastSeenMap[e.uid] || t > lastSeenMap[e.uid]) lastSeenMap[e.uid] = t;
+        }
+      });
+      var voucherCountByAccount = {};
+      vAdds.forEach(function (e) {
+        if (e.uid) {
+          if (!voucherCountByAccount[e.uid]) voucherCountByAccount[e.uid] = 0;
+          voucherCountByAccount[e.uid]++;
+        }
+      });
+      if (!accounts.length) {
+        regList.innerHTML = '<div class="monitor-empty">' + Va.t('monitorNoData') + '</div>';
+      } else {
+        var locale = state.lang === 'he' ? 'he-IL' : 'en-US';
+        var allUsers = [];
+        accounts.forEach(function (acc) {
+          var members = acc.approvedPhones || [];
+          var names = acc.memberNames || {};
+          var wName = acc.walletName || '';
+          var ownerUid = acc.ownerUid || acc.id;
+          members.forEach(function (phone, idx) {
+            var name = names[phone] || phone;
+            var isOwner = idx === 0;
+            var seen = lastSeenMap[isOwner ? ownerUid : null];
+            allUsers.push({
+              name: name,
+              isOwner: isOwner,
+              wallet: wName,
+              voucherCount: acc.voucherCount || 0,
+              memberCount: members.length,
+              lastSeen: seen,
+              updatedAt: acc.updatedAt && acc.updatedAt.toDate ? acc.updatedAt.toDate() : null
+            });
+          });
+        });
+        regList.innerHTML = allUsers.map(function (u) {
+          var isActive = u.lastSeen && u.lastSeen.toISOString().slice(0, 10) === today;
+          var statusText = isActive ? Va.t('monitorActiveNow') :
+            u.lastSeen ? u.lastSeen.toLocaleDateString(locale, { day: 'numeric', month: 'short' }) :
+            (u.updatedAt ? u.updatedAt.toLocaleDateString(locale, { day: 'numeric', month: 'short' }) : '—');
+          var statusClass = isActive ? ' active' : '';
+          var roleClass = u.isOwner ? 'owner' : 'member';
+          var roleLabel = u.isOwner ? Va.t('monitorWalletOwner') : Va.t('monitorWalletMember');
+          return '<div class="monitor-member">' +
+            '<div class="monitor-member-name">' + escapeHtml(u.name) + '</div>' +
+            '<span style="font-size:0.6rem;color:var(--muted)">🎫' + u.voucherCount + '</span>' +
+            '<div class="monitor-member-role ' + roleClass + '">' + roleLabel + '</div>' +
+            '<div class="monitor-member-status' + statusClass + '">' + statusText + '</div>' +
+          '</div>';
+        }).join('');
+      }
+    }
   }
 
   function renderBarChart(container, events, days, barClass) {
     if (!container) return;
+    var chart = container.closest('.monitor-chart');
     var buckets = {};
     var labels = [];
     for (var i = days - 1; i >= 0; i--) {
@@ -4378,16 +4525,26 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     }
     events.forEach(function (e) { if (buckets[e.day] !== undefined) buckets[e.day]++; });
     var maxVal = Math.max.apply(null, labels.map(function (l) { return buckets[l.key]; })) || 1;
-    var step = days > 14 ? 2 : 1;
+    var step = days > 20 ? 5 : days > 10 ? 3 : 1;
     container.innerHTML = labels.map(function (l, idx) {
-      var h = Math.round((buckets[l.key] / maxVal) * 80);
-      var showLabel = idx % step === 0 || idx === labels.length - 1;
+      var val = buckets[l.key];
+      var h = Math.round((val / maxVal) * 80);
       return '<div class="monitor-bar-col">' +
-        (buckets[l.key] ? '<div class="monitor-bar-value">' + buckets[l.key] + '</div>' : '') +
-        '<div class="monitor-bar' + (barClass ? ' ' + barClass : '') + '" style="height:' + Math.max(h, 2) + 'px"></div>' +
-        (showLabel ? '<div class="monitor-bar-label">' + l.label + '</div>' : '') +
+        (val ? '<div class="monitor-bar-value">' + val + '</div>' : '') +
+        '<div class="monitor-bar' + (barClass ? ' ' + barClass : '') + '" style="height:' + (val ? Math.max(h, 4) : 0) + 'px"></div>' +
       '</div>';
     }).join('');
+    var existing = chart && chart.querySelector('.monitor-bar-labels');
+    if (existing) existing.remove();
+    if (chart) {
+      var labelRow = document.createElement('div');
+      labelRow.className = 'monitor-bar-labels';
+      labelRow.innerHTML = labels.map(function (l, idx) {
+        var show = idx === 0 || idx === labels.length - 1 || (idx % step === 0);
+        return '<span>' + (show ? l.label : '') + '</span>';
+      }).join('');
+      chart.appendChild(labelRow);
+    }
   }
 
   function renderSettings() {
