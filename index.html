@@ -1052,7 +1052,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.15.1';
+  const APP_VERSION = '2.15.2';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -1141,7 +1141,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.15.1',
+      aboutVersion: 'גרסה 2.15.2',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -1418,7 +1418,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.15.1',
+      aboutVersion: 'Version 2.15.2',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -6292,7 +6292,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         refreshing = true;
         location.reload();
       });
-      navigator.serviceWorker.register('sw.js').then(function (reg) {
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
         reg.addEventListener('updatefound', function () {
           var nw = reg.installing;
           if (!nw) return;

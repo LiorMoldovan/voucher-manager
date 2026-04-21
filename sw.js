@@ -1,4 +1,4 @@
-const CACHE_NAME = 'voucher-manager-v2.15.1';
+const CACHE_NAME = 'voucher-manager-v2.15.2';
 const ASSETS = [
   '/voucher-manager/',
   '/voucher-manager/index.html',
