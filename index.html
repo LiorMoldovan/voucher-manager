@@ -277,9 +277,14 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.6; }
   0% { transform: scale(0.9) translateY(12px); opacity: 0; }
   100% { transform: scale(1) translateY(0); opacity: 1; }
 }
-@keyframes pulseUrgent { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
-.urgent { animation: pulseUrgent 3s ease-in-out infinite; border-color: var(--ex-red) !important; }
-.expiring-soon { border-color: var(--ex-orange) !important; }
+.urgent {
+  border-color: var(--ex-red) !important;
+  box-shadow: var(--shadow-md), 0 0 0 1px rgba(239,68,68,0.15), inset 0 0 0 1px rgba(239,68,68,0.06);
+}
+.expiring-soon {
+  border-color: var(--ex-orange) !important;
+  box-shadow: var(--shadow-md), 0 0 0 1px rgba(249,115,22,0.12);
+}
 
 .toast-wrap { position: fixed; top: 16px; inset-inline: 16px; z-index: 100; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
 .toast {
@@ -646,39 +651,48 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 }
 .monitor-chart {
   background: var(--card); border-radius: var(--radius-sm);
-  padding: 16px 14px 24px;
+  padding: 18px 16px 12px;
   border: 1px solid var(--border); backdrop-filter: var(--glass);
   overflow: hidden;
 }
+.monitor-bars-wrap {
+  position: relative; height: 110px; direction: ltr;
+}
+.monitor-bars-grid {
+  position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between;
+  pointer-events: none;
+}
+.monitor-bars-grid span {
+  display: block; height: 1px; background: var(--border); opacity: 0.5;
+}
 .monitor-bars {
-  display: flex; align-items: flex-end; gap: 2px; direction: ltr;
-  height: 90px;
+  position: relative; display: flex; align-items: flex-end; gap: 3px; direction: ltr;
+  height: 100%; z-index: 1;
 }
 .monitor-bar-col {
   flex: 1; display: flex; flex-direction: column; align-items: center;
-  justify-content: flex-end; gap: 3px; min-width: 0;
+  justify-content: flex-end; gap: 2px; min-width: 0;
 }
 .monitor-bar {
-  width: 100%; max-width: 16px; margin-inline: auto;
-  border-radius: 3px 3px 0 0;
-  background: linear-gradient(180deg, var(--primary), rgba(124,107,240,0.4));
-  transition: height var(--duration-slow) var(--ease-out);
+  width: 100%; max-width: 20px; margin-inline: auto;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(180deg, var(--primary), rgba(124,107,240,0.35));
+  transition: height 0.4s cubic-bezier(.4,0,.2,1);
 }
 .monitor-bar.accent {
-  background: linear-gradient(180deg, var(--accent), rgba(0,210,160,0.4));
+  background: linear-gradient(180deg, var(--accent), rgba(0,210,160,0.35));
+}
+.monitor-bar-value {
+  font-size: 0.6rem; font-weight: 700; color: var(--text); line-height: 1;
+  opacity: 0.85;
 }
 .monitor-bar-labels {
-  display: flex; gap: 2px; direction: ltr;
-  padding-top: 8px; border-top: 1px solid var(--border);
-  margin-top: 8px;
+  display: flex; gap: 3px; direction: ltr;
+  padding-top: 10px;
 }
 .monitor-bar-labels span {
   flex: 1; text-align: center;
-  font-size: 0.48rem; color: var(--muted); white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis;
-}
-.monitor-bar-value {
-  font-size: 0.52rem; font-weight: 700; color: var(--text); line-height: 1;
+  font-size: 0.68rem; color: var(--muted); white-space: nowrap;
 }
 .monitor-activity-list { display: flex; flex-direction: column; gap: 6px; }
 .monitor-activity-row {
@@ -724,7 +738,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 .monitor-empty {
   text-align: center; padding: 40px 20px; color: var(--muted); font-size: 0.85rem;
 }
-.monitor-member-list { display: flex; flex-direction: column; gap: 3px; }
+#monitor-registered-list { display: flex; flex-direction: column; gap: 3px; max-height: 400px; overflow-y: auto; }
 .monitor-member {
   display: flex; align-items: center; gap: 6px; padding: 7px 10px;
   border-radius: var(--radius-xs); background: var(--surface); font-size: 0.78rem;
@@ -753,7 +767,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   .monitor-stats-grid { gap: 6px; }
   .monitor-stat { padding: 10px; }
   .monitor-stat-value { font-size: 1.4rem; }
-  .monitor-bars { height: 65px; }
+  .monitor-bars-wrap { height: 90px; }
 }
 
 @keyframes screenFadeIn {
@@ -980,11 +994,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         <div class="monitor-stats-grid" id="monitor-stats-grid"></div>
         <div class="monitor-section" id="monitor-login-chart-section">
           <div class="monitor-section-title" data-i18n="monitorLoginChart">כניסות לפי יום</div>
-          <div class="monitor-chart"><div class="monitor-bars" id="monitor-login-bars"></div></div>
+          <div class="monitor-chart"><div class="monitor-bars-wrap"><div class="monitor-bars-grid"><span></span><span></span><span></span><span></span></div><div class="monitor-bars" id="monitor-login-bars"></div></div></div>
         </div>
         <div class="monitor-section" id="monitor-voucher-chart-section">
           <div class="monitor-section-title" data-i18n="monitorVoucherChart">שוברים שנוספו לפי יום</div>
-          <div class="monitor-chart"><div class="monitor-bars" id="monitor-voucher-bars"></div></div>
+          <div class="monitor-chart"><div class="monitor-bars-wrap"><div class="monitor-bars-grid"><span></span><span></span><span></span><span></span></div><div class="monitor-bars" id="monitor-voucher-bars"></div></div></div>
         </div>
         <div class="monitor-section" id="monitor-registered-section">
           <div class="monitor-section-title" data-i18n="monitorRegisteredUsers">משתמשים רשומים</div>
@@ -2131,14 +2145,25 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       .then(function (snap) {
         var arr = [];
         snap.forEach(function (d) { arr.push(Object.assign({ id: d.id }, d.data())); });
+        var voucherTimestamps = [];
         var countPromises = arr.map(function (acc) {
           return db.collection(Va.COL_ACC).doc(acc.id).collection(Va.COL_VOU).get()
-            .then(function (vs) { acc.voucherCount = vs.size; })
+            .then(function (vs) {
+              acc.voucherCount = vs.size;
+              vs.forEach(function (vDoc) {
+                var vd = vDoc.data();
+                if (vd.createdAt && vd.createdAt.toDate) {
+                  voucherTimestamps.push({ accountId: acc.id, timestamp: vd.createdAt });
+                }
+              });
+            })
             .catch(function () { acc.voucherCount = 0; });
         });
-        return Promise.all(countPromises).then(function () { return arr; });
+        return Promise.all(countPromises).then(function () {
+          return { accounts: arr, voucherTimestamps: voucherTimestamps };
+        });
       })
-      .catch(function () { return []; });
+      .catch(function () { return { accounts: [], voucherTimestamps: [] }; });
   }
   Va.fetchGlobalAccounts = fetchGlobalAccounts;
 })();
@@ -4342,7 +4367,8 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       Va.fetchGlobalAccounts()
     ]).then(function (res) {
       _monitorLoading = false;
-      _monitorCache = { events: res[0], accounts: res[1] };
+      var gResult = res[1];
+      _monitorCache = { events: res[0], accounts: gResult.accounts, voucherTimestamps: gResult.voucherTimestamps };
       drawMonitorData(_monitorCache);
     }).catch(function () {
       _monitorLoading = false;
@@ -4353,6 +4379,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   function drawMonitorData(data) {
     var events = data.events;
     var accounts = data.accounts || [];
+    var voucherTimestamps = data.voucherTimestamps || [];
     var accountCount = accounts.length;
     var grid = $('monitor-stats-grid');
     var loginBars = $('monitor-login-bars');
@@ -4362,13 +4389,34 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var regList = $('monitor-registered-list');
     if (!grid) return;
 
-    var logins = events.filter(function (e) { return e.type === 'login'; });
-    var vAdds = events.filter(function (e) { return e.type === 'voucher_add'; });
+    var analyticsLogins = events.filter(function (e) { return e.type === 'login'; });
     var today = new Date().toISOString().slice(0, 10);
-    var todayLogins = logins.filter(function (e) { return e.day === today; });
+    var totalVouchers = accounts.reduce(function (s, a) { return s + (a.voucherCount || 0); }, 0);
+
+    var historicalVoucherEvents = voucherTimestamps.map(function (vt) {
+      var d = vt.timestamp.toDate();
+      return { type: 'voucher_add', day: d.toISOString().slice(0, 10), timestamp: vt.timestamp, accountId: vt.accountId };
+    });
+
+    var historicalLoginEvents = [];
+    accounts.forEach(function (acc) {
+      if (acc.createdAt && acc.createdAt.toDate) {
+        var d = acc.createdAt.toDate();
+        historicalLoginEvents.push({ type: 'login', day: d.toISOString().slice(0, 10), uid: acc.ownerUid || acc.id });
+      }
+      if (acc.updatedAt && acc.updatedAt.toDate) {
+        var ud = acc.updatedAt.toDate();
+        var uDay = ud.toISOString().slice(0, 10);
+        if (uDay !== (acc.createdAt && acc.createdAt.toDate ? acc.createdAt.toDate().toISOString().slice(0, 10) : '')) {
+          historicalLoginEvents.push({ type: 'login', day: uDay, uid: acc.ownerUid || acc.id });
+        }
+      }
+    });
+    var allLogins = analyticsLogins.concat(historicalLoginEvents);
+
+    var todayLogins = allLogins.filter(function (e) { return e.day === today; });
     var uniqueToday = {};
     todayLogins.forEach(function (e) { if (e.uid) uniqueToday[e.uid] = true; });
-    var totalVouchers = accounts.reduce(function (s, a) { return s + (a.voucherCount || 0); }, 0);
 
     grid.innerHTML =
       '<div class="monitor-stat purple">' +
@@ -4383,7 +4431,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       '</div>' +
       '<div class="monitor-stat blue">' +
         '<div class="monitor-stat-icon">🔑</div>' +
-        '<div class="monitor-stat-value blue">' + logins.length + '</div>' +
+        '<div class="monitor-stat-value blue">' + accountCount + '</div>' +
         '<div class="monitor-stat-label">' + Va.t('monitorTotalLogins') + '</div>' +
       '</div>' +
       '<div class="monitor-stat orange">' +
@@ -4392,24 +4440,36 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         '<div class="monitor-stat-label">' + Va.t('monitorActiveToday') + '</div>' +
       '</div>';
 
-    var chartDays = Math.min(_monitorRange === 9999 ? 30 : _monitorRange, 30);
-    renderBarChart(loginBars, logins, chartDays, '');
-    renderBarChart(voucherBars, vAdds, chartDays, 'accent');
+    var allEvents = allLogins.concat(historicalVoucherEvents);
+    var allDays = allEvents.map(function (e) { return e.day; }).filter(Boolean);
+    var earliestDay = allDays.length ? allDays.reduce(function (m, d) { return d < m ? d : m; }, allDays[0]) : today;
+    var totalSpanMs = Date.now() - new Date(earliestDay).getTime();
+    var totalSpanDays = Math.max(Math.ceil(totalSpanMs / 86400000) + 1, 7);
+
+    var chartDays;
+    if (_monitorRange === 9999) {
+      chartDays = totalSpanDays;
+    } else {
+      chartDays = _monitorRange;
+    }
+
+    renderBarChart(loginBars, allLogins, chartDays, '');
+    renderBarChart(voucherBars, historicalVoucherEvents, chartDays, 'accent');
 
     if (usersList) {
-      var byUser = {};
-      vAdds.forEach(function (e) {
-        var key = e.uid || 'unknown';
-        if (!byUser[key]) byUser[key] = { name: e.displayName || Va.t('monitorAnonymousUser'), count: 0 };
-        byUser[key].count++;
-      });
-      var sorted = Object.keys(byUser).map(function (k) { return byUser[k]; })
+      var byWallet = accounts
+        .filter(function (a) { return a.voucherCount > 0; })
+        .map(function (a) {
+          var names = a.memberNames || {};
+          var owner = (a.approvedPhones && a.approvedPhones[0]) ? names[a.approvedPhones[0]] : null;
+          return { name: owner || a.walletName || a.id.slice(0, 8), count: a.voucherCount };
+        })
         .sort(function (a, b) { return b.count - a.count; });
-      var maxCount = sorted.length ? sorted[0].count : 1;
-      if (!sorted.length) {
+      var maxCount = byWallet.length ? byWallet[0].count : 1;
+      if (!byWallet.length) {
         usersList.innerHTML = '<div class="monitor-empty">' + Va.t('monitorNoData') + '</div>';
       } else {
-        usersList.innerHTML = sorted.slice(0, 10).map(function (u, i) {
+        usersList.innerHTML = byWallet.slice(0, 10).map(function (u, i) {
           var pct = Math.round((u.count / maxCount) * 100);
           return '<div class="monitor-user-row">' +
             '<div class="monitor-user-rank">' + (i + 1) + '</div>' +
@@ -4424,7 +4484,32 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     }
 
     if (actList) {
-      var recent = events.slice(0, 20);
+      var allActivity = [];
+      events.forEach(function (ev) {
+        if (ev.timestamp && ev.timestamp.toDate) {
+          allActivity.push({ type: ev.type, name: ev.displayName || '', ts: ev.timestamp.toDate() });
+        }
+      });
+      accounts.forEach(function (acc) {
+        if (acc.createdAt && acc.createdAt.toDate) {
+          var ownerName = '';
+          if (acc.approvedPhones && acc.approvedPhones[0] && acc.memberNames) {
+            ownerName = acc.memberNames[acc.approvedPhones[0]] || '';
+          }
+          allActivity.push({ type: 'wallet_create', name: ownerName || acc.walletName || '', ts: acc.createdAt.toDate() });
+        }
+      });
+      voucherTimestamps.forEach(function (vt) {
+        var acc = accounts.find(function (a) { return a.id === vt.accountId; });
+        var name = '';
+        if (acc && acc.approvedPhones && acc.approvedPhones[0] && acc.memberNames) {
+          name = acc.memberNames[acc.approvedPhones[0]] || '';
+        }
+        allActivity.push({ type: 'voucher_add', name: name, ts: vt.timestamp.toDate() });
+      });
+      allActivity.sort(function (a, b) { return b.ts - a.ts; });
+      var recent = allActivity.slice(0, 30);
+      var actLocale = state.lang === 'he' ? 'he-IL' : 'en-US';
       if (!recent.length) {
         actList.innerHTML = '<div class="monitor-empty">' + Va.t('monitorNoData') + '</div>';
       } else {
@@ -4434,13 +4519,9 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           var typeLabel = ev.type === 'login' ? Va.t('monitorEventLogin') :
                           ev.type === 'voucher_add' ? Va.t('monitorEventVoucherAdd') :
                           Va.t('monitorEventWalletCreate');
-          var name = escapeHtml(ev.displayName || Va.t('monitorAnonymousUser'));
-          var time = '';
-          if (ev.timestamp && ev.timestamp.toDate) {
-            var d = ev.timestamp.toDate();
-            time = d.toLocaleDateString(state.lang === 'he' ? 'he-IL' : 'en-US', { month: 'short', day: 'numeric' }) +
-                   ' ' + d.toLocaleTimeString(state.lang === 'he' ? 'he-IL' : 'en-US', { hour: '2-digit', minute: '2-digit' });
-          }
+          var name = escapeHtml(ev.name || Va.t('monitorAnonymousUser'));
+          var time = ev.ts.toLocaleDateString(actLocale, { month: 'short', day: 'numeric' }) +
+                     ' ' + ev.ts.toLocaleTimeString(actLocale, { hour: '2-digit', minute: '2-digit' });
           return '<div class="monitor-activity-row">' +
             '<div class="monitor-activity-icon ' + icon + '">' + emoji + '</div>' +
             '<div class="monitor-activity-text">' +
@@ -4455,17 +4536,10 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 
     if (regList) {
       var lastSeenMap = {};
-      logins.forEach(function (e) {
+      analyticsLogins.forEach(function (e) {
         if (e.uid && e.timestamp && e.timestamp.toDate) {
           var t = e.timestamp.toDate();
           if (!lastSeenMap[e.uid] || t > lastSeenMap[e.uid]) lastSeenMap[e.uid] = t;
-        }
-      });
-      var voucherCountByAccount = {};
-      vAdds.forEach(function (e) {
-        if (e.uid) {
-          if (!voucherCountByAccount[e.uid]) voucherCountByAccount[e.uid] = 0;
-          voucherCountByAccount[e.uid]++;
         }
       });
       if (!accounts.length) {
@@ -4489,9 +4563,15 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
               voucherCount: acc.voucherCount || 0,
               memberCount: members.length,
               lastSeen: seen,
+              createdAt: acc.createdAt && acc.createdAt.toDate ? acc.createdAt.toDate() : null,
               updatedAt: acc.updatedAt && acc.updatedAt.toDate ? acc.updatedAt.toDate() : null
             });
           });
+        });
+        allUsers.sort(function (a, b) {
+          var ta = a.createdAt ? a.createdAt.getTime() : 0;
+          var tb = b.createdAt ? b.createdAt.getTime() : 0;
+          return tb - ta;
         });
         regList.innerHTML = allUsers.map(function (u) {
           var isActive = u.lastSeen && u.lastSeen.toISOString().slice(0, 10) === today;
@@ -4515,23 +4595,38 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
   function renderBarChart(container, events, days, barClass) {
     if (!container) return;
     var chart = container.closest('.monitor-chart');
-    var buckets = {};
-    var labels = [];
+    var locale = state.lang === 'he' ? 'he-IL' : 'en-US';
+
+    var groupDays = days > 90 ? 7 : days > 40 ? 3 : 1;
+    var dayKeys = [];
     for (var i = days - 1; i >= 0; i--) {
       var d = new Date(); d.setDate(d.getDate() - i);
-      var key = d.toISOString().slice(0, 10);
-      buckets[key] = 0;
-      labels.push({ key: key, label: d.toLocaleDateString(state.lang === 'he' ? 'he-IL' : 'en-US', { day: 'numeric', month: 'short' }) });
+      dayKeys.push(d.toISOString().slice(0, 10));
     }
-    events.forEach(function (e) { if (buckets[e.day] !== undefined) buckets[e.day]++; });
-    var maxVal = Math.max.apply(null, labels.map(function (l) { return buckets[l.key]; })) || 1;
-    var step = days > 20 ? 5 : days > 10 ? 3 : 1;
-    container.innerHTML = labels.map(function (l, idx) {
-      var val = buckets[l.key];
-      var h = Math.round((val / maxVal) * 80);
+
+    var dayBuckets = {};
+    dayKeys.forEach(function (k) { dayBuckets[k] = 0; });
+    events.forEach(function (e) { if (dayBuckets[e.day] !== undefined) dayBuckets[e.day]++; });
+
+    var labels = [];
+    for (var g = 0; g < dayKeys.length; g += groupDays) {
+      var slice = dayKeys.slice(g, g + groupDays);
+      var sum = slice.reduce(function (s, k) { return s + dayBuckets[k]; }, 0);
+      var startDate = new Date(slice[0]);
+      var dd = startDate.getDate();
+      var mm = startDate.getMonth() + 1;
+      var lbl = dd + '/' + mm;
+      labels.push({ key: slice[0], value: sum, label: lbl });
+    }
+
+    var maxVal = Math.max.apply(null, labels.map(function (l) { return l.value; })) || 1;
+    var barCount = labels.length;
+    var step = barCount > 20 ? 5 : barCount > 10 ? 3 : 1;
+    container.innerHTML = labels.map(function (l) {
+      var h = Math.round((l.value / maxVal) * 80);
       return '<div class="monitor-bar-col">' +
-        (val ? '<div class="monitor-bar-value">' + val + '</div>' : '') +
-        '<div class="monitor-bar' + (barClass ? ' ' + barClass : '') + '" style="height:' + (val ? Math.max(h, 4) : 0) + 'px"></div>' +
+        (l.value ? '<div class="monitor-bar-value">' + l.value + '</div>' : '') +
+        '<div class="monitor-bar' + (barClass ? ' ' + barClass : '') + '" style="height:' + (l.value ? Math.max(h, 4) : 0) + 'px"></div>' +
       '</div>';
     }).join('');
     var existing = chart && chart.querySelector('.monitor-bar-labels');
@@ -4539,10 +4634,20 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (chart) {
       var labelRow = document.createElement('div');
       labelRow.className = 'monitor-bar-labels';
-      labelRow.innerHTML = labels.map(function (l, idx) {
-        var show = idx === 0 || idx === labels.length - 1 || (idx % step === 0);
-        return '<span>' + (show ? l.label : '') + '</span>';
-      }).join('');
+      if (barCount <= 10) {
+        labelRow.innerHTML = labels.map(function (l) {
+          return '<span>' + l.label + '</span>';
+        }).join('');
+      } else {
+        var maxLabels = 5;
+        var pickIndices = [];
+        for (var p = 0; p < maxLabels; p++) {
+          pickIndices.push(Math.round(p * (barCount - 1) / (maxLabels - 1)));
+        }
+        labelRow.innerHTML = labels.map(function (l, idx) {
+          return '<span>' + (pickIndices.indexOf(idx) !== -1 ? l.label : '') + '</span>';
+        }).join('');
+      }
       chart.appendChild(labelRow);
     }
   }
