@@ -1052,7 +1052,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.15.3';
+  const APP_VERSION = '2.15.4';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -1141,7 +1141,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.15.3',
+      aboutVersion: 'גרסה 2.15.4',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -1418,7 +1418,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.15.3',
+      aboutVersion: 'Version 2.15.4',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -4338,7 +4338,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     });
   }
 
-  var _monitorRange = 30;
+  var _monitorRange = 7;
   var _monitorCache = null;
   var _monitorLoading = false;
 
@@ -4421,6 +4421,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     if (isLocal && u) {
       adminUids[u.uid] = true;
     }
+    events.forEach(function (ev) {
+      if (ev.uid && ev.displayName && /^dev$/i.test(ev.displayName.trim())) {
+        adminUids[ev.uid] = true;
+      }
+    });
     accounts.forEach(function (acc) {
       var uid = acc.ownerUid || acc.id;
       if (adminUids[uid]) { adminAccountIds[acc.id] = true; return; }
@@ -4521,7 +4526,6 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
         usersList.innerHTML = byWallet.slice(0, 10).map(function (u, i) {
           var pct = Math.round((u.count / maxCount) * 100);
           return '<div class="monitor-user-row">' +
-            '<div class="monitor-user-rank">' + (i + 1) + '</div>' +
             '<div style="flex:1;min-width:0">' +
               '<div class="monitor-user-name">' + escapeHtml(u.name) + '</div>' +
               '<div class="monitor-user-bar" style="width:' + pct + '%"></div>' +
