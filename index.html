@@ -1052,7 +1052,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
 (function () {
   'use strict';
 
-  const APP_VERSION = '2.15.2';
+  const APP_VERSION = '2.15.3';
   const COL_ACC = 'vm_accounts';
   const COL_VOU = 'vouchers';
   const IDX_PHONE = 'vm_phone_index';
@@ -1141,7 +1141,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'מחיקה לצמיתות',
       lastUsed: 'שימוש אחרון:',
       settingsTitle: 'הגדרות',
-      aboutVersion: 'גרסה 2.15.2',
+      aboutVersion: 'גרסה 2.15.3',
       userSection: 'משתמש',
       sharingSection: 'שיתוף משפחתי',
       approvedPhones: 'מספרים מאושרים',
@@ -1418,7 +1418,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
       deleteForever: 'Delete permanently',
       lastUsed: 'Last used:',
       settingsTitle: 'Settings',
-      aboutVersion: 'Version 2.15.2',
+      aboutVersion: 'Version 2.15.3',
       userSection: 'User',
       sharingSection: 'Family sharing',
       approvedPhones: 'Approved numbers',
@@ -4414,7 +4414,11 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     var adminEmails = Va.ADMIN_EMAILS || [];
     var adminNameParts = adminEmails.map(function (ae) { return ae.split('@')[0].replace(/\./g, ' ').toLowerCase(); });
     var u = state.authUser;
+    var isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
     if (u && u.email && adminEmails.indexOf(u.email.toLowerCase()) !== -1) {
+      adminUids[u.uid] = true;
+    }
+    if (isLocal && u) {
       adminUids[u.uid] = true;
     }
     accounts.forEach(function (acc) {
@@ -4502,7 +4506,7 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
     renderBarChart(voucherBars, historicalVoucherEvents, chartDays, 'accent');
 
     if (usersList) {
-      var byWallet = nonAdminAccounts
+      var byWallet = accounts
         .filter(function (a) { return a.voucherCount > 0; })
         .map(function (a) {
           var names = a.memberNames || {};
@@ -4612,12 +4616,12 @@ html[dir="ltr"] body { direction: ltr; text-align: start; }
           if (!lastSeenMap[e.uid] || t > lastSeenMap[e.uid]) lastSeenMap[e.uid] = t;
         }
       });
-      if (!nonAdminAccounts.length) {
+      if (!accounts.length) {
         regList.innerHTML = '<div class="monitor-empty">' + Va.t('monitorNoData') + '</div>';
       } else {
         var locale = state.lang === 'he' ? 'he-IL' : 'en-US';
         var allUsers = [];
-        nonAdminAccounts.forEach(function (acc) {
+        accounts.forEach(function (acc) {
           var members = acc.approvedPhones || [];
           var names = acc.memberNames || {};
           var wName = acc.walletName || '';
